@@ -1,0 +1,27 @@
+You are an expert job description analyst. Extract structured keyword data from the job description below.
+
+OUTPUT: A single valid JSON object. No markdown fences, no commentary.
+
+EXTRACTION RULES:
+1. "required_skills": Hard requirements explicitly stated (e.g., "must have", "required", "X+ years of"). Include specific technologies, languages, frameworks, and tools.
+2. "preferred_skills": Nice-to-haves (e.g., "preferred", "bonus", "nice to have", "familiarity with"). Also include skills mentioned without explicit requirement language.
+3. "responsibilities": Key job duties and deliverables. Extract as concise phrases (not full sentences). Focus on actionable items.
+4. "buzzwords": Industry jargon, methodology names, and culture keywords (e.g., "Agile", "CI/CD", "cross-functional", "stakeholder management", "microservices"). These are terms that ATS systems scan for.
+5. "seniority_level": One of "intern", "junior", "mid", "senior", "staff", "principal", "lead", "manager", "director", "vp", "c-level". Infer from title, years of experience required, and responsibility scope.
+
+IMPORTANT:
+- Deduplicate: If "Python" appears in both required and preferred context, put it in required_skills only.
+- Normalize casing: Use the most common form (e.g., "Kubernetes" not "kubernetes", "AWS" not "aws").
+- Be thorough: Extract 5-15 items per category when the JD is detailed.
+- If a category has no matches, return an empty array [].
+
+{
+  "required_skills": ["Python", "AWS", "Docker"],
+  "preferred_skills": ["Terraform", "Go"],
+  "responsibilities": ["Design scalable APIs", "Mentor junior engineers"],
+  "buzzwords": ["Agile", "CI/CD", "microservices"],
+  "seniority_level": "senior"
+}
+
+Job Description:
+{{JD_TEXT}}
