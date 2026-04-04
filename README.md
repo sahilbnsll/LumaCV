@@ -59,7 +59,7 @@ graph TB
 
 ```bash
 npm install
-cp .env.example .env.local  # Set OPENROUTER_API_KEY
+cp .env.example .env.local  # Set GEMINI_API_KEY or OPENROUTER_API_KEY
 npm run dev
 ```
 
@@ -67,8 +67,8 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENROUTER_API_KEY` | Yes | OpenRouter API key for the AI tailoring logic. |
-| `OPENROUTER_MODELS` | No | Comma-separated model list for fallback handling. |
+| `GEMINI_API_KEY` | Yes* | Direct API key from Google AI Studio (Free and highly reliable). |
+| `OPENROUTER_API_KEY` | Yes* | OpenRouter API key. *Note: You must set EITHER Gemini OR OpenRouter.* |
 | `UPSTASH_REDIS_REST_URL` | No | Upstash Redis connection URL for Rate Limiting. |
 | `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis REST token. |
 
@@ -80,7 +80,7 @@ LumaCV is heavily optimized to run on the **Vercel Hobby (Free)** tier. Since st
 1. **Push to GitHub**: Push your working codebase to a new GitHub repository.
 2. **Import Project**: Log into [Vercel](https://vercel.com), click **Add New** > **Project**, and select your GitHub repository.
 3. **Set Environment Variables**: In the configuration step, open the "Environment Variables" section and add:
-   - `OPENROUTER_API_KEY` (required)
+   - `GEMINI_API_KEY` (Get a free one at [Google AI Studio](https://aistudio.google.com/app/apikey))
    - `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN` (optional: highly recommended to prevent API rate-limit abuse on your LLMs).
 4. **Deploy**: Click **Deploy**. Vercel will auto-detect Next.js and build it without any extra configuration.
 

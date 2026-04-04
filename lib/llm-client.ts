@@ -1,22 +1,30 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { streamText, LanguageModel } from 'ai';
 
 // ============================================================================
 // Model Chains — easily configurable
 // ============================================================================
 
 /** Complex JSON tasks: resume parsing, tailoring */
-const HEAVY_MODELS = [
+const OPENROUTER_HEAVY_MODELS = [
     'meta-llama/llama-3.3-70b-instruct:free',
-    'qwen/qwen3.6-plus:free',
     'google/gemma-3-27b-it:free',
+    'qwen/qwen3.6-plus:free',
 ];
 
 /** Fast tasks: JD analysis, keyword extraction */
-const LIGHT_MODELS = [
+const OPENROUTER_LIGHT_MODELS = [
     'meta-llama/llama-3.2-3b-instruct:free',
-    'qwen/qwen3-coder:free',
     'google/gemma-3-12b-it:free',
+    'qwen/qwen3-coder:free',
+];
+
+/** Native Gemini Models via Google AI Studio */
+const GEMINI_MODELS = [
+    'gemini-2.0-flash',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash'
 ];
 
 export type TaskType = 'heavy' | 'light';
@@ -43,33 +51,40 @@ export function extractJsonObjectFromAssistantText(text: string): string {
 }
 
 // ============================================================================
-// OpenRouter Provider (singleton)
+// Provider Configuration
 // ============================================================================
 
-let _openRouterProvider: ReturnType<typeof createOpenAI> | null = null;
-
-function getOpenRouterProvider() {
-    if (_openRouterProvider) return _openRouterProvider;
-
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-        throw new Error('OPENROUTER_API_KEY is not set');
+function getProviderConfiguration(taskType: TaskType): { 
+    provider: (modelId: string) => LanguageModel, 
+    models: string[], 
+    name: string 
+} {
+    if (process.env.GEMINI_API_KEY) {
+        const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+        return {
+            provider: google,
+            models: GEMINI_MODELS,
+            name: 'GeminiNative'
+        };
     }
 
-    _openRouterProvider = createOpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey,
-        headers: {
-            'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-            'X-Title': 'LumaAI',
-        },
-    });
+    if (process.env.OPENROUTER_API_KEY) {
+        const openrouter = createOpenAI({
+            baseURL: 'https://openrouter.ai/api/v1',
+            apiKey: process.env.OPENROUTER_API_KEY,
+            headers: {
+                'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+                'X-Title': 'LumaAI',
+            },
+        });
+        return {
+            provider: openrouter,
+            models: taskType === 'heavy' ? OPENROUTER_HEAVY_MODELS : OPENROUTER_LIGHT_MODELS,
+            name: 'OpenRouter'
+        };
+    }
 
-    return _openRouterProvider;
-}
-
-function getModelsForTask(taskType: TaskType): string[] {
-    return taskType === 'heavy' ? HEAVY_MODELS : LIGHT_MODELS;
+    throw new Error('No AI provider configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY in Environment Variables.');
 }
 
 // ============================================================================
@@ -77,11 +92,10 @@ function getModelsForTask(taskType: TaskType): string[] {
 // ============================================================================
 
 /**
- * Stream text from OpenRouter with multi-model failover.
+ * Stream text from provider with multi-model failover.
  * Uses the Vercel AI SDK `streamText()` under the hood.
  *
- * CRITICAL: 6-second timeout per model via AbortController.
- * If a model doesn't start streaming in 6s, we abort and try the next model.
+ * CRITICAL: 15-second timeout per model via AbortController.
  *
  * @param prompt - The prompt to send
  * @param systemPrompt - Optional system prompt
@@ -94,15 +108,14 @@ export async function generateStream(
     taskType: TaskType,
     options: { maxTokens?: number; abortSignal?: AbortSignal } = {}
 ) {
-    const provider = getOpenRouterProvider();
-    const models = getModelsForTask(taskType);
+    const { provider, models, name: providerName } = getProviderConfiguration(taskType);
     const maxOutputTokens = options.maxTokens || 4000;
     const errors: string[] = [];
 
     for (const modelId of models) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-            console.log(`[OpenRouter] ${modelId} timed out after 15s, failing over...`);
+            console.log(`[${providerName}] ${modelId} timed out after 15s, failing over...`);
             controller.abort();
         }, 15000);
 
@@ -112,7 +125,7 @@ export async function generateStream(
         }
 
         try {
-            console.log(`[OpenRouter] Attempting ${modelId}...`);
+            console.log(`[${providerName}] Attempting ${modelId}...`);
 
             const result = streamText({
                 model: provider(modelId),
@@ -137,7 +150,7 @@ export async function generateStream(
                 throw new Error('Empty stream');
             }
 
-            console.log(`[OpenRouter] Stream connected via ${modelId}`);
+            console.log(`[${providerName}] Stream connected via ${modelId}`);
 
             // Create a new ReadableStream that yields the first chunk + remaining chunks
             const fullStream = new ReadableStream<string>({
@@ -163,12 +176,12 @@ export async function generateStream(
         } catch (e) {
             clearTimeout(timeoutId);
             const msg = e instanceof Error ? e.message : String(e);
-            console.log(`[OpenRouter] ${modelId} failed: ${msg.slice(0, 100)}, failing over...`);
+            console.log(`[${providerName}] ${modelId} failed: ${msg.slice(0, 100)}, failing over...`);
             errors.push(`${modelId}: ${msg.slice(0, 200)}`);
         }
     }
 
-    throw new Error(`[OpenRouter] All models exhausted. Attempts: ${errors.join(' | ')}`);
+    throw new Error(`[${providerName}] All models exhausted. Attempts: ${errors.join(' | ')}`);
 }
 
 // ============================================================================

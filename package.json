@@ -12,6 +12,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.58",
     "@ai-sdk/openai": "^3.0.50",
     "@hookform/resolvers": "^3.3.4",
     "@radix-ui/react-dialog": "^1.1.1",
