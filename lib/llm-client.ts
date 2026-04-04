@@ -7,16 +7,16 @@ import { streamText } from 'ai';
 
 /** Complex JSON tasks: resume parsing, tailoring */
 const HEAVY_MODELS = [
-    'google/gemini-3-flash-preview',
-    'google/gemini-3.1-pro-preview',
-    'qwen/qwen3.6-plus:free',
+    'google/gemini-2.0-pro-exp-02-05:free',
+    'google/gemini-2.0-flash-exp:free',
+    'qwen/qwen-2.5-72b-instruct:free',
 ];
 
 /** Fast tasks: JD analysis, keyword extraction */
 const LIGHT_MODELS = [
-    'google/gemini-3.1-flash-lite-preview',
-    'google/gemini-3-flash-preview',
-    'qwen/qwen3.6-plus:free',
+    'google/gemini-2.0-flash-lite-preview-02-05:free',
+    'google/gemini-2.0-flash-exp:free',
+    'qwen/qwen-2.5-72b-instruct:free',
 ];
 
 export type TaskType = 'heavy' | 'light';
