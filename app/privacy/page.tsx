@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
             <article className="prose prose-slate lg:prose-lg dark:prose-invert">
                 <h1>Privacy Policy</h1>
-                <p className="lead">Last Updated: February 13, 2026</p>
+                <p className="lead">Last Updated: April 3rd, 2026</p>
 
                 <h2>1. Data Collection</h2>
                 <p>
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
 
                 <h2>5. Contact</h2>
                 <p>
-                    If you have questions, please contact us at support@resumetailor.ai.
+                    If you have questions, please contact us at sahilbansal.sb24@gmail.com
                 </p>
             </article>
         </div>

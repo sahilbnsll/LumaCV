@@ -19,7 +19,7 @@ const steps = [
     {
         n: '01',
         title: 'Upload resume',
-        desc: 'Drop your PDF. We extract structure and text on your device—nothing stored server-side.',
+        desc: 'Drop your PDF. We extract structure and text on your device,nothing stored server-side.',
     },
     {
         n: '02',
@@ -29,7 +29,7 @@ const steps = [
     {
         n: '03',
         title: 'Tailor with AI',
-        desc: 'Bullets and skills are rewritten to mirror the role—without inventing experience.',
+        desc: 'Bullets and skills are rewritten to mirror the role without inventing experience.',
     },
     {
         n: '04',
@@ -42,7 +42,7 @@ const features = [
     {
         icon: Layers,
         title: 'Template studio',
-        desc: 'Modern, Classic, ATS, Executive, Minimal, Compact, Creative, and Tech—consistent typography and spacing.',
+        desc: 'Modern, Classic, ATS, Executive, Minimal, Compact, Creative, and Tech consistent typography and spacing.',
     },
     {
         icon: Zap,
@@ -116,16 +116,7 @@ export default function LandingPage() {
                             </h1>
                             <p className="mx-auto mt-5 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground">
                                 Upload once, paste a job description, and get a tailored resume with ATS-aware
-                                templates and an honest match breakdown—similar in spirit to polished tools like{' '}
-                                <a
-                                    href="https://rxresu.me/"
-                                    className="underline decoration-border underline-offset-4 hover:text-foreground"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    Reactive Resume
-                                </a>
-                                , focused on clarity and control.
+                                templates and an honest match breakdown similar in spirit to polished tools, focused on clarity and control.
                             </p>
                             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                                 <Button asChild size="lg" className="h-11 min-w-[200px] rounded-md px-8 text-base font-medium">
@@ -161,7 +152,7 @@ export default function LandingPage() {
                         <div className="mb-12 max-w-xl">
                             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">How it works</h2>
                             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                                A linear flow from file to PDF—each step has a single job.
+                                A linear flow from file to PDF each step has a single job.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -235,7 +226,7 @@ export default function LandingPage() {
                                     <h3 className="text-xl font-semibold tracking-tight">Sahil Bansal</h3>
                                     <p className="mt-1 text-sm font-medium text-muted-foreground">DevOps Engineer</p>
                                     <p className="mt-5 max-w-prose text-sm leading-relaxed text-muted-foreground">
-                                        I build reliable cloud platforms and the tooling around them—automation,
+                                        I build reliable cloud platforms and the tooling around them automation,
                                         observability, and pragmatic delivery. LumaCV came from wanting a resume workflow
                                         that respects both recruiters&apos; parsers and candidates&apos; time.
                                     </p>
