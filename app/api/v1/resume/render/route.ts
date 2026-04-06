@@ -3,11 +3,13 @@ import { z } from 'zod';
 import { hashTextServer } from '@/lib/content-hash';
 import { enqueueCompileJob } from '@/lib/qstash';
 import { requireUser } from '@/lib/auth';
+import { createSignedPdfUrl } from '@/lib/supabase-storage';
 import {
     getJobState,
     getPdfCache,
     isPreviewInfraConfigured,
     setJobState,
+    setPdfCache,
 } from '@/lib/resume-preview-store';
 
 export const maxDuration = 10;
@@ -15,6 +17,35 @@ export const maxDuration = 10;
 const RenderRequestSchema = z.object({
     latexCode: z.string().min(1),
 });
+
+function normalizeBucketName(raw: string | undefined) {
+    return (raw || 'resumes').trim().replace(/^"+|"+$/g, '').replace(/^'+|'+$/g, '');
+}
+
+function isLikelySignedPdfUrl(url: unknown, opts: { bucket: string; hash: string }) {
+    if (typeof url !== 'string') return false;
+    if (!url.startsWith('http')) return false;
+    if (!url.includes('/storage/v1/object/sign/')) return false;
+    if (!url.includes(`/${opts.bucket}/`)) return false;
+    if (!url.includes(`compiled/${opts.hash}.pdf`)) return false;
+    if (!url.includes('token=')) return false;
+    return true;
+}
+
+async function refreshSignedUrlIfNeeded(input: {
+    hash: string;
+    userId: string;
+    cachedUrl?: string;
+    cachedPath?: string;
+}) {
+    const bucket = normalizeBucketName(process.env.SUPABASE_RESUMES_BUCKET);
+    if (isLikelySignedPdfUrl(input.cachedUrl, { bucket, hash: input.hash })) return input.cachedUrl as string;
+    const path = (input.cachedPath || `compiled/${input.hash}.pdf`).replace(/^\/+/, '');
+    const url = await createSignedPdfUrl(path, 60 * 60 * 6);
+    const now = new Date().toISOString();
+    await setPdfCache(input.hash, { status: 'ready', url, path, userId: input.userId, createdAt: now });
+    return url;
+}
 
 export async function POST(req: NextRequest) {
         const auth = await requireUser();
@@ -40,7 +71,17 @@ export async function POST(req: NextRequest) {
 
         const cached = await getPdfCache(compileHash);
         if (cached?.status === 'ready' && cached.userId === user.id) {
-            return NextResponse.json({ status: 'ready', hash: compileHash, url: cached.url });
+            try {
+                const url = await refreshSignedUrlIfNeeded({
+                    hash: compileHash,
+                    userId: user.id,
+                    cachedUrl: cached.url,
+                    cachedPath: cached.path,
+                });
+                return NextResponse.json({ status: 'ready', hash: compileHash, url });
+            } catch {
+                // If re-signing fails (misconfigured infra), fall through to job creation.
+            }
         }
 
         const existingJob = await getJobState(compileHash);
@@ -94,7 +135,18 @@ export async function GET(req: NextRequest) {
 
     const cached = await getPdfCache(hash);
     if (cached?.status === 'ready' && cached.userId === user.id) {
-        return NextResponse.json({ status: 'ready', hash, url: cached.url });
+        try {
+            const url = await refreshSignedUrlIfNeeded({
+                hash,
+                userId: user.id,
+                cachedUrl: cached.url,
+                cachedPath: cached.path,
+            });
+            return NextResponse.json({ status: 'ready', hash, url });
+        } catch {
+            // If signing fails, return the cached URL anyway (may be expired), plus a hint.
+            return NextResponse.json({ status: 'ready', hash, url: cached.url, warning: 'Could not refresh signed URL' });
+        }
     }
 
     const job = await getJobState(hash);

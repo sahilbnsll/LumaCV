@@ -57,12 +57,14 @@ function addSupabaseAuthHint(message: string, cfg: { url: string; serviceKey: st
 function getConfig() {
     const urlRaw = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKeyRaw = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const bucket = process.env.SUPABASE_RESUMES_BUCKET || 'resumes';
+    const bucketRaw = process.env.SUPABASE_RESUMES_BUCKET || 'resumes';
     if (!urlRaw || !serviceKeyRaw) return null;
 
     const url = urlRaw.trim().replace(/\/$/, '');
     // Vercel env pastes sometimes include surrounding quotes or whitespace.
     const serviceKey = serviceKeyRaw.trim().replace(/^"+|"+$/g, '');
+    // Bucket is frequently pasted with quotes or accidental whitespace in Vercel UI.
+    const bucket = bucketRaw.trim().replace(/^"+|"+$/g, '').replace(/^'+|'+$/g, '');
     return { url, serviceKey, bucket };
 }
 
@@ -76,10 +78,17 @@ function headers(contentType = 'application/json') {
     };
 }
 
+function normalizeStoragePath(input: string) {
+    const raw = (input || '').trim().replace(/^\/+/, '');
+    // Defensive: never allow directory traversal.
+    if (!raw || raw.includes('..')) throw new Error(`Invalid storage path: ${input}`);
+    return raw.replace(/\/{2,}/g, '/');
+}
+
 export async function uploadPdfToSupabase(hash: string, pdfBuffer: ArrayBuffer) {
     const cfg = getConfig();
     if (!cfg) throw new Error('Supabase is not configured');
-    const path = `compiled/${hash}.pdf`;
+    const path = normalizeStoragePath(`compiled/${hash}.pdf`);
     const response = await fetch(`${cfg.url}/storage/v1/object/${cfg.bucket}/${path}`, {
         method: 'POST',
         headers: {
@@ -101,8 +110,9 @@ export async function uploadPdfToSupabase(hash: string, pdfBuffer: ArrayBuffer) 
 export async function createSignedPdfUrl(path: string, expiresIn = 60 * 60 * 6) {
     const cfg = getConfig();
     if (!cfg) throw new Error('Supabase is not configured');
+    const normalizedPath = normalizeStoragePath(path);
 
-    const response = await fetch(`${cfg.url}/storage/v1/object/sign/${cfg.bucket}/${path}`, {
+    const response = await fetch(`${cfg.url}/storage/v1/object/sign/${cfg.bucket}/${normalizedPath}`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({ expiresIn }),
@@ -115,9 +125,27 @@ export async function createSignedPdfUrl(path: string, expiresIn = 60 * 60 * 6) 
     }
 
     const json = await response.json();
-    const raw = json.signedURL || json.signedUrl || json.path;
-    if (!raw) throw new Error('Signed URL missing from Supabase response');
-    return raw.startsWith('http') ? raw : `${cfg.url}${raw}`;
+    const signed = json.signedURL || json.signedUrl;
+    if (!signed || typeof signed !== 'string') {
+        throw new Error('Signed URL missing from Supabase response');
+    }
+
+    if (signed.startsWith('http')) return signed;
+
+    // Ensure we return an absolute URL with a valid Supabase Storage path.
+    let pathname = signed;
+    if (!pathname.startsWith('/')) pathname = '/' + pathname;
+    if (!pathname.startsWith('/storage/v1/')) {
+        if (pathname.startsWith('/object/')) {
+            pathname = '/storage/v1' + pathname;
+        }
+    }
+
+    const absolute = new URL(pathname, cfg.url).toString();
+    if (!absolute.includes('/storage/v1/object/')) {
+        throw new Error(`Signed URL is not a storage object URL: ${absolute}`);
+    }
+    return absolute;
 }
 
 export async function upsertResumeRecord(input: {

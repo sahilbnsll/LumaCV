@@ -75,7 +75,12 @@ export async function POST(req: NextRequest) {
 
     try {
         const cached = await getPdfCache(compileHash);
-        if (cached?.status === 'ready' && cached.userId === userId) {
+        const cachedUrlOk =
+            typeof cached?.url === 'string' &&
+            cached.url.startsWith('http') &&
+            cached.url.includes('/storage/v1/object/') &&
+            cached.url.includes('token=');
+        if (cached?.status === 'ready' && cached.userId === userId && cachedUrlOk) {
             return NextResponse.json({ ok: true, status: 'ready', url: cached.url });
         }
 
@@ -108,6 +113,7 @@ export async function POST(req: NextRequest) {
                 await setPdfCache(compileHash, {
                     status: 'ready',
                     url: signedUrl,
+                    path,
                     userId,
                     createdAt: now,
                 });

@@ -5,6 +5,9 @@ export type PreviewJobStatus = 'queued' | 'compiling' | 'ready' | 'failed';
 export type PdfCacheRecord = {
     status: 'ready';
     url: string;
+    // Object path inside the bucket (e.g. "compiled/<hash>.pdf"). Used to re-sign
+    // without recompiling when a signed URL expires or was cached incorrectly.
+    path?: string;
     userId: string;
     createdAt: string;
 };
