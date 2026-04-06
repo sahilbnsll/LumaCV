@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { Analytics } from '@vercel/analytics/next';
+import { AuthProvider } from '@/components/auth-provider';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'LumaCV — AI-Powered Resume Builder',
@@ -17,14 +15,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const supabaseAnonKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster position="top-center" theme="dark" />
-        </ThemeProvider>
-        <Analytics />
+      <body className="antialiased">
+        <AuthProvider url={supabaseUrl} anonKey={supabaseAnonKey}>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+            {children}
+            <Toaster position="top-center" theme="dark" />
+          </ThemeProvider>
+          <Analytics />
+        </AuthProvider>
       </body>
     </html>
   );

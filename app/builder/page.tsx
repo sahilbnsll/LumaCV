@@ -7,19 +7,16 @@ import { Step2Details } from './step2-details';
 import { Step3Processing } from './step3-processing';
 import { Step4Preview } from './step4-preview';
 import { useEffect, useState } from 'react';
-import { Loader2, Sparkles, Moon, Sun, RotateCcw } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Loader2, Sparkles, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { AuthButtons } from '@/components/auth-buttons';
 
 export default function BuilderPage() {
     const currentStep = useAppStore((state) => state.step);
     const [ready, setReady] = useState(false);
-    const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => { setMounted(true); }, []);
 
     useEffect(() => {
         if (useAppStore.persist.hasHydrated()) {
@@ -54,6 +51,7 @@ export default function BuilderPage() {
                         LumaCV
                     </Link>
                     <div className="flex items-center gap-2">
+                        <AuthButtons />
                         <Button
                             variant="ghost"
                             size="sm"
@@ -66,16 +64,7 @@ export default function BuilderPage() {
                         >
                             <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset
                         </Button>
-                        {mounted && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9"
-                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            >
-                                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                            </Button>
-                        )}
+                        <ThemeToggle />
                     </div>
                 </div>
             </header>

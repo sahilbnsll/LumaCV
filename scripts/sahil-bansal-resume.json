@@ -1,0 +1,90 @@
+{
+  "personalInfo": {
+    "name": "Sahil Bansal",
+    "title": "Software Engineer - DevOps & Cloud Infrastructure",
+    "tagline": "Focused on infrastructure automation, reliability, and cost-efficient cloud systems",
+    "phone": "+91 8949823046",
+    "email": "sahilbansal.sb24@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/sahilbansal24",
+    "portfolio": "https://sahilbansal.vercel.app"
+  },
+  "summary": "DevOps / Cloud Engineer with 3 years of global remote experience owning production AWS infrastructure end-to-end, from architecture through on-call. Delivered $40K/year in cloud cost savings, cut provisioning time by 70%, and accelerated 30% faster deployment cycles through IaC-first automation and high-leverage CI/CD redesigns. Equally effective owning the reliability contract through SLOs, alerting, and incident response, and the developer experience through pipeline design, security gates, and self-service platform tooling. Core strengths: AWS (ECS, RDS, VPC, IAM), Terraform, GitHub Actions, container security, and data-platform engineering.",
+  "skills": [
+    { "category": "Cloud / AWS", "items": "ECS, Lambda, RDS, S3, IAM, VPC, CloudFront, Route 53, Fargate Spot, Savings Plans" },
+    { "category": "Infrastructure as Code", "items": "Terraform (modules, remote state, drift management), CloudFormation" },
+    { "category": "CI/CD", "items": "GitHub Actions, Jenkins, parallelized pipelines, semantic versioning, PR-scoped validation" },
+    { "category": "Containers & Orchestration", "items": "Docker, ECS, Kubernetes (EKS), container security scanning (Trivy, CVE-Binary)" },
+    { "category": "Observability", "items": "Prometheus, Grafana, CloudWatch, SLO/alerting design" },
+    { "category": "Data Platforms", "items": "ClickHouse, Dagster, DLT, DBT, Metabase, ELT pipeline design and operation" },
+    { "category": "Security / Identity", "items": "IAM Identity Center (SSO), least-privilege policies, DevSecOps, Auth0, secrets management" },
+    { "category": "Languages", "items": "Python (automation, scripting, infra tooling), Bash, HCL, YAML, SQL" },
+    { "category": "Databases", "items": "PostgreSQL, MySQL, MongoDB, ClickHouse" }
+  ],
+  "keyMetrics": [],
+  "experience": [
+    {
+      "title": "DevOps Engineer",
+      "company": "Buyogo AG",
+      "location": "Zurich, CH (Remote)",
+      "dates": "Jun 2024 - Present",
+      "bullets": [
+        "Saved $40K/year (40% AWS spend reduction) by adopting Fargate Spot, Savings Plans, eliminating unused resources and ECS task right-sizing across 20+ services, validated against SLO dashboards with zero reliability regression.",
+        "Cut environment provisioning time by 70% by architecting a Terraform-first IaC platform covering 100% of ECS, RDS, SQS, IAM, and VPC resources across 4 environments in reusable, versioned modules.",
+        "Accelerated deployment frequency by 30% by overhauling GitHub Actions CI/CD across 20+ repositories, introducing parallelized test stages, PR-scoped smoke tests, and semantic versioning, reducing average pipeline duration from 15 min to 6 min.",
+        "Sustained 99.99% availability on a multi-tenant FTP ingestion platform processing 1000+ requests/day for 100+ global suppliers, enforcing per-tenant isolation, per-user credentials, and full API audit trails.",
+        "Reduced analytics query latency from minutes to milliseconds by designing a real-time ELT lakehouse from MySQL and MongoDB into ClickHouse via Dagster and DLT, powering executive dashboards.",
+        "Eliminated long-lived credentials org-wide by enforcing AWS IAM Identity Center (SSO) across 30 accounts/roles and authoring least-privilege IAM policies; implemented service-level observability with Prometheus, Grafana, and ECS deployment alerting.",
+        "Executed zero-downtime Auth0 tenant migration for 1,000+ user accounts during a corporate rebrand with no password resets and no user impact."
+      ]
+    },
+    {
+      "title": "DevOps Analyst",
+      "company": "Capgemini",
+      "location": "Pune, IND",
+      "dates": "Jan 2024 - Jun 2024",
+      "bullets": [
+        "Raised deployment success rate by 15% by refactoring monolithic CI/CD pipelines into modular, independently failing stages with targeted fault isolation.",
+        "Cut incident response time by 20% by integrating Prometheus alerting with a Slack-based on-call workflow, replacing manual triage."
+      ]
+    },
+    {
+      "title": "Software Engineer - DevOps",
+      "company": "Qapita Fintech",
+      "location": "Hyderabad, IND",
+      "dates": "Jun 2023 - Nov 2023",
+      "bullets": [
+        "Blocked 95% of critical CVEs from reaching production by embedding container security gates into AWS CodeBuild pipelines as hard-fail quality gates enforcing a zero-tolerance policy on HIGH and CRITICAL severity findings.",
+        "Improved log query performance by 30% and reduced per-GB storage cost by 45% by migrating centralized logging from EBS-backed volumes to AWS EFS, enabling elastic scaling without pre-provisioning."
+      ]
+    }
+  ],
+  "internships": [],
+  "education": [
+    {
+      "institution": "University of Petroleum and Energy Studies",
+      "degree": "B.Tech in Computer Science and Engineering",
+      "fieldOfStudy": "DevOps & Cloud Specialization",
+      "dates": "2019 - 2023",
+      "gpa": "7.86/10"
+    }
+  ],
+  "projects": [],
+  "certifications": [
+    { "name": "DevOps on AWS Specialization", "issuer": "Amazon Web Services (Coursera)" },
+    { "name": "Agile with Atlassian Jira", "issuer": "Atlassian" },
+    { "name": "Postman API Fundamentals", "issuer": "Postman" }
+  ],
+  "achievements": [],
+  "publications": [],
+  "openSource": [],
+  "leadership": [],
+  "volunteering": [],
+  "conferences": [],
+  "languages": [],
+  "interests": [],
+  "products": [],
+  "devopsContributions": [],
+  "securityContributions": [],
+  "additionalInfo": {},
+  "customSections": []
+}

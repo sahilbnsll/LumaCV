@@ -1,31 +1,247 @@
 "use client";
 
-import { useForm, useFieldArray, UseFormReturn } from 'react-hook-form';
+import { useEffect, useRef, useState } from 'react';
+import { useFieldArray, useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ResumeData, ResumeDataSchema } from '@/lib/resume-schema';
-import { useAppStore } from '@/lib/store';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Save } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp, Plus, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useAppStore } from '@/lib/store';
+import { ResumeData, ResumeDataSchema } from '@/lib/resume-schema';
+
+type ArraySectionName =
+    | 'skills'
+    | 'keyMetrics'
+    | 'experience'
+    | 'internships'
+    | 'education'
+    | 'projects'
+    | 'certifications'
+    | 'achievements'
+    | 'publications'
+    | 'openSource'
+    | 'leadership'
+    | 'volunteering'
+    | 'conferences'
+    | 'languages'
+    | 'interests'
+    | 'products'
+    | 'customSections';
+
 const emptyResumeData: ResumeData = {
-    personalInfo: { name: '', email: '', phone: '', linkedin: '', portfolio: '', title: '', tagline: '' },
+    personalInfo: {
+        name: '',
+        email: '',
+        phone: '',
+        linkedin: '',
+        github: '',
+        portfolio: '',
+        title: '',
+        tagline: '',
+        location: '',
+    },
     summary: '',
+    techStackSummary: '',
+    sectionOrder: ['summary', 'techStackSummary', 'skills', 'keyMetrics', 'experience', 'internships', 'education', 'projects', 'certifications', 'achievements', 'openSource', 'publications', 'leadership', 'volunteering', 'conferences', 'languages', 'interests', 'products', 'devopsContributions', 'securityContributions', 'additionalInfo', 'customSections'],
     skills: [{ category: '', items: '' }],
+    keyMetrics: [],
     experience: [{ title: '', company: '', location: '', dates: '', bullets: [''] }],
-    education: { institution: '', degree: '', dates: '' },
+    internships: [],
+    education: [{ institution: '', degree: '', fieldOfStudy: '', location: '', dates: '', gpa: '', coursework: '', honors: '' }],
+    projects: [],
     certifications: [],
+    achievements: [],
+    publications: [],
+    openSource: [],
+    leadership: [],
+    volunteering: [],
+    conferences: [],
+    languages: [],
+    interests: [],
+    products: [],
+    devopsContributions: [],
+    securityContributions: [],
+    additionalInfo: {
+        availability: '',
+        workAuthorization: '',
+        relocation: '',
+        travel: '',
+        notes: '',
+    },
+    customSections: [],
 };
 
+function CollapsibleCard({
+    title,
+    defaultOpen = false,
+    children,
+    actionButton,
+}: {
+    title: string;
+    defaultOpen?: boolean;
+    children: React.ReactNode;
+    actionButton?: React.ReactNode;
+}) {
+    const [open, setOpen] = useState(defaultOpen);
+
+    return (
+        <Card>
+            <CardHeader
+                className="flex cursor-pointer select-none flex-row items-center justify-between"
+                onClick={(event) => {
+                    if ((event.target as HTMLElement).closest('.action-btn-no-toggle')) return;
+                    setOpen((prev) => !prev);
+                }}
+            >
+                <CardTitle className="flex items-center gap-2">
+                    {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    {title}
+                </CardTitle>
+                {actionButton ? <div className="action-btn-no-toggle">{actionButton}</div> : null}
+            </CardHeader>
+            {open ? <CardContent className="space-y-6">{children}</CardContent> : null}
+        </Card>
+    );
+}
+
+function DynamicSectionList({
+    title,
+    form,
+    name,
+    defaultOpen,
+    emptyItem,
+    renderItem,
+}: {
+    title: string;
+    form: UseFormReturn<ResumeData>;
+    name: ArraySectionName;
+    defaultOpen?: boolean;
+    emptyItem: ResumeData[ArraySectionName][number];
+    renderItem: (index: number) => React.ReactNode;
+}) {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: name as never,
+    });
+
+    return (
+        <CollapsibleCard
+            title={title}
+            defaultOpen={defaultOpen}
+            actionButton={
+                <Button type="button" variant="outline" size="sm" onClick={() => append(emptyItem)}>
+                    <Plus className="mr-2 h-4 w-4" /> Add
+                </Button>
+            }
+        >
+            <div className="space-y-6">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="relative space-y-4 rounded-lg border bg-gray-50/50 p-4 dark:bg-gray-900/50">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-2 top-2 text-red-500 hover:text-red-700"
+                            onClick={() => remove(index)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <div className="pr-8">{renderItem(index)}</div>
+                    </div>
+                ))}
+                {fields.length === 0 ? (
+                    <div className="flex flex-col items-center rounded border border-dashed py-4 text-center text-sm text-muted-foreground">
+                        <p>No entries yet.</p>
+                        <Button type="button" variant="link" onClick={() => append(emptyItem)}>
+                            Add one now
+                        </Button>
+                    </div>
+                ) : null}
+            </div>
+        </CollapsibleCard>
+    );
+}
+
+function NestedBulletList({
+    form,
+    path,
+    buttonLabel = 'Add Bullet',
+    placeholder,
+}: {
+    form: UseFormReturn<ResumeData>;
+    path: string;
+    buttonLabel?: string;
+    placeholder?: string;
+}) {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: path as never,
+    });
+
+    return (
+        <div className="space-y-2">
+            {fields.map((item, index) => (
+                <div key={item.id} className="flex gap-2">
+                    <Input {...form.register(`${path}.${index}` as never)} placeholder={placeholder} />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                        <Trash2 className="h-3 w-3" />
+                    </Button>
+                </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => append('')} className="mt-2">
+                <Plus className="mr-2 h-3 w-3" /> {buttonLabel}
+            </Button>
+        </div>
+    );
+}
+
+function ExperienceFields({
+    form,
+    basePath,
+    organizationLabel,
+}: {
+    form: UseFormReturn<ResumeData>;
+    basePath: `experience.${number}` | `internships.${number}`;
+    organizationLabel: string;
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input {...form.register(`${basePath}.title`)} placeholder="DevOps Engineer" />
+                </div>
+                <div className="space-y-2">
+                    <Label>{organizationLabel}</Label>
+                    <Input {...form.register(`${basePath}.company`)} placeholder="Company or Organization" />
+                </div>
+                <div className="space-y-2">
+                    <Label>Dates</Label>
+                    <Input {...form.register(`${basePath}.dates`)} placeholder="Jan 2023 - Present" />
+                </div>
+                <div className="space-y-2">
+                    <Label>Location</Label>
+                    <Input {...form.register(`${basePath}.location`)} placeholder="Bengaluru, India / Remote" />
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Impact Bullets</Label>
+                <NestedBulletList form={form} path={`${basePath}.bullets`} placeholder="Improved deployment speed by 40% using GitHub Actions and Docker" />
+            </div>
+        </div>
+    );
+}
 
 export function ResumeForm() {
-    const resumeData = useAppStore((s) => s.resumeData);
-    const setResumeData = useAppStore((s) => s.setResumeData);
+    const resumeData = useAppStore((state) => state.resumeData);
+    const setResumeData = useAppStore((state) => state.setResumeData);
+    const [autosaveState, setAutosaveState] = useState<'idle' | 'saving' | 'saved' | 'invalid'>('idle');
+    const autosaveTimer = useRef<number | null>(null);
 
     const form = useForm<ResumeData>({
         resolver: zodResolver(ResumeDataSchema),
@@ -33,271 +249,632 @@ export function ResumeForm() {
         mode: 'onBlur',
     });
 
-    // Explicitly reset form when resumeData becomes available (after parse or hydration).
-    // We track whether we've already synced this data to avoid resetting user edits.
     const syncedRef = useRef<string | null>(null);
     useEffect(() => {
         if (!resumeData) return;
-        const key = resumeData.personalInfo.name + '|' + resumeData.experience.length;
+        const key = `${resumeData.personalInfo.name}|${resumeData.experience.length}|${resumeData.education.length}`;
         if (syncedRef.current === key) return;
         syncedRef.current = key;
-        // Use setTimeout to ensure DOM refs from register() are attached
         setTimeout(() => form.reset(resumeData), 0);
     }, [resumeData, form]);
 
-    const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({
-        control: form.control,
-        name: 'experience'
-    });
-
-    const { fields: skillFields, append: appendSkill, remove: removeSkill } = useFieldArray({
-        control: form.control,
-        name: 'skills'
-    });
+    useEffect(() => {
+        const subscription = form.watch((values) => {
+            if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+            setAutosaveState('saving');
+            autosaveTimer.current = window.setTimeout(() => {
+                const parsed = ResumeDataSchema.safeParse(values);
+                if (parsed.success) {
+                    setResumeData(parsed.data);
+                    setAutosaveState('saved');
+                } else {
+                    setAutosaveState('invalid');
+                }
+            }, 500);
+        });
+        return () => {
+            subscription.unsubscribe();
+            if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+        };
+    }, [form, setResumeData]);
 
     const onSubmit = (data: ResumeData) => {
         setResumeData(data);
-        toast.success('Resume details saved!');
+        setAutosaveState('saved');
+        toast.success('Resume details saved.');
     };
 
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Personal Info */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" {...form.register('personalInfo.name')} />
-                        {form.formState.errors.personalInfo?.name && (
-                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.name.message}</p>
-                        )}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="rounded-lg border bg-muted/20 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 className="text-sm font-semibold">Core Sections</h3>
+                        <p className="text-xs text-muted-foreground">Focus on the essentials first: header, summary, skills, experience, education, and projects.</p>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" {...form.register('personalInfo.email')} />
-                        {form.formState.errors.personalInfo?.email && (
-                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.email.message}</p>
-                        )}
+                    <div className="text-xs text-muted-foreground">
+                        {autosaveState === 'saving' && 'Autosaving…'}
+                        {autosaveState === 'saved' && 'All changes saved'}
+                        {autosaveState === 'invalid' && 'Draft changed - fix validation issues to save'}
+                        {autosaveState === 'idle' && 'Autosave ready'}
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
-                        <Input id="phone" {...form.register('personalInfo.phone')} />
-                        {form.formState.errors.personalInfo?.phone && (
-                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.phone.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="linkedin">LinkedIn</Label>
-                        <Input id="linkedin" {...form.register('personalInfo.linkedin')} />
-                        {form.formState.errors.personalInfo?.linkedin && (
-                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.linkedin.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="portfolio">Portfolio</Label>
-                        <Input id="portfolio" {...form.register('personalInfo.portfolio')} />
-                        {form.formState.errors.personalInfo?.portfolio && (
-                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.portfolio.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="title">Job Title</Label>
-                        <Input id="title" {...form.register('personalInfo.title')} />
-                        {form.formState.errors.personalInfo?.title && (
-                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.title.message}</p>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Summary */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Professional Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Textarea
-                        {...form.register('summary')}
-                        className="min-h-[100px]"
-                        placeholder="Experienced software engineer with..."
-                    />
-                    {form.formState.errors.summary && (
-                        <p className="text-xs text-red-500">{form.formState.errors.summary.message}</p>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Experience */}
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Experience</CardTitle>
-                    <Button type="button" variant="outline" size="sm" onClick={() => appendExp({ title: '', company: '', dates: '', location: '', bullets: [''] })}>
-                        <Plus className="h-4 w-4 mr-2" /> Add Job
-                    </Button>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {expFields.map((field, index) => (
-                        <div key={field.id} className="border p-4 rounded-lg space-y-4 relative">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                                onClick={() => removeExp(index)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Job Title</Label>
-                                    <Input {...form.register(`experience.${index}.title`)} />
-                                    {form.formState.errors.experience?.[index]?.title && (
-                                        <p className="text-xs text-red-500">{form.formState.errors.experience[index]?.title?.message}</p>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Company</Label>
-                                    <Input {...form.register(`experience.${index}.company`)} />
-                                    {form.formState.errors.experience?.[index]?.company && (
-                                        <p className="text-xs text-red-500">{form.formState.errors.experience[index]?.company?.message}</p>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Dates</Label>
-                                    <Input {...form.register(`experience.${index}.dates`)} placeholder="Jan 2020 - Present" />
-                                    {form.formState.errors.experience?.[index]?.dates && (
-                                        <p className="text-xs text-red-500">{form.formState.errors.experience[index]?.dates?.message}</p>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Location</Label>
-                                    <Input {...form.register(`experience.${index}.location`)} />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Achievements (Bullet Points)</Label>
-                                <NestedBulletList nestIndex={index} form={form} />
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-
-            {/* Skills */}
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Skills</CardTitle>
-                    <Button type="button" variant="outline" size="sm" onClick={() => appendSkill({ category: '', items: '' })}>
-                        <Plus className="h-4 w-4 mr-2" /> Add Category
-                    </Button>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {skillFields.map((field, index) => (
-                        <div key={field.id} className="flex gap-4 items-start">
-                            <div className="flex-1 space-y-2">
-                                <Label>Category</Label>
-                                <Input {...form.register(`skills.${index}.category`)} placeholder="Languages, Tools..." />
-                                {form.formState.errors.skills?.[index]?.category && (
-                                    <p className="text-xs text-red-500">{form.formState.errors.skills[index]?.category?.message}</p>
-                                )}
-                            </div>
-                            <div className="flex-[2] space-y-2">
-                                <Label>Items</Label>
-                                <Input {...form.register(`skills.${index}.items`)} placeholder="Java, Python, React..." />
-                                {form.formState.errors.skills?.[index]?.items && (
-                                    <p className="text-xs text-red-500">{form.formState.errors.skills[index]?.items?.message}</p>
-                                )}
-                            </div>
-                            <Button type="button" variant="ghost" size="icon" className="mt-8" onClick={() => removeSkill(index)}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-
-            {/* Education */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Education</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Institution</Label>
-                        <Input {...form.register('education.institution')} />
-                        {form.formState.errors.education?.institution && (
-                            <p className="text-xs text-red-500">{form.formState.errors.education.institution.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Degree</Label>
-                        <Input {...form.register('education.degree')} />
-                        {form.formState.errors.education?.degree && (
-                            <p className="text-xs text-red-500">{form.formState.errors.education.degree.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Dates</Label>
-                        <Input {...form.register('education.dates')} />
-                        {form.formState.errors.education?.dates && (
-                            <p className="text-xs text-red-500">{form.formState.errors.education.dates.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label>GPA (Optional)</Label>
-                        <Input {...form.register('education.gpa')} />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Button type="submit" className="w-full" size="lg">
-                <Save className="mr-2 h-4 w-4" /> Save Changes
-            </Button>
-        </form>
-    );
-}
-
-interface NestedBulletListProps {
-    nestIndex: number;
-    form: UseFormReturn<ResumeData>;
-}
-
-
-function NestedBulletList({ nestIndex, form }: NestedBulletListProps) {
-    // RHF's FieldArrayPath<ResumeData> only lists top-level arrays; nested bullet paths are valid at runtime.
-    const { fields, append, remove } = useFieldArray({
-        control: form.control,
-        // @ts-expect-error — dynamic `experience[n].bullets` path
-        name: `experience.${nestIndex}.bullets`,
-    });
-
-    return (
-        <div className="space-y-2">
-            {fields.map((item, k) => (
-                <div key={item.id} className="flex gap-2">
-                    <Input {...form.register(`experience.${nestIndex}.bullets.${k}`)} />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(k)}>
-                        <Trash2 className="h-3 w-3" />
-                    </Button>
                 </div>
-            ))}
-            {form.formState.errors.experience?.[nestIndex]?.bullets && (
-                <p className="text-xs text-red-500">{form.formState.errors.experience[nestIndex]?.bullets?.message}</p>
-            )}
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append("New achievement" as never)}
-                className="mt-2"
-            >
-                <Plus className="h-3 w-3 mr-2" /> Add Bullet
-            </Button>
-        </div>
+            </div>
+
+            <CollapsibleCard title="Personal Information" defaultOpen>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label>Full Name</Label>
+                        <Input {...form.register('personalInfo.name')} />
+                        {form.formState.errors.personalInfo?.name ? <p className="text-xs text-red-500">{form.formState.errors.personalInfo.name.message}</p> : null}
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Job Title</Label>
+                        <Input {...form.register('personalInfo.title')} placeholder="Senior Backend Engineer" />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label>Tagline</Label>
+                        <Input {...form.register('personalInfo.tagline')} placeholder="Platform engineer building reliable cloud systems" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input type="email" {...form.register('personalInfo.email')} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input {...form.register('personalInfo.phone')} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Location</Label>
+                        <Input {...form.register('personalInfo.location')} placeholder="Mumbai, India" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>LinkedIn</Label>
+                        <Input {...form.register('personalInfo.linkedin')} placeholder="https://linkedin.com/in/username" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>GitHub</Label>
+                        <Input {...form.register('personalInfo.github')} placeholder="https://github.com/username" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Portfolio / Website</Label>
+                        <Input {...form.register('personalInfo.portfolio')} placeholder="https://your-portfolio.com" />
+                    </div>
+                </div>
+            </CollapsibleCard>
+
+            <CollapsibleCard title="Professional Summary" defaultOpen>
+                <Textarea {...form.register('summary')} className="min-h-[120px]" placeholder="Summarize total experience, domains, top tools, and strongest impact in 2-4 lines." />
+                {form.formState.errors.summary ? <p className="text-xs text-red-500">{form.formState.errors.summary.message}</p> : null}
+            </CollapsibleCard>
+
+            <CollapsibleCard title="Tech Stack Summary" defaultOpen>
+                <Input {...form.register('techStackSummary')} placeholder="AWS | Terraform | Kubernetes | Docker | GitHub Actions | Prometheus" />
+            </CollapsibleCard>
+
+            <DynamicSectionList
+                title="Skills"
+                form={form}
+                name="skills"
+                defaultOpen
+                emptyItem={{ category: '', items: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="space-y-2">
+                            <Label>Category</Label>
+                            <Input {...form.register(`skills.${index}.category`)} placeholder="Languages / Cloud / Databases" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Items</Label>
+                            <Input {...form.register(`skills.${index}.items`)} placeholder="Python, TypeScript, Go" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Key Metrics"
+                form={form}
+                name="keyMetrics"
+                emptyItem={{ label: '', value: '', context: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="space-y-2">
+                            <Label>Label</Label>
+                            <Input {...form.register(`keyMetrics.${index}.label`)} placeholder="Infrastructure Cost" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Value</Label>
+                            <Input {...form.register(`keyMetrics.${index}.value`)} placeholder="Reduced by 35%" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Context</Label>
+                            <Input {...form.register(`keyMetrics.${index}.context`)} placeholder="After workload rightsizing and reserved capacity planning" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Work Experience"
+                form={form}
+                name="experience"
+                defaultOpen
+                emptyItem={{ title: '', company: '', location: '', dates: '', bullets: [''] }}
+                renderItem={(index) => <ExperienceFields form={form} basePath={`experience.${index}`} organizationLabel="Company" />}
+            />
+
+            <DynamicSectionList
+                title="Internships"
+                form={form}
+                name="internships"
+                emptyItem={{ title: '', company: '', location: '', dates: '', bullets: [''] }}
+                renderItem={(index) => <ExperienceFields form={form} basePath={`internships.${index}`} organizationLabel="Organization" />}
+            />
+
+            <DynamicSectionList
+                title="Education"
+                form={form}
+                name="education"
+                defaultOpen
+                emptyItem={{ institution: '', degree: '', fieldOfStudy: '', location: '', dates: '', gpa: '', coursework: '', honors: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Institution</Label>
+                            <Input {...form.register(`education.${index}.institution`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Degree</Label>
+                            <Input {...form.register(`education.${index}.degree`)} placeholder="Master of Science" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Field of Study</Label>
+                            <Input {...form.register(`education.${index}.fieldOfStudy`)} placeholder="Computer Science" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Location</Label>
+                            <Input {...form.register(`education.${index}.location`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Dates</Label>
+                            <Input {...form.register(`education.${index}.dates`)} placeholder="2022 - 2024" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>GPA / Percentage</Label>
+                            <Input {...form.register(`education.${index}.gpa`)} />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Relevant Coursework</Label>
+                            <Input {...form.register(`education.${index}.coursework`)} placeholder="Distributed Systems, Computer Networks" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Honors</Label>
+                            <Input {...form.register(`education.${index}.honors`)} placeholder="Dean's List, Merit Scholarship" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Projects"
+                form={form}
+                name="projects"
+                emptyItem={{ name: '', description: '', techStack: '', role: '', dates: '', impact: '', link: '', bullets: [] }}
+                renderItem={(index) => (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Project Name</Label>
+                                <Input {...form.register(`projects.${index}.name`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Your Role</Label>
+                                <Input {...form.register(`projects.${index}.role`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Dates</Label>
+                                <Input {...form.register(`projects.${index}.dates`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Project Link</Label>
+                                <Input {...form.register(`projects.${index}.link`)} />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Description</Label>
+                                <Textarea {...form.register(`projects.${index}.description`)} className="min-h-[90px]" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Tech Stack</Label>
+                                <Input {...form.register(`projects.${index}.techStack`)} placeholder="Next.js, Node.js, PostgreSQL" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Impact / Result</Label>
+                                <Input {...form.register(`projects.${index}.impact`)} placeholder="Used by 5k+ students across 3 campuses" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Highlights</Label>
+                            <NestedBulletList form={form} path={`projects.${index}.bullets`} placeholder="Built ATS-friendly LaTeX output with multi-template support" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <div className="rounded-lg border bg-muted/20 p-4">
+                <h3 className="text-sm font-semibold">Advanced Sections</h3>
+                <p className="text-xs text-muted-foreground">Use these when they genuinely strengthen the resume. Core sections should stay strongest.</p>
+            </div>
+
+            <DynamicSectionList
+                title="Certifications"
+                form={form}
+                name="certifications"
+                emptyItem={{ name: '', issuer: '', date: '', expiryDate: '', credentialId: '', link: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Certification Name</Label>
+                            <Input {...form.register(`certifications.${index}.name`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Issuer</Label>
+                            <Input {...form.register(`certifications.${index}.issuer`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Issued</Label>
+                            <Input {...form.register(`certifications.${index}.date`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Expiry Date</Label>
+                            <Input {...form.register(`certifications.${index}.expiryDate`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Credential ID</Label>
+                            <Input {...form.register(`certifications.${index}.credentialId`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Credential Link</Label>
+                            <Input {...form.register(`certifications.${index}.link`)} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Achievements & Awards"
+                form={form}
+                name="achievements"
+                emptyItem={{ name: '', context: '', date: '', rank: '', description: '', link: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Name</Label>
+                            <Input {...form.register(`achievements.${index}.name`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Context</Label>
+                            <Input {...form.register(`achievements.${index}.context`)} placeholder="Hackathon / Company / University" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input {...form.register(`achievements.${index}.date`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Rank / Result</Label>
+                            <Input {...form.register(`achievements.${index}.rank`)} />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Description</Label>
+                            <Textarea {...form.register(`achievements.${index}.description`)} className="min-h-[90px]" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Link</Label>
+                            <Input {...form.register(`achievements.${index}.link`)} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Open Source Contributions"
+                form={form}
+                name="openSource"
+                emptyItem={{ project: '', contribution: '', dates: '', impact: '', link: '', bullets: [] }}
+                renderItem={(index) => (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Project / Repository</Label>
+                                <Input {...form.register(`openSource.${index}.project`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Contribution Type</Label>
+                                <Input {...form.register(`openSource.${index}.contribution`)} placeholder="Maintainer, PR author, feature contributor" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Dates</Label>
+                                <Input {...form.register(`openSource.${index}.dates`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Link</Label>
+                                <Input {...form.register(`openSource.${index}.link`)} />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Impact</Label>
+                                <Input {...form.register(`openSource.${index}.impact`)} placeholder="Merged 12 PRs improving test reliability and docs" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Details</Label>
+                            <NestedBulletList form={form} path={`openSource.${index}.bullets`} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Publications & Blogs"
+                form={form}
+                name="publications"
+                emptyItem={{ title: '', platform: '', date: '', authors: '', description: '', link: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Title</Label>
+                            <Input {...form.register(`publications.${index}.title`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Platform / Journal / Blog</Label>
+                            <Input {...form.register(`publications.${index}.platform`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input {...form.register(`publications.${index}.date`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Authors</Label>
+                            <Input {...form.register(`publications.${index}.authors`)} />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Description</Label>
+                            <Textarea {...form.register(`publications.${index}.description`)} className="min-h-[90px]" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Link</Label>
+                            <Input {...form.register(`publications.${index}.link`)} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Leadership"
+                form={form}
+                name="leadership"
+                emptyItem={{ role: '', organization: '', location: '', dates: '', bullets: [] }}
+                renderItem={(index) => (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div className="space-y-2">
+                                <Label>Role</Label>
+                                <Input {...form.register(`leadership.${index}.role`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Organization</Label>
+                                <Input {...form.register(`leadership.${index}.organization`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Location</Label>
+                                <Input {...form.register(`leadership.${index}.location`)} />
+                            </div>
+                            <div className="space-y-2 md:col-span-3">
+                                <Label>Dates</Label>
+                                <Input {...form.register(`leadership.${index}.dates`)} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Details</Label>
+                            <NestedBulletList form={form} path={`leadership.${index}.bullets`} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Volunteering"
+                form={form}
+                name="volunteering"
+                emptyItem={{ role: '', organization: '', location: '', dates: '', bullets: [] }}
+                renderItem={(index) => (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div className="space-y-2">
+                                <Label>Role</Label>
+                                <Input {...form.register(`volunteering.${index}.role`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Organization</Label>
+                                <Input {...form.register(`volunteering.${index}.organization`)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Location</Label>
+                                <Input {...form.register(`volunteering.${index}.location`)} />
+                            </div>
+                            <div className="space-y-2 md:col-span-3">
+                                <Label>Dates</Label>
+                                <Input {...form.register(`volunteering.${index}.dates`)} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Details</Label>
+                            <NestedBulletList form={form} path={`volunteering.${index}.bullets`} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Conferences & Talks"
+                form={form}
+                name="conferences"
+                emptyItem={{ name: '', topic: '', role: '', date: '', location: '', description: '', link: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Event Name</Label>
+                            <Input {...form.register(`conferences.${index}.name`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Topic</Label>
+                            <Input {...form.register(`conferences.${index}.topic`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Role</Label>
+                            <Input {...form.register(`conferences.${index}.role`)} placeholder="Speaker / Panelist / Attendee" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input {...form.register(`conferences.${index}.date`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Location</Label>
+                            <Input {...form.register(`conferences.${index}.location`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Link</Label>
+                            <Input {...form.register(`conferences.${index}.link`)} />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Description</Label>
+                            <Textarea {...form.register(`conferences.${index}.description`)} className="min-h-[90px]" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Languages"
+                form={form}
+                name="languages"
+                emptyItem={{ language: '', proficiency: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Language</Label>
+                            <Input {...form.register(`languages.${index}.language`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Proficiency</Label>
+                            <Input {...form.register(`languages.${index}.proficiency`)} placeholder="Native / Fluent / Intermediate" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Interests & Hobbies"
+                form={form}
+                name="interests"
+                emptyItem={{ name: '', details: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Interest</Label>
+                            <Input {...form.register(`interests.${index}.name`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Details</Label>
+                            <Input {...form.register(`interests.${index}.details`)} placeholder="Competitive chess, technical blogging, mentoring" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <DynamicSectionList
+                title="Products / Systems Owned"
+                form={form}
+                name="products"
+                emptyItem={{ name: '', responsibility: '', scale: '', impact: '' }}
+                renderItem={(index) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Name</Label>
+                            <Input {...form.register(`products.${index}.name`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Responsibility</Label>
+                            <Input {...form.register(`products.${index}.responsibility`)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Scale</Label>
+                            <Input {...form.register(`products.${index}.scale`)} placeholder="50k MAU, 2TB/day, global fleet" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Impact</Label>
+                            <Input {...form.register(`products.${index}.impact`)} />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <CollapsibleCard title="DevOps / SRE Contributions">
+                <NestedBulletList form={form} path="devopsContributions" buttonLabel="Add Contribution" placeholder="Built reusable CI/CD pipelines with GitHub Actions and Terraform" />
+            </CollapsibleCard>
+
+            <CollapsibleCard title="Security / Compliance Work">
+                <NestedBulletList form={form} path="securityContributions" buttonLabel="Add Contribution" placeholder="Implemented IAM least-privilege policies and audit controls" />
+            </CollapsibleCard>
+
+            <CollapsibleCard title="Additional Information">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label>Availability</Label>
+                        <Input {...form.register('additionalInfo.availability')} placeholder="Immediate / 30 days notice" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Work Authorization</Label>
+                        <Input {...form.register('additionalInfo.workAuthorization')} placeholder="Authorized to work in India / US" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Relocation</Label>
+                        <Input {...form.register('additionalInfo.relocation')} placeholder="Open to relocate" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Travel</Label>
+                        <Input {...form.register('additionalInfo.travel')} placeholder="Open to occasional travel" />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label>Notes</Label>
+                        <Textarea {...form.register('additionalInfo.notes')} className="min-h-[90px]" />
+                    </div>
+                </div>
+            </CollapsibleCard>
+
+            <DynamicSectionList
+                title="Custom Sections"
+                form={form}
+                name="customSections"
+                emptyItem={{ title: '', items: [] }}
+                renderItem={(index) => (
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Section Title</Label>
+                            <Input {...form.register(`customSections.${index}.title`)} placeholder="References / Patents / Community" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Items</Label>
+                            <NestedBulletList form={form} path={`customSections.${index}.items`} buttonLabel="Add Item" />
+                        </div>
+                    </div>
+                )}
+            />
+
+            <div className="sticky bottom-4 z-10 pt-4">
+                <Button type="submit" className="w-full shadow-lg" size="lg">
+                    <Save className="mr-2 h-4 w-4" /> Save Resume Data
+                </Button>
+            </div>
+        </form>
     );
 }

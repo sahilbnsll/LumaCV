@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/.next_stale_*/
 /out/
 
 # production
@@ -29,16 +30,43 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+*.pid
+*.out
 
 # env files (can opt-in for committing if needed)
 .env*
 
 # vercel
 .vercel
+.turbo
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# build/test artifacts
+.artifacts/
+
+# reference repos / scratch
+reactive-resume-main/
+
+# LaTeX temp artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.nav
+*.out.ps
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.xdv
 
 # IDEs and AI tools
 .claude/
@@ -51,4 +79,8 @@ CLAUDE.md
 gemini.md
 .opencode.json
 .mcp.json
+
+# macOS
+._*
+
 *.pdf

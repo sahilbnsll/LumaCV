@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { AuthButtons } from '@/components/auth-buttons';
 import {
     ArrowRight,
     BarChart3,
@@ -41,23 +43,23 @@ const steps = [
 const features = [
     {
         icon: Layers,
-        title: 'Template studio',
-        desc: 'Modern, Classic, ATS, Executive, Minimal, Compact, Creative, and Tech consistent typography and spacing.',
+        title: 'LaTeX precision',
+        desc: 'Eight ATS-first layouts tuned for spacing, hierarchy, and recruiter readability.',
     },
     {
         icon: Zap,
-        title: 'Multi-model AI',
-        desc: 'Several frontier models with automatic failover so generation keeps working.',
+        title: 'AI tailoring',
+        desc: 'Tailor bullets and skills against a job description without rewriting your background into fiction.',
     },
     {
         icon: BarChart3,
-        title: 'Match transparency',
-        desc: 'See which JD buckets moved your score and which keywords are still missing.',
+        title: 'Match score insights',
+        desc: 'Understand what improved, what is missing, and which keywords matter most.',
     },
     {
         icon: Shield,
-        title: 'Privacy-first flow',
-        desc: 'No accounts required. Parsing runs in your browser; tailoring is ephemeral.',
+        title: 'ATS optimized',
+        desc: 'Parser-safe formatting, single-page control, and preview feedback tuned for real applications.',
     },
 ];
 
@@ -78,7 +80,7 @@ export default function LandingPage() {
                         </span>
                         LumaCV
                     </Link>
-                    <nav className="flex items-center gap-6">
+                    <nav className="flex items-center gap-3 sm:gap-6">
                         <Link
                             className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline"
                             href="#product"
@@ -97,8 +99,10 @@ export default function LandingPage() {
                         >
                             About
                         </Link>
+                        <ThemeToggle />
+                        <AuthButtons />
                         <Button asChild size="sm" className="h-9 rounded-md px-4 text-sm font-medium shadow-none">
-                            <Link href="/builder">Open builder</Link>
+                            <Link href="/builder">Start building</Link>
                         </Button>
                     </nav>
                 </div>
@@ -112,20 +116,19 @@ export default function LandingPage() {
                                 Resume builder
                             </p>
                             <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl sm:leading-[1.1]">
-                                A calm, precise way to align your resume with any role
+                                Build ATS-optimized resumes in minutes
                             </h1>
                             <p className="mx-auto mt-5 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground">
-                                Upload once, paste a job description, and get a tailored resume with ATS-aware
-                                templates and an honest match breakdown similar in spirit to polished tools, focused on clarity and control.
+                                AI-powered tailoring, LaTeX precision, recruiter-ready output, and a transparent match score that helps you improve with intent.
                             </p>
                             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                                 <Button asChild size="lg" className="h-11 min-w-[200px] rounded-md px-8 text-base font-medium">
                                     <Link href="/builder">
-                                        Start for free
+                                        Start Building
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Link>
                                 </Button>
-                                <p className="text-xs text-muted-foreground">No sign-up · LaTeX-quality PDFs</p>
+                                <p className="text-xs text-muted-foreground">AI tailoring · ATS scoring · LaTeX-quality PDFs</p>
                             </div>
                         </div>
 
@@ -133,7 +136,7 @@ export default function LandingPage() {
                             {[
                                 { k: 'Templates', v: '8' },
                                 { k: 'AI models', v: '4+' },
-                                { k: 'Your data', v: 'Ephemeral' },
+                                { k: 'Preview flow', v: 'Async' },
                             ].map((s) => (
                                 <div
                                     key={s.k}
@@ -152,7 +155,7 @@ export default function LandingPage() {
                         <div className="mb-12 max-w-xl">
                             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">How it works</h2>
                             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                                A linear flow from file to PDF each step has a single job.
+                                A linear flow with clearer feedback, live scoring, and layout controls where they matter.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -179,7 +182,7 @@ export default function LandingPage() {
                         <div className="mb-12 max-w-xl">
                             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Built for serious applications</h2>
                             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                                Everything is tuned for legibility, ATS parsing, and a professional first impression.
+                                Everything is tuned for legibility, ATS parsing, and a professional first impression without template clutter.
                             </p>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">

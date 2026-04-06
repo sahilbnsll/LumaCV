@@ -37,6 +37,8 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "reactive-resume-main",
+    ".next_stale_*"
   ]
 }

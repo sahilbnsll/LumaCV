@@ -4,32 +4,36 @@ OUTPUT: A single valid JSON object. No markdown fences, no commentary, no extra 
 
 CRITICAL RULES:
 1. Extract EVERY piece of information present. Do not skip or summarize.
-2. For missing fields, use "" (empty string) for strings, [] for arrays. NEVER use null.
-3. LinkedIn/GitHub/Portfolio URLs: Look for patterns like "linkedin.com/in/...", "github.com/...", any URL that looks like a portfolio or personal website. Extract the FULL URL including https://.
-4. If you see text like "Portfolio" or "Website" near a URL or as a hyperlink label, capture the associated URL.
-5. Phone numbers: Extract in original format (e.g., "+1-555-123-4567" or "(555) 123-4567").
-6. Email: Extract the full email address.
-7. Skills: Group into logical categories (e.g., "Languages", "Frameworks", "Cloud & DevOps", "Tools"). Items within each category should be comma-separated.
-8. Experience bullets: Preserve exact metrics, percentages, dollar amounts, and time savings. Do NOT modify or paraphrase — extract verbatim.
-9. If a section is ambiguous or partially readable, extract what you can and set confidenceScore lower.
-10. Dates: Use the format as written in the resume (e.g., "Jan 2020 - Present", "2019 - 2021").
-11. "summary" must be at least 10 characters. If no explicit summary exists, synthesize one from the resume content (2-3 sentences describing the candidate's profile).
-12. "tagline" is a short descriptor like "Full Stack Developer" or "DevOps Engineer | Cloud Architect". Extract from resume header if present.
+2. For missing fields, use "" for strings, [] for arrays, and {} only for `additionalInfo`. NEVER use null.
+3. Preserve factual truth exactly. Do not invent companies, dates, links, metrics, or credentials.
+4. Preserve metrics, percentages, amounts, dates, ranks, and credential IDs verbatim when present.
+5. URLs: extract full URLs including `https://` when possible.
+6. Dates: keep the same display format used in the resume.
+7. `summary` must be at least 10 characters. If no summary exists, synthesize a short truthful summary from the resume.
+8. Multiple entries are allowed everywhere relevant: education, experience, internships, projects, certifications, publications, etc.
+9. If a section is absent, return an empty array or empty string, not a guessed section.
+10. Lower `confidenceScore` if the resume is noisy, partially unreadable, or ambiguous.
 
-REQUIRED JSON SCHEMA (follow exactly):
+JSON SCHEMA:
 {
   "personalInfo": {
     "name": "Full Name",
-    "title": "Current/Most Recent Job Title",
+    "title": "Current or recent job title",
     "tagline": "Short professional tagline if present",
+    "location": "City, Country or Remote",
     "phone": "+1-555-123-4567",
     "email": "email@example.com",
     "linkedin": "https://linkedin.com/in/username",
+    "github": "https://github.com/username",
     "portfolio": "https://portfolio-url.com"
   },
-  "summary": "Professional summary text (minimum 10 characters)",
+  "summary": "2-4 lines or synthesized truthful summary",
+  "techStackSummary": "AWS | Terraform | Kubernetes | Docker",
   "skills": [
-    { "category": "Category Name", "items": "Skill1, Skill2, Skill3" }
+    { "category": "Languages", "items": "Python, TypeScript, Go" }
+  ],
+  "keyMetrics": [
+    { "label": "Infrastructure Cost", "value": "Reduced by 35%", "context": "Using rightsizing and reserved instances" }
   ],
   "experience": [
     {
@@ -37,26 +41,148 @@ REQUIRED JSON SCHEMA (follow exactly):
       "company": "Company Name",
       "location": "City, State or Remote",
       "dates": "Start - End",
-      "bullets": [
-        "Achievement or responsibility with metrics where available"
-      ]
+      "bullets": ["Impact bullet with metrics where available"]
     }
   ],
-  "certifications": ["Certification Name (Issuer, Year)"],
-  "education": {
-    "institution": "University Name",
-    "degree": "Degree Type and Major",
-    "dates": "Start - End",
-    "gpa": "GPA if mentioned"
+  "internships": [
+    {
+      "title": "Intern Title",
+      "company": "Organization",
+      "location": "Location",
+      "dates": "Start - End",
+      "bullets": ["Internship impact bullet"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University/School Name",
+      "degree": "Degree Type",
+      "fieldOfStudy": "Major or field",
+      "location": "Location",
+      "dates": "Start - End",
+      "gpa": "GPA/Percentage",
+      "coursework": "Relevant coursework",
+      "honors": "Honors, scholarships, dean's list"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "1-2 line description",
+      "techStack": "Technologies Used",
+      "role": "Your role",
+      "dates": "Dates",
+      "impact": "Result or outcome",
+      "link": "https://...",
+      "bullets": ["Project bullet"]
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Certification Name",
+      "issuer": "Issuing Organization",
+      "date": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "credentialId": "Credential ID",
+      "link": "https://..."
+    }
+  ],
+  "achievements": [
+    {
+      "name": "Award or achievement",
+      "context": "Hackathon, company, university, platform",
+      "date": "Date",
+      "rank": "Rank or result",
+      "description": "Short context",
+      "link": "https://..."
+    }
+  ],
+  "publications": [
+    {
+      "title": "Article or paper title",
+      "platform": "Medium, IEEE, Journal, Blog, Conference",
+      "date": "Date",
+      "authors": "Authors if mentioned",
+      "description": "Short description",
+      "link": "https://..."
+    }
+  ],
+  "openSource": [
+    {
+      "project": "Repository or project name",
+      "contribution": "Role or contribution",
+      "dates": "Dates",
+      "impact": "Impact or result",
+      "link": "https://...",
+      "bullets": ["Contribution bullet"]
+    }
+  ],
+  "leadership": [
+    {
+      "role": "Leadership role",
+      "organization": "Organization name",
+      "location": "Location",
+      "dates": "Start - End",
+      "bullets": ["Leadership impact bullet"]
+    }
+  ],
+  "volunteering": [
+    {
+      "role": "Volunteer role",
+      "organization": "Organization name",
+      "location": "Location",
+      "dates": "Start - End",
+      "bullets": ["Volunteer impact bullet"]
+    }
+  ],
+  "conferences": [
+    {
+      "name": "Conference or event",
+      "topic": "Topic or talk title",
+      "role": "Speaker, attendee, panelist",
+      "date": "Date",
+      "location": "Location",
+      "description": "Short description",
+      "link": "https://..."
+    }
+  ],
+  "languages": [
+    { "language": "English", "proficiency": "Fluent" }
+  ],
+  "interests": [
+    { "name": "Chess", "details": "Competitive player" }
+  ],
+  "products": [
+    {
+      "name": "System or product name",
+      "responsibility": "Ownership or responsibility",
+      "scale": "Traffic, users, data volume, geography",
+      "impact": "Result"
+    }
+  ],
+  "devopsContributions": ["CI/CD, monitoring, reliability, scaling, incident response bullets"],
+  "securityContributions": ["Security, IAM, audit, compliance bullets"],
+  "additionalInfo": {
+    "availability": "Availability",
+    "workAuthorization": "Work authorization",
+    "relocation": "Relocation preference",
+    "travel": "Travel preference",
+    "notes": "Anything relevant but uncategorized"
   },
+  "customSections": [
+    {
+      "title": "Any other resume section title",
+      "items": ["Section item 1", "Section item 2"]
+    }
+  ],
   "confidenceScore": 0.85
 }
 
 CONFIDENCE SCORING:
-- 0.9-1.0: All fields clearly extracted, well-structured resume
-- 0.7-0.89: Most fields found, some minor ambiguity
-- 0.5-0.69: Several fields missing or unclear formatting
-- Below 0.5: Major extraction issues, heavily unstructured
+- 0.90-1.00: Clear structured extraction with strong confidence
+- 0.70-0.89: Mostly clear, minor ambiguity
+- 0.50-0.69: Several unclear or partially missing areas
+- Below 0.50: Major parsing uncertainty
 
 Resume text:
 {{EXTRACTED_TEXT}}

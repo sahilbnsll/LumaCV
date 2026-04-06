@@ -1,0 +1,148 @@
+type ResumeRowStatus = 'queued' | 'compiling' | 'ready' | 'failed';
+
+export class SupabaseStorageError extends Error {
+    status?: number;
+    constructor(message: string, opts?: { status?: number }) {
+        super(message);
+        this.name = 'SupabaseStorageError';
+        this.status = opts?.status;
+    }
+}
+
+function safeJwtIssuer(jwt: string): string | null {
+    const parts = jwt.split('.');
+    if (parts.length !== 3) return null;
+    try {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+        if (payload && typeof payload.iss === 'string') return payload.iss;
+    } catch {
+        // ignore
+    }
+    return null;
+}
+
+function addSupabaseAuthHint(message: string, cfg: { url: string; serviceKey: string }) {
+    const issuer = safeJwtIssuer(cfg.serviceKey);
+    const host = (() => {
+        try {
+            return new URL(cfg.url).host;
+        } catch {
+            return cfg.url;
+        }
+    })();
+    const issuerHost = issuer
+        ? (() => {
+              try {
+                  return new URL(issuer).host;
+              } catch {
+                  return issuer;
+              }
+          })()
+        : null;
+
+    const mismatch = issuerHost && host && issuerHost !== host;
+    const lines = [
+        message,
+        '',
+        'Supabase auth hint:',
+        `- SUPABASE_URL host: ${host}`,
+        issuer ? `- Key issuer (iss): ${issuer}` : '- Key issuer (iss): unavailable (not a JWT?)',
+        mismatch ? '- MISMATCH: key issuer host does not match SUPABASE_URL host' : null,
+        '- Ensure SUPABASE_SERVICE_ROLE_KEY is the service_role key for this exact Supabase project.',
+    ].filter(Boolean);
+
+    return lines.join('\n');
+}
+
+function getConfig() {
+    const urlRaw = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKeyRaw = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const bucket = process.env.SUPABASE_RESUMES_BUCKET || 'resumes';
+    if (!urlRaw || !serviceKeyRaw) return null;
+
+    const url = urlRaw.trim().replace(/\/$/, '');
+    // Vercel env pastes sometimes include surrounding quotes or whitespace.
+    const serviceKey = serviceKeyRaw.trim().replace(/^"+|"+$/g, '');
+    return { url, serviceKey, bucket };
+}
+
+function headers(contentType = 'application/json') {
+    const cfg = getConfig();
+    if (!cfg) throw new Error('Supabase is not configured');
+    return {
+        Authorization: `Bearer ${cfg.serviceKey}`,
+        apikey: cfg.serviceKey,
+        'Content-Type': contentType,
+    };
+}
+
+export async function uploadPdfToSupabase(hash: string, pdfBuffer: ArrayBuffer) {
+    const cfg = getConfig();
+    if (!cfg) throw new Error('Supabase is not configured');
+    const path = `compiled/${hash}.pdf`;
+    const response = await fetch(`${cfg.url}/storage/v1/object/${cfg.bucket}/${path}`, {
+        method: 'POST',
+        headers: {
+            ...headers('application/pdf'),
+            'x-upsert': 'true',
+        },
+        body: Buffer.from(pdfBuffer),
+    });
+
+    if (!response.ok) {
+        const raw = (await response.text()).slice(0, 800) || 'Failed to upload PDF to Supabase';
+        const msg = response.status === 401 || response.status === 403 ? addSupabaseAuthHint(raw, cfg) : raw;
+        throw new SupabaseStorageError(msg, { status: response.status });
+    }
+
+    return { path };
+}
+
+export async function createSignedPdfUrl(path: string, expiresIn = 60 * 60 * 6) {
+    const cfg = getConfig();
+    if (!cfg) throw new Error('Supabase is not configured');
+
+    const response = await fetch(`${cfg.url}/storage/v1/object/sign/${cfg.bucket}/${path}`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ expiresIn }),
+    });
+
+    if (!response.ok) {
+        const raw = (await response.text()).slice(0, 800) || 'Failed to create signed URL';
+        const msg = response.status === 401 || response.status === 403 ? addSupabaseAuthHint(raw, cfg) : raw;
+        throw new SupabaseStorageError(msg, { status: response.status });
+    }
+
+    const json = await response.json();
+    const raw = json.signedURL || json.signedUrl || json.path;
+    if (!raw) throw new Error('Signed URL missing from Supabase response');
+    return raw.startsWith('http') ? raw : `${cfg.url}${raw}`;
+}
+
+export async function upsertResumeRecord(input: {
+    contentHash: string;
+    latex: string;
+    pdfUrl?: string;
+    status: ResumeRowStatus;
+    attempts: number;
+}) {
+    const cfg = getConfig();
+    if (!cfg) return;
+
+    await fetch(`${cfg.url}/rest/v1/resumes?on_conflict=content_hash`, {
+        method: 'POST',
+        headers: {
+            ...headers(),
+            Prefer: 'resolution=merge-duplicates,return=minimal',
+        },
+        body: JSON.stringify({
+            content_hash: input.contentHash,
+            latex: input.latex,
+            pdf_url: input.pdfUrl ?? null,
+            status: input.status,
+            attempts: input.attempts,
+            updated_at: new Date().toISOString(),
+        }),
+    });
+}

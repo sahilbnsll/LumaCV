@@ -5,6 +5,7 @@ import { normalizeResumeFromLLM } from '@/lib/normalize-resume';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { ratelimit } from '@/lib/rate-limit';
+import { jsonrepair } from 'jsonrepair';
 
 export const maxDuration = 60;
 
@@ -41,7 +42,15 @@ export async function POST(req: NextRequest) {
         console.log(`[Parse] Stream complete (${rawText.length} chars)`);
 
         const jsonText = extractJsonObjectFromAssistantText(rawText);
-        const raw = JSON.parse(jsonText);
+        let raw: unknown;
+        try {
+            raw = JSON.parse(jsonText);
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            console.warn('[Parse] JSON.parse failed, attempting jsonrepair:', msg);
+            const repaired = jsonrepair(jsonText);
+            raw = JSON.parse(repaired);
+        }
         const resumeData = normalizeResumeFromLLM(raw);
 
         return NextResponse.json(resumeData);

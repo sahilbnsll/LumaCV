@@ -99,8 +99,9 @@ function getProviderConfigurations(taskType: TaskType): Array<{
 }> {
     const configs = [];
 
-    if (process.env.GEMINI_API_KEY) {
-        const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+        const google = createGoogleGenerativeAI({ apiKey: geminiKey });
         configs.push({
             provider: google,
             models: GEMINI_MODELS,
@@ -108,10 +109,11 @@ function getProviderConfigurations(taskType: TaskType): Array<{
         });
     }
 
-    if (process.env.OPENROUTER_API_KEY) {
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    if (openrouterKey) {
         const openrouter = createOpenAI({
             baseURL: 'https://openrouter.ai/api/v1',
-            apiKey: process.env.OPENROUTER_API_KEY,
+            apiKey: openrouterKey,
             headers: {
                 'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
                 'X-Title': 'LumaAI',

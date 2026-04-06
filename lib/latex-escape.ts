@@ -93,7 +93,10 @@ export function escapeLatex(text: string | undefined | null): string {
         .replace(/\{/g, '\\{')
         .replace(/\}/g, '\\}')
         .replace(/~/g, '\\textasciitilde{}')
-        .replace(/\^/g, '\\textasciicircum{}');
+        .replace(/\^/g, '\\textasciicircum{}')
+        .replace(/\|/g, '\\textbar{}')
+        .replace(/</g, '\\textless{}')
+        .replace(/>/g, '\\textgreater{}');
 
     // ── Phase 3: Swap placeholders back to real LaTeX ──
     for (const [token, latex] of placeholders) {
