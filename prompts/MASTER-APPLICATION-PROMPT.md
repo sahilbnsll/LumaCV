@@ -7,43 +7,52 @@ Use this document as the product/engineering spec for the ResumeTailor app. It m
 ## Critical fixes (must read)
 
 ### 1. LaTeX URL length limit
+
 - **Problem:** Query strings cannot hold full resume LaTeX (~2KB+ encoded).
 - **Solution:** `multipart/form-data` POST to `https://latexonline.cc/compile` with the `.tex` file as a blob field.
 - **Impact:** Avoids HTTP 414 URI Too Long.
 
 ### 2. PDF.js client/server separation
+
 - **Problem:** pdf.js expects browser APIs (Canvas, workers).
 - **Solution:** Extract text **only in the browser**; send plain text to `/api/parse-resume`.
 - **Impact:** No Node canvas polyfills; smaller server bundles.
 
 ### 3. LaTeX special-character escaping
+
 - **Problem:** Characters like `&`, `#`, `$`, `%` break LaTeX.
 - **Solution:** `escapeLatex()` on **all** user-controlled strings before template insertion.
 - **Impact:** Stable PDF compilation.
 
 ### 3b. Line breaks in `center` (critical)
+
 - **Problem:** In JS template strings, `\\[4pt]` becomes `\[4pt]` in the `.tex` file — `\[` opens **display math**, not “line break + 4pt”, corrupting the document and previews.
 - **Solution:** Emit a real LaTeX line break as `\\\\[n pt]` from JS (four backslashes → `\\[n pt]` in TeX), or use a helper like `latexCenterBreak(n)`.
 - **Overleaf “Open” via `snip`:** Overleaf’s legacy `snip` POST often injects the **default welcome project** instead of your file. Prefer **Download .tex** + upload, or **Copy LaTeX** into a blank project.
 
 ### 4. LLM JSON mode + response cleanup
+
 - **Problem:** Some providers still wrap JSON in markdown fences.
 - **Solution:** `response_format: { type: 'json_object' }` where supported, plus `extractJsonObjectFromAssistantText()` before `JSON.parse`.
 - **Impact:** Fewer parse failures; fewer retries.
 
 ### 5. Zod contracts
+
 - **Problem:** Ambiguous API payloads cause runtime errors.
 - **Solution:** Zod for all API inputs/outputs; `normalizeResumeFromLLM()` to coerce messy model output into `ResumeDataSchema`.
 
 ### 6. LLM abstraction
+
 - **Problem:** Vendor lock-in (Groq-only).
 - **Solution:** `LLMClient` in `lib/llm-client.ts` with OpenRouter (OpenAI-compatible) as default when `OPENROUTER_API_KEY` is set, Groq as fallback.
 - **Env:** `OPENROUTER_API_KEY`, optional `OPENROUTER_MODEL`, optional `GROQ_API_KEY`, optional `LLM_PROVIDER=openrouter|groq`.
 
 ### 7. Prompt versioning
+
 - **Solution:** Prompts live under `/prompts/*.txt`; load and substitute placeholders in route handlers.
 
 ### 8. Zustand persist + Step 2 empty form (CRITICAL)
+
 - **Problem:** `persist` rehydrates from `localStorage` **asynchronously**. If the user parses a resume **before** rehydration finishes, the stored snapshot (often `resumeData: null`) can **overwrite** the freshly parsed data. Step 2 then mounts with empty fields while the toast still says success.
 - **Solution (use all):**
   1. **Wait for hydration** before rendering the wizard: `useAppStore.persist.hasHydrated()` / `onFinishHydration`.

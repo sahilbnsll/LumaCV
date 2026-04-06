@@ -32,7 +32,7 @@ export default function PrivacyPage() {
                     Your data is used solely for the purpose of generating your customized resume. We use third-party services for processing:
                 </p>
                 <ul>
-                    <li><strong>OpenRouter</strong> (or another configured LLM provider): For AI text analysis and generation.</li>
+                    <li><strong>OpenRouter/Gemini</strong> (or another configured LLM provider): For AI text analysis and generation.</li>
                     <li><strong>LaTeX.Online:</strong> For compiling your resume into a PDF document.</li>
                 </ul>
 

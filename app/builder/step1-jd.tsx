@@ -96,9 +96,8 @@ export function Step1JD() {
 
                 <div
                     {...getRootProps()}
-                    className={`relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer h-[420px] flex flex-col items-center justify-center ${
-                        isDragActive ? 'border-primary bg-primary/5 scale-[1.02] shadow-[0_0_30px_rgba(99,102,241,0.15)]' : isParsing ? 'border-primary/50 bg-primary/5 animate-pulse' : 'border-border/50 hover:border-primary/40 hover:bg-muted/30'
-                    }`}
+                    className={`relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer h-[420px] flex flex-col items-center justify-center ${isDragActive ? 'border-primary bg-primary/5 scale-[1.02] shadow-[0_0_30px_rgba(99,102,241,0.15)]' : isParsing ? 'border-primary/50 bg-primary/5 animate-pulse' : 'border-border/50 hover:border-primary/40 hover:bg-muted/30'
+                        }`}
                 >
                     <input {...getInputProps()} />
                     {isParsing ? (
@@ -109,7 +108,7 @@ export function Step1JD() {
                             </div>
                             <div className="text-center">
                                 <p className="font-medium">Analyzing your resume...</p>
-                                <p className="text-xs text-muted-foreground mt-1">Powered by AI (OpenRouter)</p>
+                                <p className="text-xs text-muted-foreground mt-1">Powered by AI</p>
                             </div>
                         </div>
                     ) : acceptedFiles[0] ? (
