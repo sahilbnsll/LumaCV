@@ -25,28 +25,57 @@ export async function POST(req: NextRequest) {
 
         const { latexCode } = validatedInput.data;
 
-        // Use latex.ytotech.com POST API (latexonline.cc only supports GET with query params)
-        console.log('Sending to latex.ytotech.com...');
-        const response = await fetch('https://latex.ytotech.com/builds/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                compiler: 'pdflatex',
-                resources: [
-                    {
-                        main: true,
-                        content: latexCode,
-                    },
-                ],
-            }),
-        });
+        // Use latex.ytotech.com POST API with exponential backoff for 429 errors
+        let pdfBuffer: ArrayBuffer | null = null;
+        let lastError = null;
+        const maxRetries = 3;
+        const baseDelayMs = 1500;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`LaTeX Compilation Failed: ${errorText.substring(0, 500)}`);
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            console.log(`[Compile API] Attempt ${attempt}/${maxRetries} sending to latex.ytotech.com...`);
+            
+            try {
+                const response = await fetch('https://latex.ytotech.com/builds/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        compiler: 'pdflatex',
+                        resources: [{ main: true, content: latexCode }],
+                    }),
+                });
+
+                if (response.ok) {
+                    pdfBuffer = await response.arrayBuffer();
+                    break; // Success, exit retry loop
+                }
+
+                const errorText = await response.text();
+                
+                // If it's a 429 Rate Limit, we want to wait and retry
+                if (response.status === 429 && attempt < maxRetries) {
+                    const delay = baseDelayMs * Math.pow(2, attempt - 1);
+                    console.warn(`[Compile API] Rate limited (429). Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+
+                // If it's a LaTeX compilation error (syntax error in TeX), retrying won't help
+                throw new Error(`LaTeX Compilation Failed (Status ${response.status}): ${errorText.substring(0, 500)}`);
+                
+            } catch (error) {
+                lastError = error;
+                // If network error, we want to retry
+                if (attempt < maxRetries) {
+                    const delay = baseDelayMs * Math.pow(2, attempt - 1);
+                    console.warn(`[Compile API] Network error: ${error instanceof Error ? error.message : 'Unknown'}. Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
         }
 
-        const pdfBuffer = await response.arrayBuffer();
+        if (!pdfBuffer) {
+            throw lastError || new Error("Failed to compile LaTeX after multiple attempts");
+        }
 
         // Return as PDF stream
         return new NextResponse(pdfBuffer, {

@@ -27,7 +27,7 @@ const OPENROUTER_LIGHT_MODELS = [
 
 /** Native Gemini Models via Google AI Studio */
 const GEMINI_MODELS = [
-    'gemini-3.1-pro-preview',
+    'gemini-flash-latest',
     'gemini-3-flash-preview',
     'gemini-3.1-flash-lite-preview',
     'gemini-2.5-flash',
