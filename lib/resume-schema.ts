@@ -241,21 +241,62 @@ export const AnalyzeJDResponseSchema = z.object({
   seniority_level: z.string().optional(),
 });
 
+export const ThemeTypeSchema = z.enum([
+  'none',
+  'navy',
+  'cobalt',
+  'emerald',
+  'burgundy',
+  'teal',
+  'slate',
+  'black',
+]);
+export type ThemeType = z.infer<typeof ThemeTypeSchema>;
+
+export const TemplateTypeSchema = z.enum([
+  'classic',
+  'modern',
+  'engineering',
+  'compact',
+  'two_column',
+  'ats_safe',
+  // legacy aliases mapped to the 6 core Typst templates
+  'ats',
+  'executive',
+  'minimal',
+  'creative',
+  'tech',
+]);
+
 export const GenerateResumeRequestSchema = z.object({
   resumeData: ResumeDataSchema,
   jdKeywords: AnalyzeJDResponseSchema,
-  template: z.enum(['modern', 'classic', 'ats', 'executive', 'minimal', 'compact', 'creative', 'tech']).optional().default('modern'),
+  template: TemplateTypeSchema.optional().default('modern'),
+  theme: ThemeTypeSchema.optional().default('none'),
 });
 
 export const GenerateResumeResponseSchema = z.object({
   tailoredResume: ResumeDataSchema,
-  latexCode: z.string(),
+  typstCode: z.string().optional(),
   confidenceScore: z.number().min(0).max(1),
+  factCheckReport: z.object({
+    passed: z.boolean(),
+    issuesCount: z.number(),
+    preservedMetricsCount: z.number(),
+    verifiedEmployersCount: z.number(),
+  }).optional(),
 });
 
-export const CompileLatexRequestSchema = z.object({
-  latexCode: z.string().min(1, 'LaTeX code is required'),
+
+export const CompileResumeRequestSchema = z.object({
+  resumeData: ResumeDataSchema.optional(),
+  template: TemplateTypeSchema.optional().default('modern'),
+  theme: ThemeTypeSchema.optional().default('none'),
+  typstCode: z.string().optional(),
 });
+
+export const CompileTypstRequestSchema = CompileResumeRequestSchema;
+
 
 export type PersonalInfo = z.infer<typeof PersonalInfoSchema>;
 export type Skill = z.infer<typeof SkillSchema>;
@@ -273,6 +314,8 @@ export type AnalyzeJDResponse = z.infer<typeof AnalyzeJDResponseSchema>;
 export type GenerateResumeRequest = z.infer<typeof GenerateResumeRequestSchema>;
 export type GenerateResumeResponse = z.infer<typeof GenerateResumeResponseSchema>;
 
-export type CompileLatexRequest = z.infer<typeof CompileLatexRequestSchema>;
+export type CompileResumeRequest = z.infer<typeof CompileResumeRequestSchema>;
 
-export type TemplateType = 'modern' | 'classic' | 'ats' | 'executive' | 'minimal' | 'compact' | 'creative' | 'tech';
+export type TemplateType = z.infer<typeof TemplateTypeSchema>;
+
+

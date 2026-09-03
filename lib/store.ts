@@ -23,9 +23,10 @@ interface AppState {
     // Step 4: Generation
     generatedResume: {
         data: ResumeData;
-        latex: string;
+        typst: string;
         confidenceScore?: number;
     } | null;
+
 
     // Score tracking
     originalScore: MatchScoreResponse | null;
@@ -33,6 +34,7 @@ interface AppState {
 
     // Options
     template: TemplateType;
+    theme: string;
 
     // Actions
     setStep: (step: number) => void;
@@ -43,10 +45,12 @@ interface AppState {
     /** After /api/parse-resume — bumps form key so Step 2 fields populate. */
     setResumeDataFromParse: (data: ResumeData) => void;
     setAnalysis: (analysis: AnalyzeJDResponse) => void;
-    setGeneratedResume: (data: ResumeData, latex: string, score?: number) => void;
+    setGeneratedResume: (data: ResumeData, typst: string, score?: number) => void;
+
     setOriginalScore: (score: AppState['originalScore']) => void;
     setTailoredScore: (score: AppState['tailoredScore']) => void;
     setTemplate: (template: TemplateType) => void;
+    setTheme: (theme: string) => void;
     reset: () => void;
 }
 
@@ -64,6 +68,7 @@ export const useAppStore = create<AppState>()(
             originalScore: null,
             tailoredScore: null,
             template: 'modern',
+            theme: 'none',
 
             setStep: (step) => set({ step }),
             setJD: (jd) => set({ jd }),
@@ -76,12 +81,15 @@ export const useAppStore = create<AppState>()(
                     resumeDataRevision: s.resumeDataRevision + 1,
                 })),
             setAnalysis: (analysis) => set({ jdAnalysis: analysis }),
-            setGeneratedResume: (data, latex, score) => set({
-                generatedResume: { data, latex, confidenceScore: score }
+            setGeneratedResume: (data, typst, score) => set({
+                generatedResume: { data, typst, confidenceScore: score }
             }),
+
+
             setOriginalScore: (score) => set({ originalScore: score }),
             setTailoredScore: (score) => set({ tailoredScore: score }),
             setTemplate: (template) => set({ template }),
+            setTheme: (theme) => set({ theme }),
 
             reset: () => set({
                 step: 1,
@@ -94,7 +102,8 @@ export const useAppStore = create<AppState>()(
                 generatedResume: null,
                 originalScore: null,
                 tailoredScore: null,
-                template: 'modern'
+                template: 'modern',
+                theme: 'none',
             }),
         }),
         {
@@ -110,7 +119,9 @@ export const useAppStore = create<AppState>()(
                 originalScore: state.originalScore,
                 tailoredScore: state.tailoredScore,
                 template: state.template,
+                theme: state.theme,
             }),
+
             /**
              * Prefer in-memory state for fields that may be set before persist rehydration finishes,
              * otherwise rehydration can overwrite parsed resumeData with null from storage.

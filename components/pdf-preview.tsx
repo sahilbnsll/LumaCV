@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Download, FileCode, Copy, ServerCrash, RefreshCcw } from 'lucide-react';
+import { Loader2, ServerCrash, RefreshCcw } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { hashTextBrowser } from '@/lib/content-hash';
 import { useAuth } from './auth-provider';
-import { AuthGuardCard } from './auth-guard-card';
+
 
 type PreviewStatus = 'idle' | 'queued' | 'compiling' | 'ready' | 'failed';
 
@@ -23,10 +23,11 @@ type CompileMeta = {
 const previewCache = new Map<string, { url: string; meta: CompileMeta }>();
 
 export function PdfPreview() {
-    const { resumeData, generatedResume } = useAppStore();
+    const { resumeData, generatedResume, template, theme } = useAppStore();
     const { user, loading: authLoading } = useAuth();
-    const latexCode = generatedResume?.latex || '';
+    const typstCode = generatedResume?.typst || '';
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
     const [status, setStatus] = useState<PreviewStatus>('idle');
     const [compileError, setCompileError] = useState<string | null>(null);
     const [compileMeta, setCompileMeta] = useState<CompileMeta | null>(null);
@@ -38,8 +39,15 @@ export function PdfPreview() {
         const response = await fetch('/api/v1/resume/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ latexCode }),
+            body: JSON.stringify({
+                resumeData,
+                template,
+                theme,
+                typstCode,
+            }),
         });
+
+
 
         const contentType = response.headers.get('content-type') || '';
         if (!response.ok) {
@@ -80,7 +88,7 @@ export function PdfPreview() {
             return url;
         });
         setStatus('ready');
-    }, [latexCode]);
+    }, [typstCode, resumeData, template, theme]);
 
     const pollJob = useCallback((hash: string) => {
         if (pollRef.current) window.clearInterval(pollRef.current);
@@ -126,12 +134,12 @@ export function PdfPreview() {
     }, []);
 
     const compilePdf = useCallback(async () => {
-        if (!latexCode.trim()) {
-            setCompileError('No LaTeX to compile yet.');
+        if (!typstCode.trim()) {
+            setCompileError('No document to compile yet.');
             return;
         }
         setAuthRequired(false);
-        const compileHash = await hashTextBrowser(latexCode);
+        const compileHash = await hashTextBrowser(typstCode);
         const cached = previewCache.get(compileHash);
         if (cached) {
             setCompileMeta({ ...cached.meta, fromCache: true });
@@ -150,7 +158,7 @@ export function PdfPreview() {
             const response = await fetch('/api/v1/resume/render', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ latexCode }),
+                body: JSON.stringify({ typstCode }),
             });
             if (response.status === 401) {
                 setAuthRequired(true);
@@ -196,10 +204,10 @@ export function PdfPreview() {
             console.error(error);
             setStatus('failed');
         }
-    }, [authRequired, fallbackDirectCompile, latexCode, pollJob]);
+    }, [authRequired, fallbackDirectCompile, typstCode, pollJob]);
 
     useEffect(() => {
-        if (!latexCode) return;
+        if (!typstCode) return;
         if (authLoading) return;
         if (!user) {
             // Avoid auto-compiling when logged out; keep UI in auth-gated state.
@@ -221,53 +229,10 @@ export function PdfPreview() {
             if (debounceRef.current) window.clearTimeout(debounceRef.current);
             if (pollRef.current) window.clearInterval(pollRef.current);
         };
-    }, [latexCode, compilePdf, authLoading, user]);
-
-    const downloadTex = () => {
-        if (!latexCode) return;
-        if (!user) {
-            toast.error('Login to download your LaTeX file.');
-            return;
-        }
-        fetch('/api/v1/resume/export-tex', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                latexCode,
-                filename: `resume-${(resumeData?.personalInfo.name || 'resume').replace(/\s+/g, '-')}`,
-            }),
-        })
-            .then(async (response) => {
-                if (!response.ok) {
-                    const payload = await response.json().catch(() => ({}));
-                    throw new Error(payload.error || payload.details || 'Failed to export .tex');
-                }
-                const blob = await response.blob();
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `resume-${(resumeData?.personalInfo.name || 'resume').replace(/\s+/g, '-')}.tex`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-                toast.success('Downloaded .tex file');
-            })
-            .catch((error) => toast.error(error instanceof Error ? error.message : 'Export failed'));
-    };
-
-    const copyTex = async () => {
-        if (!latexCode) return;
-        if (!user) {
-            toast.error('Login to copy LaTeX.');
-            return;
-        }
-        try {
-            await navigator.clipboard.writeText(latexCode);
-            toast.success('LaTeX copied to clipboard — paste into Overleaf → New Project → Blank');
-        } catch {
-            toast.error('Could not copy to clipboard');
-        }
-    };
+    }, [typstCode, compilePdf, authLoading, user]);
 
     const loading = status === 'queued' || status === 'compiling';
+
     const statusCopy =
         status === 'queued'
             ? 'Queued for PDF generation…'
@@ -304,25 +269,17 @@ export function PdfPreview() {
                 </div>
             </div>
 
-            <div className="relative h-[800px] border rounded-xl overflow-hidden bg-white shadow-sm transition-all duration-300 hover:border-primary/35 hover:shadow-lg hover:shadow-primary/15">
+            <div className="relative h-[820px] rounded-xl border border-border/80 overflow-hidden bg-white shadow-xl">
                 {loading && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-                        <div className="flex flex-col items-center space-y-2">
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                        <div className="flex flex-col items-center space-y-3">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <p className="text-sm font-medium text-muted-foreground">
-                                {status === 'queued' ? 'Generating preview' : 'Rendering resume'}
+                            <p className="text-xs font-semibold text-foreground">
+                                {status === 'queued' ? 'Formatting layout…' : 'Compiling pixel-perfect PDF…'}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                                Your preview is being prepared in the background.
+                            <p className="text-[11px] text-muted-foreground">
+                                Rendering vector fonts and ATS-safe geometry.
                             </p>
-                        </div>
-                    </div>
-                )}
-
-                {!user && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[2px]">
-                        <div className="w-full max-w-md p-4">
-                            <AuthGuardCard />
                         </div>
                     </div>
                 )}
@@ -330,36 +287,33 @@ export function PdfPreview() {
                 {pdfUrl ? (
                     <iframe
                         src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                        className="w-full h-full"
-                        title="Resume Preview"
+                        className="w-full h-full border-0"
+                        title="Resume Document Preview"
                     />
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8 text-center">
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8 text-center bg-muted/10">
                         {!loading && (
                             <>
-                                <p className="font-medium text-foreground">
-                                    {compileError ? 'Could not build preview' : statusCopy}
+                                <p className="text-sm font-medium text-foreground">
+                                    {compileError ? 'Could not render preview' : statusCopy}
                                 </p>
                                 {compileError && (
                                     <div className="max-w-md rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-left">
-                                        <div className="mb-1 flex items-center gap-2 text-sm font-medium text-destructive">
+                                        <div className="mb-1 flex items-center gap-2 text-xs font-medium text-destructive">
                                             <ServerCrash className="h-4 w-4" />
-                                            {authRequired ? 'Login required' : 'Compile failed after fallbacks'}
+                                            <span>Formatting issue detected</span>
                                         </div>
-                                        <p className="text-sm text-destructive whitespace-pre-wrap">
-                                            {authRequired ? 'Login to generate your preview.' : compileError}
+                                        <p className="text-xs text-destructive whitespace-pre-wrap font-mono">
+                                            {compileError}
                                         </p>
                                     </div>
                                 )}
-                                <p className="text-sm max-w-md">
-                                    Download the .tex file and open it in Overleaf (New Project → Upload
-                                    project), or copy the LaTeX and paste into a blank project. The old
-                                    &quot;snip&quot; upload often showed Overleaf&apos;s default template instead of
-                                    your resume.
+                                <p className="text-xs max-w-sm text-muted-foreground">
+                                    Compiling your resume with sub-50ms native typography and strict ATS scanner alignment.
                                 </p>
-                                <Button variant="outline" size="sm" onClick={() => compilePdf()} disabled={!user}>
-                                    <RefreshCcw className="mr-2 h-4 w-4" />
-                                    Retry compile
+                                <Button variant="outline" size="sm" onClick={() => compilePdf()} className="h-8 text-xs">
+                                    <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
+                                    Regenerate PDF
                                 </Button>
                             </>
                         )}
@@ -367,36 +321,12 @@ export function PdfPreview() {
                 )}
             </div>
 
-            <div className="flex flex-wrap justify-end gap-3">
-                {latexCode && (
-                    <>
-                        <Button type="button" variant="outline" onClick={downloadTex} disabled={!user}>
-                            <FileCode className="mr-2 h-4 w-4" />
-                            Download .tex
-                        </Button>
-                        <Button type="button" variant="outline" onClick={copyTex} disabled={!user}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Copy LaTeX
-                        </Button>
-                    </>
-                )}
 
-                {pdfUrl && (
-                    user ? (
-                        <Button asChild>
-                            <a href={pdfUrl} download={`Resume-${resumeData.personalInfo.name.replace(/\s+/g, '-')}.pdf`}>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download PDF
-                            </a>
-                        </Button>
-                    ) : (
-                        <Button type="button" disabled>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download PDF
-                        </Button>
-                    )
-                )}
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                <span>Rendering: Vector PDF</span>
+                <span>{compileMeta?.hash ? `Hash: ${compileMeta.hash.slice(0, 8)}` : 'Standard'}</span>
             </div>
         </div>
     );
 }
+

@@ -150,7 +150,7 @@ export async function createSignedPdfUrl(path: string, expiresIn = 60 * 60 * 6) 
 
 export async function upsertResumeRecord(input: {
     contentHash: string;
-    latex: string;
+    typst?: string;
     pdfUrl?: string;
     status: ResumeRowStatus;
     attempts: number;
@@ -158,6 +158,7 @@ export async function upsertResumeRecord(input: {
     const cfg = getConfig();
     if (!cfg) return;
 
+    const docSource = input.typst ?? '';
     await fetch(`${cfg.url}/rest/v1/resumes?on_conflict=content_hash`, {
         method: 'POST',
         headers: {
@@ -166,7 +167,7 @@ export async function upsertResumeRecord(input: {
         },
         body: JSON.stringify({
             content_hash: input.contentHash,
-            latex: input.latex,
+            typst: docSource,
             pdf_url: input.pdfUrl ?? null,
             status: input.status,
             attempts: input.attempts,
@@ -174,3 +175,5 @@ export async function upsertResumeRecord(input: {
         }),
     });
 }
+
+

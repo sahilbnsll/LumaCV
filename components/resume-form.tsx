@@ -495,7 +495,8 @@ export function ResumeForm() {
                         </div>
                         <div className="space-y-2">
                             <Label>Highlights</Label>
-                            <NestedBulletList form={form} path={`projects.${index}.bullets`} placeholder="Built ATS-friendly LaTeX output with multi-template support" />
+                            <NestedBulletList form={form} path={`projects.${index}.bullets`} placeholder="Built ATS-friendly Typst output with multi-template support" />
+
                         </div>
                     </div>
                 )}

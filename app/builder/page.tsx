@@ -1,18 +1,15 @@
 "use client";
 
-import { WizardStepper } from '@/components/wizard-stepper';
+import { useEffect, useState } from 'react';
+import { BuilderWorkflowBar } from '@/components/builder-workflow-bar';
 import { useAppStore } from '@/lib/store';
 import { Step1JD } from './step1-jd';
 import { Step2Details } from './step2-details';
 import { Step3Processing } from './step3-processing';
 import { Step4Preview } from './step4-preview';
-import { useEffect, useState } from 'react';
-import { Loader2, Sparkles, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
+import { Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { AuthButtons } from '@/components/auth-buttons';
 
 export default function BuilderPage() {
     const currentStep = useAppStore((state) => state.step);
@@ -30,56 +27,32 @@ export default function BuilderPage() {
 
     if (!ready) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-sm">Loading your session...</p>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-xs font-mono">Restoring document state...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md">
-                <div className="container mx-auto px-4 h-14 flex items-center justify-between max-w-6xl">
-                    <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-card">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                        </span>
-                        LumaCV
-                    </Link>
-                    <div className="flex items-center gap-2">
-                        <AuthButtons />
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:text-destructive text-xs"
-                            onClick={() => {
-                                if (confirm('Start over? All progress will be lost.')) {
-                                    useAppStore.getState().reset();
-                                }
-                            }}
-                        >
-                            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset
-                        </Button>
-                        <ThemeToggle />
-                    </div>
-                </div>
-            </header>
+        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+            <AppHeader />
 
-            <main className="container mx-auto px-4 py-6 max-w-6xl">
-                <WizardStepper />
+            <BuilderWorkflowBar />
+
+            <main className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
+
 
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentStep}
-                        initial={{ opacity: 0, y: 12 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -12 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-6"
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className="mt-2"
                     >
                         {currentStep === 1 && <Step1JD />}
                         {currentStep === 2 && <Step2Details />}

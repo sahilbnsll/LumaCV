@@ -36,6 +36,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
 
 # vercel
 .vercel
@@ -84,3 +86,9 @@ gemini.md
 ._*
 
 *.pdf
+typst/scratch/
+bin/
+/.agents/
+/scratch/
+task.md
+walkthrough.md

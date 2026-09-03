@@ -1,44 +1,75 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { streamText, LanguageModel } from 'ai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { streamText } from 'ai';
+import { UserApiKeys } from './ai-keys';
+
 
 // ============================================================================
-// Model Chains — easily configurable
+// Official Models (Configured from console.groq.com, aistudio.google.com, platform.openai.com, console.anthropic.com)
 // ============================================================================
 
-/** Complex JSON tasks: resume parsing, tailoring */
-const OPENROUTER_HEAVY_MODELS = [
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemma-3-27b-it:free',
-    'google/gemini-2.5-flash-free',
-    'deepseek/deepseek-r1:free',
-    'huggingfaceh4/zephyr-7b-beta:free'
+/** 
+ * Groq Active Models
+ */
+const GROQ_HEAVY_MODELS = [
+    'qwen/qwen3.6-27b',
+    'qwen/qwen3.8-27b',
+    'openai/gpt-oss-120b'
 ];
 
-/** Fast tasks: JD analysis, keyword extraction */
-const OPENROUTER_LIGHT_MODELS = [
-    'meta-llama/llama-3.2-3b-instruct:free',
-    'google/gemma-3-12b-it:free',
-    'qwen/qwen3-coder:free',
-    'microsoft/phi-3-mini-128k-instruct:free',
-    'huggingfaceh4/zephyr-7b-beta:free',
-    'mistralai/mistral-7b-instruct:free'
+const GROQ_LIGHT_MODELS = [
+    'qwen/qwen3.6-27b',
+    'openai/gpt-oss-20b'
 ];
 
-/** Native Gemini Models via Google AI Studio */
-const GEMINI_MODELS = [
-    'gemini-flash-latest',
-    'gemini-3-flash-preview',
-    'gemini-3.1-flash-lite-preview',
+/** 
+ * Google Gemini Active Models
+ */
+const GEMINI_HEAVY_MODELS = [
     'gemini-2.5-flash',
+    'gemini-flash-latest',
+    'gemini-3.5-flash'
+];
+
+const GEMINI_LIGHT_MODELS = [
     'gemini-2.5-flash-lite',
-    'gemini-2.5-pro'
+    'gemini-flash-lite-latest',
+    'gemini-2.5-flash'
+];
+
+/**
+ * OpenAI Active Models (BYOK)
+ */
+const OPENAI_HEAVY_MODELS = [
+    'gpt-4o',
+    'gpt-4o-mini',
+    'gpt-4-turbo'
+];
+
+const OPENAI_LIGHT_MODELS = [
+    'gpt-4o-mini',
+    'gpt-4o'
+];
+
+/**
+ * Anthropic Active Models (BYOK)
+ */
+const ANTHROPIC_HEAVY_MODELS = [
+    'claude-3-5-sonnet-20241022',
+    'claude-3-5-haiku-20241022'
+];
+
+const ANTHROPIC_LIGHT_MODELS = [
+    'claude-3-5-haiku-20241022',
+    'claude-3-5-sonnet-20241022'
 ];
 
 export type TaskType = 'heavy' | 'light';
 
+
 // ============================================================================
-// JSON extraction utility
+// JSON Extraction Utility
 // ============================================================================
 
 /**
@@ -92,73 +123,144 @@ export function extractJsonObjectFromAssistantText(text: string): string {
 // Provider Configuration
 // ============================================================================
 
-function getProviderConfigurations(taskType: TaskType): Array<{
-    provider: (modelId: string) => LanguageModel,
+function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): Array<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    provider: (modelId: string) => any,
     models: string[],
     name: string
 }> {
     const configs = [];
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (geminiKey) {
-        const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+    // Prioritize user's own custom keys (BYOK) if provided
+    if (userKeys?.gemini) {
+        const userGoogle = createGoogleGenerativeAI({ apiKey: userKeys.gemini });
+        const defaultPool = taskType === 'heavy' ? GEMINI_HEAVY_MODELS : GEMINI_LIGHT_MODELS;
+        const models = userKeys.geminiModel
+            ? [userKeys.geminiModel, ...defaultPool.filter(m => m !== userKeys.geminiModel)]
+            : defaultPool;
+
         configs.push({
-            provider: google,
-            models: GEMINI_MODELS,
-            name: 'GeminiNative'
+            provider: userGoogle,
+            models,
+            name: `BYOK-Gemini (${userKeys.geminiModel || 'Default'})`
         });
     }
 
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
-    if (openrouterKey) {
-        const openrouter = createOpenAI({
-            baseURL: 'https://openrouter.ai/api/v1',
-            apiKey: openrouterKey,
-            headers: {
-                'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-                'X-Title': 'LumaAI',
-            },
+    if (userKeys?.openai) {
+        const userOpenAI = createOpenAI({ apiKey: userKeys.openai });
+        const defaultPool = taskType === 'heavy' ? OPENAI_HEAVY_MODELS : OPENAI_LIGHT_MODELS;
+        const models = userKeys.openaiModel
+            ? [userKeys.openaiModel, ...defaultPool.filter(m => m !== userKeys.openaiModel)]
+            : defaultPool;
+
+        configs.push({
+            provider: userOpenAI,
+            models,
+            name: `BYOK-OpenAI (${userKeys.openaiModel || 'Default'})`
+        });
+    }
+
+    if (userKeys?.anthropic) {
+        const userAnthropic = createAnthropic({ apiKey: userKeys.anthropic });
+        const defaultPool = taskType === 'heavy' ? ANTHROPIC_HEAVY_MODELS : ANTHROPIC_LIGHT_MODELS;
+        const models = userKeys.anthropicModel
+            ? [userKeys.anthropicModel, ...defaultPool.filter(m => m !== userKeys.anthropicModel)]
+            : defaultPool;
+
+        configs.push({
+            provider: userAnthropic,
+            models,
+            name: `BYOK-Anthropic (${userKeys.anthropicModel || 'Default'})`
+        });
+    }
+
+    if (userKeys?.groq) {
+        const userGroq = createOpenAI({
+            baseURL: 'https://api.groq.com/openai/v1',
+            apiKey: userKeys.groq,
+        });
+        const defaultPool = taskType === 'heavy' ? GROQ_HEAVY_MODELS : GROQ_LIGHT_MODELS;
+        const models = userKeys.groqModel
+            ? [userKeys.groqModel, ...defaultPool.filter(m => m !== userKeys.groqModel)]
+            : defaultPool;
+
+        configs.push({
+            provider: userGroq,
+            models,
+            name: `BYOK-Groq (${userKeys.groqModel || 'Default'})`
+        });
+    }
+
+    // If user specified a preferred provider, move it to the very top
+    if (userKeys?.preferredProvider) {
+        const prefIdx = configs.findIndex(c => c.name.toLowerCase().includes(userKeys.preferredProvider!));
+        if (prefIdx > 0) {
+            const [preferred] = configs.splice(prefIdx, 1);
+            configs.unshift(preferred);
+        }
+    }
+
+    // Platform default system fallbacks (STRICT: Free users without keys can ONLY use system default models)
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey && !userKeys?.gemini) {
+        const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+        configs.push({
+            provider: google,
+            models: taskType === 'heavy' ? GEMINI_HEAVY_MODELS : GEMINI_LIGHT_MODELS,
+            name: 'System-Gemini (Default)'
+        });
+    }
+
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey && !userKeys?.groq) {
+        const groq = createOpenAI({
+            baseURL: 'https://api.groq.com/openai/v1',
+            apiKey: groqKey,
         });
         configs.push({
-            provider: openrouter,
-            models: taskType === 'heavy' ? OPENROUTER_HEAVY_MODELS : OPENROUTER_LIGHT_MODELS,
-            name: 'OpenRouter'
+            provider: groq,
+            models: taskType === 'heavy' ? GROQ_HEAVY_MODELS : GROQ_LIGHT_MODELS,
+            name: 'System-Groq (Default)'
+        });
+    }
+
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (openaiKey && !userKeys?.openai) {
+        const sysOpenAI = createOpenAI({ apiKey: openaiKey });
+        configs.push({
+            provider: sysOpenAI,
+            models: taskType === 'heavy' ? OPENAI_HEAVY_MODELS : OPENAI_LIGHT_MODELS,
+            name: 'System-OpenAI (Default)'
         });
     }
 
     if (configs.length === 0) {
-        throw new Error('No AI provider configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY in Environment Variables.');
+        throw new Error('No AI provider configured. Please provide your own API key (Gemini, OpenAI, Anthropic, or Groq) in Settings, or configure system API keys.');
     }
 
     return configs;
 }
 
+
 // ============================================================================
-// Streaming Generation with Dual-Chain Failover
+// Streaming Generation with Failover
 // ============================================================================
 
 /**
- * Stream text from provider with multi-model failover.
- * Uses the Vercel AI SDK `streamText()` under the hood.
- *
- * CRITICAL: 15-second timeout per model via AbortController.
- *
- * @param prompt - The prompt to send
- * @param systemPrompt - Optional system prompt
- * @param taskType - 'heavy' for complex JSON tasks, 'light' for fast extraction
- * @param options - Additional options (maxTokens, external abortSignal)
+ * Robust streaming generation across Gemini, OpenAI, Anthropic, and Groq model chains with 15s timeout failover.
  */
 export async function generateStream(
     prompt: string,
-    systemPrompt: string | undefined,
-    taskType: TaskType,
-    options: { maxTokens?: number; abortSignal?: AbortSignal } = {}
-) {
-    const configs = getProviderConfigurations(taskType);
-    const maxOutputTokens = options.maxTokens || 4000;
+    systemPrompt?: string,
+    taskType: TaskType = 'heavy',
+    options?: { maxTokens?: number; abortSignal?: AbortSignal; userKeys?: UserApiKeys }
+): Promise<{ textStream: ReadableStream<string>; model: string }> {
+    const providerConfigs = getProviderConfigurations(taskType, options?.userKeys);
+
+    const maxOutputTokens = options?.maxTokens || 4000;
     const errors: string[] = [];
 
-    for (const config of configs) {
+    for (const config of providerConfigs) {
         const { provider, models, name: providerName } = config;
 
         for (const modelId of models) {
@@ -168,8 +270,7 @@ export async function generateStream(
                 controller.abort();
             }, 15000);
 
-            // Combine external abort with per-model timeout
-            if (options.abortSignal) {
+            if (options?.abortSignal) {
                 options.abortSignal.addEventListener('abort', () => controller.abort());
             }
 
@@ -186,13 +287,9 @@ export async function generateStream(
                     abortSignal: controller.signal,
                 });
 
-                // We need to verify the stream actually starts producing data.
-                // streamText() returns synchronously, so we must await the first chunk
-                // to confirm the model is responding before clearing the timeout.
                 const reader = result.textStream.getReader();
                 const firstChunk = await reader.read();
 
-                // Model responded — clear the timeout
                 clearTimeout(timeoutId);
 
                 if (firstChunk.done) {
@@ -201,13 +298,9 @@ export async function generateStream(
 
                 console.log(`[${providerName}] Stream connected via ${modelId}`);
 
-                // Create a new ReadableStream that yields the first chunk + remaining chunks
                 const fullStream = new ReadableStream<string>({
                     async start(streamController) {
-                        // Yield the first chunk we already read
                         streamController.enqueue(firstChunk.value);
-
-                        // Continue reading the rest
                         try {
                             while (true) {
                                 const { done, value } = await reader.read();
@@ -221,7 +314,7 @@ export async function generateStream(
                     },
                 });
 
-                return { textStream: fullStream, model: modelId };
+                return { textStream: fullStream, model: `${providerName}/${modelId}` };
             } catch (e) {
                 clearTimeout(timeoutId);
                 const msg = e instanceof Error ? e.message : String(e);
@@ -234,17 +327,16 @@ export async function generateStream(
     throw new Error(`All providers and models exhausted. Attempts: ${errors.join(' | ')}`);
 }
 
-// ============================================================================
-// Helper: collect full stream into a string (for server-side use)
-// ============================================================================
-
+/**
+ * Helper to collect an entire stream into a single string.
+ */
 export async function collectStream(stream: ReadableStream<string>): Promise<string> {
     const reader = stream.getReader();
-    let result = '';
+    let accumulated = '';
     while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        result += value;
+        accumulated += value;
     }
-    return result;
+    return accumulated;
 }

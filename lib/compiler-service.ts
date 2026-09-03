@@ -1,160 +1,253 @@
-import { incrementProviderMetric, openProviderCircuit, isProviderCircuitOpen } from './resume-preview-store';
+import { execFile, spawn } from 'child_process';
+import { promises as fs } from 'fs';
+import path from 'path';
+import os from 'os';
+import { ResumeData, TemplateType } from './resume-schema';
+import { normalizeTemplateName, resumeDataToTypstData } from './typst-generator';
 
 export type CompileAttempt = {
-    provider: string;
-    ok: boolean;
-    cycle: number;
-    status?: number;
-    retryable?: boolean;
-    details?: string;
+  provider: string;
+  ok: boolean;
+  cycle: number;
+  status?: number;
+  retryable?: boolean;
+  details?: string;
 };
 
 export type ProviderResult = {
-    provider: string;
-    pdfBuffer: ArrayBuffer;
+  provider: string;
+  pdfBuffer: ArrayBuffer;
 };
 
 export class ProviderError extends Error {
-    status?: number;
-    retryable: boolean;
-    constructor(message: string, opts?: { status?: number; retryable?: boolean }) {
-        super(message);
-        this.name = 'ProviderError';
-        this.status = opts?.status;
-        this.retryable = opts?.retryable ?? true;
-    }
+  status?: number;
+  retryable: boolean;
+  constructor(message: string, opts?: { status?: number; retryable?: boolean }) {
+    super(message);
+    this.name = 'ProviderError';
+    this.status = opts?.status;
+    this.retryable = opts?.retryable ?? true;
+  }
 }
 
-const REQUEST_TIMEOUT_MS = 16000;
-
-async function readErrorText(response: Response): Promise<string> {
-    const text = await response.text();
-    return text.slice(0, 600) || `HTTP ${response.status}`;
+interface CompileTypstOptions {
+  resumeData?: ResumeData;
+  template?: TemplateType | string;
+  theme?: string;
+  typstCode?: string;
 }
 
-function isRetryableStatus(status: number): boolean {
-    return status === 408 || status === 409 || status === 425 || status === 429 || status >= 500;
-}
+/**
+ * Resolves the appropriate Typst executable for local Windows or Linux/Vercel serverless.
+ * On Vercel / Linux: copies bin/typst-linux to /tmp/typst with chmod +x so it is executable in AWS Lambda.
+ * On Windows: uses bin/typst.exe or system PATH.
+ */
+async function getTypstExecutable(): Promise<string> {
+  const isLinux = process.platform === 'linux';
 
-async function fetchWithProviderErrors(url: string, init: RequestInit): Promise<Response> {
+  if (isLinux) {
+    const tmpTypst = path.join(os.tmpdir(), 'typst');
     try {
-        const response = await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-        if (!response.ok) {
-            const errorText = await readErrorText(response);
-            console.log(
-                JSON.stringify({
-                    msg: 'latex_provider_http_error',
-                    url,
-                    status: response.status,
-                    retryable: isRetryableStatus(response.status),
-                    error: errorText.slice(0, 180),
-                })
-            );
-            throw new ProviderError(errorText, {
-                status: response.status,
-                retryable: isRetryableStatus(response.status),
-            });
-        }
-        return response;
-    } catch (error) {
-        if (error instanceof ProviderError) throw error;
-        throw new ProviderError(error instanceof Error ? error.message : 'Unknown provider error', { retryable: true });
+      await fs.access(tmpTypst);
+      return tmpTypst;
+    } catch {
+      // Not yet extracted/copied to /tmp
     }
+
+    const packagedLinuxBin = path.join(process.cwd(), 'bin', 'typst-linux');
+    try {
+      await fs.access(packagedLinuxBin);
+      await fs.copyFile(packagedLinuxBin, tmpTypst);
+      await fs.chmod(tmpTypst, 0o755);
+      return tmpTypst;
+    } catch {
+      // Fallback to system PATH typst if available
+      return 'typst';
+    }
+  }
+
+  // Windows
+  const winBin = path.join(process.cwd(), 'bin', 'typst.exe');
+  try {
+    await fs.access(winBin);
+    return winBin;
+  } catch {
+    return 'typst';
+  }
 }
 
-async function compileViaYtoTech(latexCode: string, compiler: 'pdflatex' | 'xelatex'): Promise<ProviderResult> {
-    const response = await fetchWithProviderErrors('https://latex.ytotech.com/builds/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            compiler,
-            resources: [{ main: true, content: latexCode }],
-        }),
+/**
+ * Executes Typst compilation.
+ * 100% compatible with Vercel serverless functions:
+ * - Never writes to read-only directories.
+ * - Uses os.tmpdir() exclusively for output PDFs.
+ * - Streams custom markup via stdin or passes JSON directly in memory via --input data_json.
+ */
+export async function compileTypst(options: CompileTypstOptions): Promise<ProviderResult> {
+  const typstDir = path.join(process.cwd(), 'typst');
+  const tempId = `typst_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const outputPdfPath = path.join(os.tmpdir(), `${tempId}.pdf`);
+
+  const cleanup = async () => {
+    try {
+      await fs.unlink(outputPdfPath);
+    } catch {}
+  };
+
+  const cmd = await getTypstExecutable();
+  const template = normalizeTemplateName(options.template);
+  const theme = options.theme && options.theme !== 'none' ? options.theme : 'none';
+
+  try {
+    if (options.typstCode && options.typstCode.trim()) {
+      // Compile custom Typst markup via stdin to avoid needing writable source files inside --root
+      const args = ['compile', '--root', typstDir];
+      if (process.platform === 'win32') {
+        args.push('--font-path', 'C:\\Windows\\Fonts');
+      }
+      args.push('-', outputPdfPath);
+
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn(cmd, args, { timeout: 15000 });
+        let stderr = '';
+
+        child.stderr.on('data', (chunk) => {
+          stderr += chunk.toString();
+        });
+
+        child.on('error', (err) => {
+          reject(new ProviderError(err.message, { retryable: false }));
+        });
+
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            console.error('[Typst Stdin Error]:', stderr);
+            reject(
+              new ProviderError(stderr || `Typst process exited with code ${code}`, {
+                retryable: false,
+              })
+            );
+          }
+        });
+
+        child.stdin.write(options.typstCode);
+        child.stdin.end();
+      });
+    } else if (options.resumeData) {
+      // Compile structured data using in-memory JSON argument (--input data_json)
+      const typstData = resumeDataToTypstData(options.resumeData);
+      const jsonStr = JSON.stringify(typstData);
+
+      const mainTypPath = path.join(typstDir, 'main.typ');
+      const args = [
+        'compile',
+        '--root',
+        typstDir,
+        '--input',
+        `data_json=${jsonStr}`,
+        '--input',
+        `template=${template}`,
+        '--input',
+        `theme=${theme}`,
+      ];
+
+      if (process.platform === 'win32') {
+        args.push('--font-path', 'C:\\Windows\\Fonts');
+      }
+
+      args.push(mainTypPath, outputPdfPath);
+
+      await new Promise<void>((resolve, reject) => {
+        execFile(cmd, args, { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+          if (error) {
+            console.error('[Typst Compile Error]:', stderr || error.message);
+            return reject(
+              new ProviderError(stderr || error.message || 'Typst compilation failed', {
+                retryable: false,
+              })
+            );
+          }
+          resolve();
+        });
+      });
+    } else {
+      throw new ProviderError('Neither resumeData nor typstCode was provided for compilation.', {
+        retryable: false,
+      });
+    }
+
+    const pdfBuffer = await fs.readFile(outputPdfPath);
+    const arrayBuffer = pdfBuffer.buffer.slice(
+      pdfBuffer.byteOffset,
+      pdfBuffer.byteOffset + pdfBuffer.byteLength
+    );
+
+    return {
+      provider: `typst-serverless (${process.platform})`,
+      pdfBuffer: arrayBuffer,
+    };
+  } catch (error) {
+    if (error instanceof ProviderError) throw error;
+    throw new ProviderError(error instanceof Error ? error.message : 'Unknown compile error', {
+      retryable: false,
+    });
+  } finally {
+    cleanup().catch(() => {});
+  }
+}
+
+/**
+ * Executes a compilation cycle for async queue workers.
+ */
+export async function compileTypstProviderCycle(
+  codeOrData: string | ResumeData,
+  cycle = 1,
+  opts?: { template?: string; theme?: string }
+): Promise<{
+
+  result?: ProviderResult;
+  attempts: CompileAttempt[];
+  sawRetryableFailure: boolean;
+}> {
+  const attempts: CompileAttempt[] = [];
+
+  try {
+    const isObject = typeof codeOrData === 'object' && codeOrData !== null;
+    const result = await compileTypst({
+      resumeData: isObject ? (codeOrData as ResumeData) : undefined,
+      typstCode: !isObject ? (codeOrData as string) : undefined,
+      template: opts?.template || 'modern',
+      theme: opts?.theme || 'none',
+    });
+
+    attempts.push({
+      provider: result.provider,
+      ok: true,
+      cycle,
     });
 
     return {
-        provider: `latex.ytotech.com (${compiler})`,
-        pdfBuffer: await response.arrayBuffer(),
+      result,
+      attempts,
+      sawRetryableFailure: false,
     };
-}
-
-async function compileViaLatexOnline(host: string, latexCode: string): Promise<ProviderResult> {
-    const encoded = encodeURIComponent(latexCode);
-    if (encoded.length > 14000) {
-        throw new ProviderError('Payload too large for GET-based latex-online fallback', { retryable: false });
-    }
-
-    const response = await fetchWithProviderErrors(`${host}/compile?text=${encoded}`, { method: 'GET' });
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('pdf')) {
-        throw new ProviderError((await response.text()).slice(0, 600) || 'Provider did not return a PDF', {
-            retryable: false,
-        });
-    }
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    attempts.push({
+      provider: 'typst-serverless',
+      ok: false,
+      cycle,
+      details: errorMsg,
+      retryable: false,
+    });
 
     return {
-        provider: `${host}/compile`,
-        pdfBuffer: await response.arrayBuffer(),
+      attempts,
+      sawRetryableFailure: false,
     };
+  }
 }
 
-const providers: Array<{ name: string; key: string; run: (latexCode: string) => Promise<ProviderResult> }> = [
-    { name: 'latex.ytotech.com (pdflatex)', key: 'ytotech-pdflatex', run: (latexCode) => compileViaYtoTech(latexCode, 'pdflatex') },
-    { name: 'latex.ytotech.com (xelatex)', key: 'ytotech-xelatex', run: (latexCode) => compileViaYtoTech(latexCode, 'xelatex') },
-    { name: 'latexonline.cc/compile', key: 'latexonline-cc', run: (latexCode) => compileViaLatexOnline('https://latexonline.cc', latexCode) },
-    { name: 'latex.odin.study/compile', key: 'latex-odin-study', run: (latexCode) => compileViaLatexOnline('https://latex.odin.study', latexCode) },
-    { name: 'ltxonline.hvoss.org/compile', key: 'ltxonline-hvoss', run: (latexCode) => compileViaLatexOnline('https://ltxonline.hvoss.org', latexCode) },
-];
 
-export async function compileLatexProviderCycle(latexCode: string, cycle = 1): Promise<{
-    result?: ProviderResult;
-    attempts: CompileAttempt[];
-    sawRetryableFailure: boolean;
-}> {
-    const attempts: CompileAttempt[] = [];
-    let sawRetryableFailure = false;
-
-    for (const provider of providers) {
-        if (await isProviderCircuitOpen(provider.key)) {
-            await incrementProviderMetric(provider.key, 'skipped');
-            attempts.push({
-                provider: provider.name,
-                ok: false,
-                cycle,
-                retryable: true,
-                details: 'Skipped due to open circuit breaker',
-            });
-            sawRetryableFailure = true;
-            continue;
-        }
-
-        try {
-            const result = await provider.run(latexCode);
-            await incrementProviderMetric(provider.key, 'success');
-            attempts.push({ provider: result.provider, ok: true, cycle });
-            return { result, attempts, sawRetryableFailure };
-        } catch (error) {
-            const providerError =
-                error instanceof ProviderError
-                    ? error
-                    : new ProviderError(error instanceof Error ? error.message : 'Unknown compile error');
-
-            if (providerError.retryable) {
-                sawRetryableFailure = true;
-                await openProviderCircuit(provider.key, providerError.message);
-            }
-            await incrementProviderMetric(provider.key, 'failure');
-
-            attempts.push({
-                provider: provider.name,
-                ok: false,
-                cycle,
-                status: providerError.status,
-                retryable: providerError.retryable,
-                details: providerError.message,
-            });
-        }
-    }
-
-    return { attempts, sawRetryableFailure };
-}

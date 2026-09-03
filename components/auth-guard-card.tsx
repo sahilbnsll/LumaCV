@@ -16,8 +16,9 @@ export function AuthGuardCard({ compact = false }: { compact?: boolean }) {
                 <div className="space-y-1">
                     <p className="text-sm font-medium">Login to unlock downloads</p>
                     <p className="text-sm text-muted-foreground">
-                        Sign in to download PDF, export LaTeX, and use copy actions.
+                        Sign in to download PDF, export Typst, and use copy actions.
                     </p>
+
                     <div className="flex gap-2 pt-1">
                         <Button asChild size="sm">
                             <Link href="/login">Login</Link>

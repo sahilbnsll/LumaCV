@@ -2,19 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateStream, collectStream, extractJsonObjectFromAssistantText } from '@/lib/llm-client';
 import { GenerateResumeRequestSchema, GenerateResumeResponseSchema, ResumeData } from '@/lib/resume-schema';
 import { normalizeResumeFromLLM } from '@/lib/normalize-resume';
-import { generateLatex } from '@/lib/latex-generator';
+import { generateTypst } from '@/lib/typst-generator';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { ratelimit } from '@/lib/rate-limit';
+import { jsonrepair } from 'jsonrepair';
+import { validateAndCleanTailoredResume } from '@/lib/fact-validator';
+import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-    const ip = req.ip ?? "127.0.0.1";
-    const { success } = await ratelimit.limit(ip);
+    const userKeys = extractUserApiKeys(req);
+    const usingCustomKeys = hasCustomKeys(userKeys);
 
-    if (!success) {
-        return new NextResponse('Too many requests. Please try again later.', { status: 429 });
+    if (!usingCustomKeys) {
+        const ip = req.ip ?? "127.0.0.1";
+        const { success } = await ratelimit.limit(ip);
+
+        if (!success) {
+            return new NextResponse('Too many requests. Please try again later or configure your own AI key.', { status: 429 });
+        }
     }
 
     try {
@@ -28,7 +36,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { resumeData, jdKeywords, template } = validatedInput.data;
+        const { resumeData, jdKeywords, template, theme } = validatedInput.data;
 
         // Load prompt
         const promptTemplate = await fs.readFile(path.join(process.cwd(), 'prompts', 'resume-tailor.txt'), 'utf-8');
@@ -39,29 +47,52 @@ export async function POST(req: NextRequest) {
 
         let tailoredResume: ResumeData;
         try {
-            console.log('[Tailor] Starting streaming tailor...');
-            const { textStream, model } = await generateStream(prompt, undefined, 'heavy', { maxTokens: 4000 });
+            console.log(`[Tailor] Starting streaming tailor (BYOK: ${usingCustomKeys})...`);
+            const { textStream, model } = await generateStream(prompt, undefined, 'heavy', { 
+                maxTokens: 6000,
+                userKeys
+            });
+
             console.log(`[Tailor] Connected via ${model}, collecting stream...`);
 
             const rawText = await collectStream(textStream);
             console.log(`[Tailor] Stream complete (${rawText.length} chars)`);
 
             const jsonText = extractJsonObjectFromAssistantText(rawText);
-            const raw = JSON.parse(jsonText);
+            let raw: unknown;
+            try {
+                raw = JSON.parse(jsonText);
+            } catch {
+                const repaired = jsonrepair(jsonText);
+                raw = JSON.parse(repaired);
+            }
             tailoredResume = normalizeResumeFromLLM(raw);
         } catch (llmError: unknown) {
             console.error('LLM Tailoring Failed:', llmError);
             tailoredResume = resumeData;
         }
 
-        // Generate LaTeX
-        const latexCode = generateLatex(tailoredResume, template);
+        // Run post-generation AI Fact Validation against ground truth source evidence
+        const factCheck = validateAndCleanTailoredResume(resumeData, tailoredResume);
+        tailoredResume = factCheck.cleanedResume;
+
+        // Generate Typst
+        const typstCode = generateTypst(tailoredResume, template, theme);
 
         const responseData = {
             tailoredResume,
-            latexCode,
+            typstCode,
             confidenceScore: tailoredResume.confidenceScore || 0,
+            factCheckReport: {
+                passed: factCheck.passed,
+                issuesCount: factCheck.issues.length,
+                preservedMetricsCount: factCheck.preservedMetricsCount,
+                verifiedEmployersCount: factCheck.verifiedEmployersCount,
+            },
         };
+
+
+
 
         const validatedOutput = GenerateResumeResponseSchema.safeParse(responseData);
         if (!validatedOutput.success) {

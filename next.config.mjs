@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./bin/**/*', './typst/**/*'],
+    },
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false;
 

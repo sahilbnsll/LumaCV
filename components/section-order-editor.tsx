@@ -84,8 +84,9 @@ export function SectionOrderEditor() {
         <div className="rounded-xl border bg-card p-4">
             <h3 className="text-sm font-semibold">Section Order</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-                Drag sections or use arrows to control LaTeX output order.
+                Drag sections or use arrows to control Typst output order.
             </p>
+
             <div className="mt-3 space-y-2">
                 {order.map((key, index) => (
                     <div

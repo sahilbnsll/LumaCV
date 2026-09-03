@@ -9,9 +9,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/install-typst.mjs"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.49",
     "@ai-sdk/google": "^3.0.58",
     "@ai-sdk/openai": "^3.0.50",
     "@hookform/resolvers": "^3.3.4",

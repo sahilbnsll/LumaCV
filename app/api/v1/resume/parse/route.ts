@@ -6,15 +6,21 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
+import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-    const ip = req.ip ?? "127.0.0.1";
-    const { success } = await ratelimit.limit(ip);
+    const userKeys = extractUserApiKeys(req);
+    const usingCustomKeys = hasCustomKeys(userKeys);
 
-    if (!success) {
-        return new NextResponse('Too many requests. Please try again later.', { status: 429 });
+    // Bypass or grant higher limits if candidate supplies their own AI key
+    if (!usingCustomKeys) {
+        const ip = req.ip ?? "127.0.0.1";
+        const { success } = await ratelimit.limit(ip);
+        if (!success) {
+            return new NextResponse('Too many requests. Please try again later or configure your own AI key.', { status: 429 });
+        }
     }
 
     try {
@@ -33,8 +39,12 @@ export async function POST(req: NextRequest) {
         const promptTemplate = await fs.readFile(path.join(process.cwd(), 'prompts', 'resume-parse.txt'), 'utf-8');
         const prompt = promptTemplate.replace('{{EXTRACTED_TEXT}}', extractedText.substring(0, 20000));
 
-        console.log('[Parse] Starting streaming parse...');
-        const { textStream, model } = await generateStream(prompt, undefined, 'heavy', { maxTokens: 4000 });
+        console.log(`[Parse] Starting streaming parse (BYOK: ${usingCustomKeys})...`);
+        const { textStream, model } = await generateStream(prompt, undefined, 'heavy', { 
+            maxTokens: 8000,
+            userKeys
+        });
+
         console.log(`[Parse] Connected via ${model}, collecting stream...`);
 
         // Collect the full stream, then parse + normalize server-side
@@ -53,7 +63,9 @@ export async function POST(req: NextRequest) {
         }
         const resumeData = normalizeResumeFromLLM(raw);
 
+
         return NextResponse.json(resumeData);
+
 
     } catch (error: unknown) {
         console.error('Parse Error:', error);

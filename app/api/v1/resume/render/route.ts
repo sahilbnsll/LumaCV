@@ -15,8 +15,10 @@ import {
 export const maxDuration = 10;
 
 const RenderRequestSchema = z.object({
-    latexCode: z.string().min(1),
+    typstCode: z.string().min(1, 'typstCode is required'),
 });
+
+
 
 function normalizeBucketName(raw: string | undefined) {
     return (raw || 'resumes').trim().replace(/^"+|"+$/g, '').replace(/^'+|'+$/g, '');
@@ -66,8 +68,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid input', details: parsed.error.format() }, { status: 400 });
         }
 
-        const { latexCode } = parsed.data;
-        const compileHash = await hashTextServer(latexCode);
+        const typstCode = parsed.data.typstCode;
+        const compileHash = await hashTextServer(typstCode);
+
 
         const cached = await getPdfCache(compileHash);
         if (cached?.status === 'ready' && cached.userId === user.id) {
@@ -98,7 +101,8 @@ export async function POST(req: NextRequest) {
             updatedAt: now,
         });
 
-        await enqueueCompileJob({ compileHash, latexCode, cycle: 1, userId: user.id });
+        await enqueueCompileJob({ compileHash, typstCode, cycle: 1, userId: user.id });
+
 
         return NextResponse.json({ status: 'queued', hash: compileHash });
     } catch (error) {

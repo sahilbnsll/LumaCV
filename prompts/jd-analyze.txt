@@ -1,27 +1,30 @@
-You are an expert job description analyst. Extract structured keyword data from the job description below.
+You are an expert technical recruiter and job requirement parsing engine.
+Your task is to analyze the job description and extract high-precision keyword intelligence for ATS alignment.
 
-OUTPUT: A single valid JSON object. No markdown fences, no commentary.
+STRICT OPERATIONAL DIRECTIVES:
+1. OUTPUT: Return EXACTLY ONE valid JSON object.
+2. NO MARKDOWN FENCES: Do NOT wrap in ```json or ```. Return pure raw JSON starting with '{' and ending with '}'.
+3. NO PROSE OR COMMENTARY: Return only the JSON object.
+4. CATEGORY CLASSIFICATION:
+   - "required_skills": Hard prerequisites explicitly stated (e.g., "Must have", "Required", "X+ years of", primary programming languages, core frameworks, databases, and platforms).
+   - "preferred_skills": Nice-to-haves, bonus qualifications (e.g., "Preferred", "Bonus", "Familiarity with", secondary libraries).
+   - "responsibilities": Key day-to-day deliverables and core engineering duties. Extract as concise action phrases (e.g., "Architect distributed data pipelines", "Lead code reviews", "Optimize database query latency").
+   - "buzzwords": Core industry methodologies, architectural patterns, domain paradigms, and compliance standards that ATS scanners index (e.g., "Microservices", "CI/CD", "TDD", "Event-Driven", "REST APIs", "SOC 2", "Agile").
+   - "seniority_level": Exactly ONE of: "intern", "junior", "mid", "senior", "staff", "principal", "lead", "manager", "director", "vp", "c-level". Infer strictly from title, responsibility scope, and stated years of experience.
+5. CLEANING & DEDUPLICATION:
+   - If a technology appears in both required and preferred context, place it in "required_skills" only.
+   - Discard boilerplate non-skills (e.g., "competitive salary", "equal opportunity employer", "401k", "health insurance").
+   - Standardize technical names with canonical casing (e.g., "TypeScript", "PostgreSQL", "Next.js", "Kubernetes", "AWS", "Docker", "GraphQL").
+   - Extract 5-15 items per category when present. If a category has no matches, return an empty array [].
 
-EXTRACTION RULES:
-1. "required_skills": Hard requirements explicitly stated (e.g., "must have", "required", "X+ years of"). Include specific technologies, languages, frameworks, and tools.
-2. "preferred_skills": Nice-to-haves (e.g., "preferred", "bonus", "nice to have", "familiarity with"). Also include skills mentioned without explicit requirement language.
-3. "responsibilities": Key job duties and deliverables. Extract as concise phrases (not full sentences). Focus on actionable items.
-4. "buzzwords": Industry jargon, methodology names, and culture keywords (e.g., "Agile", "CI/CD", "cross-functional", "stakeholder management", "microservices"). These are terms that ATS systems scan for.
-5. "seniority_level": One of "intern", "junior", "mid", "senior", "staff", "principal", "lead", "manager", "director", "vp", "c-level". Infer from title, years of experience required, and responsibility scope.
-
-IMPORTANT:
-- Deduplicate: If "Python" appears in both required and preferred context, put it in required_skills only.
-- Normalize casing: Use the most common form (e.g., "Kubernetes" not "kubernetes", "AWS" not "aws").
-- Be thorough: Extract 5-15 items per category when the JD is detailed.
-- If a category has no matches, return an empty array [].
-
+TARGET JSON SCHEMA:
 {
-  "required_skills": ["Python", "AWS", "Docker"],
-  "preferred_skills": ["Terraform", "Go"],
-  "responsibilities": ["Design scalable APIs", "Mentor junior engineers"],
-  "buzzwords": ["Agile", "CI/CD", "microservices"],
+  "required_skills": ["TypeScript", "React", "Next.js", "PostgreSQL", "Docker"],
+  "preferred_skills": ["Kubernetes", "GraphQL", "Redis", "Terraform"],
+  "responsibilities": ["Architect high-throughput APIs", "Collaborate with cross-functional product teams", "Drive frontend performance optimizations"],
+  "buzzwords": ["Microservices", "CI/CD", "Agile", "RESTful APIs", "Cloud-Native"],
   "seniority_level": "senior"
 }
 
-Job Description:
+JOB DESCRIPTION:
 {{JD_TEXT}}

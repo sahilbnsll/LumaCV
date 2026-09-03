@@ -5,15 +5,20 @@ import { normalizeAnalyzeJDFromLLM } from '@/lib/normalize-jd';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { ratelimit } from '@/lib/rate-limit';
+import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-    const ip = req.ip ?? "127.0.0.1";
-    const { success } = await ratelimit.limit(ip);
+    const userKeys = extractUserApiKeys(req);
+    const usingCustomKeys = hasCustomKeys(userKeys);
 
-    if (!success) {
-        return new NextResponse('Too many requests. Please try again later.', { status: 429 });
+    if (!usingCustomKeys) {
+        const ip = req.ip ?? "127.0.0.1";
+        const { success } = await ratelimit.limit(ip);
+        if (!success) {
+            return new NextResponse('Too many requests. Please try again later or configure your own AI key.', { status: 429 });
+        }
     }
 
     try {
@@ -41,9 +46,13 @@ export async function POST(req: NextRequest) {
 
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                console.log(`[JD Analyze] Attempt ${attempt}/${MAX_RETRIES} starting streaming analysis...`);
+                console.log(`[JD Analyze] Attempt ${attempt}/${MAX_RETRIES} starting streaming analysis (BYOK: ${usingCustomKeys})...`);
                 // Use the new generateStream with our models
-                const { textStream, model } = await generateStream(prompt, undefined, 'light', { maxTokens: 2000 });
+                const { textStream, model } = await generateStream(prompt, undefined, 'light', { 
+                    maxTokens: 2000,
+                    userKeys 
+                });
+
                 console.log(`[JD Analyze] Connected via ${model}, collecting stream...`);
 
                 const rawText = await collectStream(textStream);

@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CompileLatexRequestSchema } from '@/lib/resume-schema';
+import { CompileResumeRequestSchema } from '@/lib/resume-schema';
 import { hashTextServer } from '@/lib/content-hash';
-import { compileLatexProviderCycle } from '@/lib/compiler-service';
-import { requireUser } from '@/lib/auth';
+import { compileTypst } from '@/lib/compiler-service';
+import { ratelimit } from '@/lib/rate-limit';
 
 export const maxDuration = 60;
 
-const MAX_CYCLES = 3;
-const BASE_BACKOFF_MS = 700;
-
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function getBackoffMs(cycle: number): number {
-    return BASE_BACKOFF_MS * 2 ** Math.max(0, cycle - 1);
-}
-
 export async function POST(req: NextRequest) {
+    const ip = req.ip ?? "127.0.0.1";
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+        return new NextResponse('Too many requests. Please try again later.', { status: 429 });
+    }
+
     try {
-        const auth = await requireUser();
-        if (auth.response) return auth.response;
+
 
         const body = await req.json();
-        const validatedInput = CompileLatexRequestSchema.safeParse(body);
+        const validatedInput = CompileResumeRequestSchema.safeParse(body);
 
         if (!validatedInput.success) {
             return NextResponse.json(
@@ -32,44 +26,28 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { latexCode } = validatedInput.data;
-        const compileHash = await hashTextServer(latexCode);
-        const attempts = [];
+        const { resumeData, template, theme, typstCode } = validatedInput.data;
+        const codeForHash = typstCode || JSON.stringify(resumeData || '') + (template || '') + (theme || '');
+        const compileHash = await hashTextServer(codeForHash);
 
-        for (let cycle = 1; cycle <= MAX_CYCLES; cycle += 1) {
-            const { result, attempts: cycleAttempts, sawRetryableFailure } = await compileLatexProviderCycle(latexCode, cycle);
-            attempts.push(...cycleAttempts);
+        const result = await compileTypst({
+            resumeData,
+            template,
+            theme,
+            typstCode,
+        });
 
-            if (result) {
-                return new NextResponse(result.pdfBuffer, {
-                    headers: {
-                        'Content-Type': 'application/pdf',
-                        'Content-Disposition': 'inline; filename="resume.pdf"',
-                        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
-                        ETag: `"${compileHash}"`,
-                        'X-Compile-Provider': result.provider,
-                        'X-Compile-Cycle': String(cycle),
-                        'X-Compile-Attempts': String(attempts.length),
-                        'X-Compile-Hash': compileHash,
-                    },
-                });
-            }
 
-            if (cycle < MAX_CYCLES && sawRetryableFailure) {
-                await sleep(getBackoffMs(cycle));
-            } else {
-                break;
-            }
-        }
-
-        return NextResponse.json(
-            {
-                error: 'Failed to compile PDF',
-                details: 'All compile providers failed after retries.',
-                attempts,
+        return new NextResponse(result.pdfBuffer, {
+            headers: {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'inline; filename="resume.pdf"',
+                'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
+                ETag: `"${compileHash}"`,
+                'X-Compile-Provider': result.provider,
+                'X-Compile-Hash': compileHash,
             },
-            { status: 502 }
-        );
+        });
     } catch (error: unknown) {
         console.error('Compile Error:', error);
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

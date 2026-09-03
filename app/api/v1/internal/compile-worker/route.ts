@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { compileLatexProviderCycle } from '@/lib/compiler-service';
+import { compileTypstProviderCycle } from '@/lib/compiler-service';
 import { Receiver } from '@upstash/qstash';
 import { enqueueCompileJob } from '@/lib/qstash';
 import {
@@ -16,10 +16,12 @@ export const maxDuration = 10;
 
 const WorkerSchema = z.object({
     compileHash: z.string().min(10),
-    latexCode: z.string().min(1),
+    typstCode: z.string().optional(),
     cycle: z.number().int().min(1).max(3).default(1),
     userId: z.string().min(1),
 });
+
+
 
 export async function POST(req: NextRequest) {
     const rawBody = await req.text();
@@ -60,7 +62,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
     }
 
-    const { compileHash, latexCode, cycle, userId } = parsed.data;
+    const { compileHash, cycle, userId } = parsed.data;
+    const typstCode = parsed.data.typstCode || '';
+
     const locked = await acquireCompileLock(compileHash);
     if (!locked) {
         return NextResponse.json({ ok: true, status: 'locked' }, { status: 202 });
@@ -93,7 +97,8 @@ export async function POST(req: NextRequest) {
             updatedAt: nowIso(),
         });
 
-        const { result, attempts, sawRetryableFailure } = await compileLatexProviderCycle(latexCode, cycle);
+        const { result, attempts, sawRetryableFailure } = await compileTypstProviderCycle(typstCode, cycle);
+
 
         if (result) {
             try {
@@ -130,7 +135,7 @@ export async function POST(req: NextRequest) {
 
                 await upsertResumeRecord({
                     contentHash: compileHash,
-                    latex: latexCode,
+                    typst: typstCode,
                     pdfUrl: signedUrl,
                     status: 'ready',
                     attempts: cycle,
@@ -177,7 +182,7 @@ export async function POST(req: NextRequest) {
                 });
                 await upsertResumeRecord({
                     contentHash: compileHash,
-                    latex: latexCode,
+                    typst: typstCode,
                     status: 'failed',
                     attempts: cycle,
                 });
@@ -200,11 +205,11 @@ export async function POST(req: NextRequest) {
             });
             await upsertResumeRecord({
                 contentHash: compileHash,
-                latex: latexCode,
+                typst: typstCode,
                 status: 'queued',
                 attempts: cycle,
             });
-            await enqueueCompileJob({ compileHash, latexCode, cycle: cycle + 1, userId }, 2 ** cycle * 5);
+            await enqueueCompileJob({ compileHash, typstCode, cycle: cycle + 1, userId }, 2 ** cycle * 5);
             return NextResponse.json({ ok: true, status: 'queued', nextCycle: cycle + 1 }, { status: 202 });
         }
 
@@ -219,7 +224,7 @@ export async function POST(req: NextRequest) {
         });
         await upsertResumeRecord({
             contentHash: compileHash,
-            latex: latexCode,
+            typst: typstCode,
             status: 'failed',
             attempts: cycle,
         });
@@ -247,10 +252,11 @@ export async function POST(req: NextRequest) {
         });
         await upsertResumeRecord({
             contentHash: compileHash,
-            latex: latexCode,
+            typst: typstCode,
             status: 'failed',
             attempts: cycle,
         });
+
         return NextResponse.json({ ok: false, status: 'failed', error: message }, { status: 500 });
     } finally {
         await releaseCompileLock(compileHash);
