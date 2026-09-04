@@ -64,7 +64,23 @@ LumaCV features a multi-provider AI engine designed for flexible performance and
   - **Groq Cloud**: Choose between `qwen/qwen3.6-27b`, `llama-3.3-70b-versatile`, or `llama-3.1-8b-instant`.
 - **Zero Server Storage**: Your keys never touch a database or server logs. They reside in your browser's encrypted local storage and are passed solely as per-request TLS headers.
 
+---
 
+## Agent Skills & Design Standards
+
+LumaCV is integrated with the open agent skills ecosystem ([skills.sh](https://skills.sh)), ensuring that all UI/UX components adhere to anti-slop design principles, strict accessibility audits, and motion choreography:
+
+- **[`taste-skill` / `design-taste-frontend`](https://github.com/Leonxlnx/taste-skill)**: Anti-slop frontend engineering skill enforcing intentional aesthetic inference, editorial typography, tailored color palettes, and avoiding generic AI templates.
+- **[`web-design-guidelines`](https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines)**: Automated compliance auditor for Vercel Web Interface Guidelines, touch targets, WCAG contrast ratios, and responsive behaviors.
+- **[`antigravity-design-expert`](https://github.com/sickn33/agentic-awesome-skills/tree/main/skills/antigravity-design-expert)**: Spatial UI engineering, subtle glassmorphism, 3D CSS transforms, and GSAP/motion choreography.
+- **[`ui-ux-pro-max`](.agents/skills/ui-ux-pro-max/)**: Comprehensive design system intelligence with curated palettes, font pairings, and interaction guidelines.
+
+Skills are tracked in `skills-lock.json` and can be synced across agents:
+```bash
+npx skills add Leonxlnx/taste-skill --agent antigravity -y --copy
+npx skills add vercel-labs/agent-skills --skill web-design-guidelines --agent antigravity -y --copy
+npx skills add sickn33/agentic-awesome-skills --skill antigravity-design-expert --agent antigravity -y --copy
+```
 
 ---
 
@@ -146,6 +162,7 @@ npm run build
 
 ```
 LumaCV/
+├── .agents/skills/             # Open agent design, audit, and motion skills
 ├── app/                        # Next.js App Router (28 static & dynamic routes)
 │   ├── api/v1/                 # REST API endpoints
 │   │   ├── jd/analyze/         # Job description analysis
@@ -182,6 +199,7 @@ LumaCV/
 ├── scripts/                    # Verification & audit automation
 │   ├── test-visual-regression.mjs # 48-matrix layout audit
 │   └── verify-routes.mjs       # Route health checker
+├── skills-lock.json            # Agent skills lockfile
 └── typst/                      # Typst typesetting templates & library
     ├── lib/
     │   ├── theme.typ           # Color palettes & typography tokens
