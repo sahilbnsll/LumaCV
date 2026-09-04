@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from './auth-provider';
 import { toast } from 'sonner';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     const { supabase } = useAuth();
@@ -61,39 +61,45 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
         <form onSubmit={submit} className="space-y-4">
             {mode === 'signup' && (
                 <div className="space-y-1.5">
-                    <Label htmlFor="fullName" className="text-xs font-medium text-foreground">Full Name</Label>
+                    <Label htmlFor="auth-fullName" className="text-xs font-medium text-foreground">Full Name</Label>
                     <Input
-                        id="fullName"
+                        id="auth-fullName"
+                        name="name"
                         type="text"
+                        autoComplete="name"
                         placeholder="Jane Doe"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         required
-                        className="h-9 text-xs"
+                        disabled={loading}
+                        className="h-10 text-sm rounded-lg border-border/70 focus-visible:ring-1 focus-visible:ring-primary"
                     />
                 </div>
             )}
 
             <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-medium text-foreground">Email Address</Label>
+                <Label htmlFor="auth-email" className="text-xs font-medium text-foreground">Email Address</Label>
                 <Input
-                    id="email"
+                    id="auth-email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     placeholder="jane@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-9 text-xs"
+                    disabled={loading}
+                    className="h-10 text-sm rounded-lg border-border/70 focus-visible:ring-1 focus-visible:ring-primary"
                 />
             </div>
 
             <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-xs font-medium text-foreground">Password</Label>
+                    <Label htmlFor="auth-password" className="text-xs font-medium text-foreground">Password</Label>
                     {mode === 'login' && (
                         <Link
                             href="/forgot-password"
-                            className="text-[11px] text-primary hover:underline"
+                            className="text-xs text-primary hover:text-primary/80 transition-colors focus-visible:underline focus-visible:outline-none"
                         >
                             Forgot password?
                         </Link>
@@ -101,32 +107,49 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                 </div>
                 <div className="relative">
                     <Input
-                        id="password"
+                        id="auth-password"
+                        name="password"
                         type={showPassword ? "text" : "password"}
+                        autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
-                        className="h-9 text-xs pr-9"
+                        disabled={loading}
+                        className="h-10 text-sm rounded-lg pr-11 border-border/70 focus-visible:ring-1 focus-visible:ring-primary"
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-pressed={showPassword}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                 </div>
+                {mode === 'signup' && (
+                    <p className="text-[11px] text-muted-foreground">Minimum 6 characters required.</p>
+                )}
             </div>
 
             <Button
                 type="submit"
-                className="w-full h-9 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm mt-2"
                 disabled={loading}
+                className="w-full h-10 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-sm rounded-lg mt-2 transition-all cursor-pointer"
             >
-                <span>{loading ? 'Please wait…' : mode === 'signup' ? 'Create Free Account' : 'Sign In'}</span>
-                {!loading && <ArrowRight className="h-3.5 w-3.5" />}
+                {loading ? (
+                    <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Authenticating…</span>
+                    </>
+                ) : (
+                    <>
+                        <span>{mode === 'signup' ? 'Create Free Account' : 'Sign In to LumaCV'}</span>
+                        <ArrowRight className="h-4 w-4" />
+                    </>
+                )}
             </Button>
         </form>
     );

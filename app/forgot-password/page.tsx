@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
+import { AppFooter } from '@/components/app-footer';
 import { useAuth } from '@/components/auth-provider';
-import { KeyRound, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { KeyRound, ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,70 +46,92 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary relative overflow-hidden">
             <AppHeader />
 
-            <div className="px-4 py-16 flex items-center justify-center">
-                <div className="w-full max-w-md rounded-2xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-8 shadow-2xl backdrop-blur-md">
-                    <div className="flex items-center gap-2.5 mb-5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
-                            <KeyRound className="h-4 w-4" />
+            {/* Ambient glow */}
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[360px] bg-primary/8 rounded-full blur-3xl pointer-events-none -z-10" />
+
+            <main className="flex-1 px-4 py-16 sm:py-20 flex items-center justify-center">
+                <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card/90 p-8 sm:p-10 shadow-xl backdrop-blur-xl transition-all">
+                    <div className="flex items-center gap-3 mb-6 pb-5 border-b border-border/60">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+                            <KeyRound className="h-5 w-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold tracking-tight text-foreground">Reset Password</h1>
+                            <h1 className="text-xl font-bold font-display tracking-tight text-foreground">Reset Password</h1>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                We&apos;ll send you a secure link to reset your account password.
+                                Send a secure recovery link to your inbox
                             </p>
                         </div>
                     </div>
 
                     {sent ? (
-                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-6 text-center space-y-3 mt-4">
-                            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-                                <CheckCircle2 className="h-5 w-5" />
+                        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] p-6 text-center space-y-3">
+                            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 ring-4 ring-emerald-500/10">
+                                <CheckCircle2 className="h-6 w-6" />
                             </div>
                             <h2 className="text-sm font-semibold text-foreground">Check Your Inbox</h2>
-                            <p className="text-xs text-muted-foreground">
-                                We sent a password reset link to <strong>{email}</strong>. Click the link in the email to set a new password.
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                We sent a password recovery link to <span className="font-medium text-foreground font-mono">{email}</span>. Click the link to choose your new password.
                             </p>
-                            <Button asChild variant="outline" size="sm" className="h-8 text-xs mt-3">
-                                <Link href="/login">Back to Sign In</Link>
-                            </Button>
+                            <div className="pt-2">
+                                <Button asChild variant="outline" size="sm" className="h-9 text-xs rounded-lg">
+                                    <Link href="/login">Return to Sign In</Link>
+                                </Button>
+                            </div>
                         </div>
                     ) : (
-                        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1.5">
-                                <Label htmlFor="email" className="text-xs font-medium text-foreground">Your Account Email</Label>
+                                <Label htmlFor="reset-email" className="text-xs font-medium text-foreground">Account Email Address</Label>
                                 <Input
-                                    id="email"
+                                    id="reset-email"
+                                    name="email"
                                     type="email"
+                                    autoComplete="email"
                                     required
                                     placeholder="jane@example.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="h-9 text-xs"
+                                    disabled={loading}
+                                    className="h-10 text-sm rounded-lg border-border/70 focus-visible:ring-1 focus-visible:ring-primary"
                                 />
                             </div>
 
                             <Button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full h-9 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm mt-2"
+                                className="w-full h-10 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-sm rounded-lg mt-2 transition-all cursor-pointer"
                             >
-                                <span>{loading ? 'Sending link...' : 'Send Reset Link'}</span>
-                                {!loading && <ArrowRight className="h-3.5 w-3.5" />}
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <span>Dispatching link…</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Send Password Reset Link</span>
+                                        <ArrowRight className="h-4 w-4" />
+                                    </>
+                                )}
                             </Button>
 
-                            <div className="pt-3 text-center">
-                                <Link href="/login" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-                                    <ArrowLeft className="h-3 w-3" />
+                            <div className="pt-4 text-center border-t border-border/60 mt-6">
+                                <Link
+                                    href="/login"
+                                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 py-1 px-2 rounded-md hover:bg-muted/40 transition-colors"
+                                >
+                                    <ArrowLeft className="h-3.5 w-3.5" />
                                     <span>Return to sign in</span>
                                 </Link>
                             </div>
                         </form>
                     )}
                 </div>
-            </div>
+            </main>
+
+            <AppFooter />
         </div>
     );
 }
