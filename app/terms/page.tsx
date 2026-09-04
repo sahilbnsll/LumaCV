@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import { ArrowLeft, Shield, CheckCircle2 } from 'lucide-react';
-
+import { AppFooter } from '@/components/app-footer';
+import { ArrowLeft, CheckCircle2, Scale, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary flex flex-col justify-between">
             <AppHeader />
 
-            <main className="mx-auto max-w-3xl px-4 sm:px-6 py-12">
+            <main id="main-content" className="mx-auto max-w-reading px-4 sm:px-6 py-12 flex-1">
                 <div className="mb-6">
                     <Button asChild variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 -ml-2">
                         <Link href="/">
@@ -21,82 +21,77 @@ export default function TermsPage() {
                     </Button>
                 </div>
 
-                <div className="space-y-2 border-b border-border/60 pb-6 mb-8">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 mb-2">
-                        <Shield className="h-3 w-3" />
-                        <span>Legal Terms</span>
+                <div className="space-y-3 border-b border-border/50 pb-6 mb-8">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                        <Scale className="h-3 w-3" />
+                        <span>Platform Terms</span>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Terms of Service</h1>
-                    <p className="text-sm text-muted-foreground">Last updated: September 2026</p>
+                    <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-foreground">
+                        Terms of Service
+                    </h1>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>Last updated: September 2026</span>
+                        <span>•</span>
+                        <span>3 min read</span>
+                        <span>•</span>
+                        <span className="text-primary font-medium">Open-Access Utility</span>
+                    </div>
                 </div>
 
-                <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
+                <div className="space-y-8 text-xs sm:text-sm leading-relaxed text-muted-foreground">
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
                             1. Acceptance of Terms
                         </h2>
                         <p>
-                            By accessing or using LumaCV (&ldquo;the Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+                            By accessing or using LumaCV, you agree to these Terms of Service. LumaCV provides resume parsing, AI-assisted alignment, deterministic ATS scoring, and vector PDF compilation as an open-access utility.
                         </p>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            2. Service Description & User Content
+                            2. Authentic Candidate Responsibility
                         </h2>
                         <p>
-                            LumaCV provides career optimization tools, including structured resume editing, ATS alignment analysis, and native document compilation. You retain 100% ownership of all resume text, career history, and job descriptions you submit.
-                        </p>
-                        <p>
-                            We do not sell, rent, or use your personal career data to train public artificial intelligence models.
+                            LumaCV is engineered with strict fact-checking filters designed to prevent invented employers, dates, or skills. However, as the applicant, you remain solely responsible for the factual accuracy of all submitted materials and representation during hiring processes.
                         </p>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            3. Factual Truth & User Responsibility
+                            3. Fair Usage & Automated Scraping
                         </h2>
                         <p>
-                            LumaCV is designed to enhance phrasing and maximize keyword alignment for job descriptions while preserving factual truth. However, you are solely responsible for reviewing and validating the accuracy of all generated resumes before submitting them to prospective employers.
+                            LumaCV is offered freely to individual candidates. Automated bot traffic, DDoS attacks, or programmatic scraping of our serverless compilation endpoints without authorization is prohibited.
                         </p>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            4. Subscriptions, Payments & Cancellations
+                            4. Disclaimer of Warranties
                         </h2>
                         <p>
-                            Certain features of LumaCV are offered on a paid subscription basis. Subscriptions automatically renew unless cancelled prior to the renewal date. You may cancel your subscription at any time through your Account settings.
+                            LumaCV provides algorithmic match scoring as a diagnostic heuristic. We do not guarantee employment, interview invitations, or hiring decisions. The service is provided &ldquo;as is&rdquo; without warranties of any kind.
                         </p>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            5. Limitation of Liability
+                            5. Questions & Legal Inquiries
                         </h2>
                         <p>
-                            LumaCV does not guarantee job interviews, offers, or employment outcomes. To the maximum extent permitted by law, LumaCV and its creators shall not be liable for any indirect, incidental, or consequential damages resulting from your use of the service.
-                        </p>
-                    </section>
-
-                    <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-primary" />
-                            6. Inquiries & Legal Notices
-                        </h2>
-                        <p>
-                            For inquiries, legal notices, or account assistance, reach out to our team at{' '}
-                            <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>.
+                            For inquiries regarding our terms, licensing, or commercial distribution, please reach out to <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>.
                         </p>
                     </section>
                 </div>
-
             </main>
+
+            <AppFooter />
         </div>
     );
 }

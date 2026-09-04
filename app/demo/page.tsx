@@ -3,10 +3,12 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
+import { AppFooter } from '@/components/app-footer';
 import { Button } from '@/components/ui/button';
 import { DEMO_RESUME_DATA } from '@/lib/demo-data';
 import { TemplateType } from '@/lib/resume-schema';
 import { generateTypst } from '@/lib/typst-generator';
+import { PALETTES } from '@/lib/design-tokens';
 import {
     Download,
     ArrowRight,
@@ -16,14 +18,15 @@ import {
     Undo2,
     Palette,
     Layers,
-    FileCheck
+    FileCheck,
+    Sparkles,
+    ShieldCheck
 } from 'lucide-react';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MiniLayoutRepresentation } from '@/components/template-selector';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-
+import { AnimatedCounter } from '@/components/animated-counter';
 
 const templateOptions: Array<{ id: TemplateType; name: string; style: string }> = [
     { id: 'modern', name: 'Modern', style: 'Clean Sans-Serif' },
@@ -32,17 +35,6 @@ const templateOptions: Array<{ id: TemplateType; name: string; style: string }> 
     { id: 'compact', name: 'Compact', style: 'Space-Optimized' },
     { id: 'two_column', name: 'Two-Column', style: 'Asymmetric Sidebar' },
     { id: 'ats_safe', name: 'ATS-Safe', style: 'Linear Pure Text' },
-];
-
-const colorSwatches = [
-    { id: 'none', label: 'Default Slate', hex: '#64748B' },
-    { id: 'navy', label: 'Deep Navy', hex: '#1E3A8A' },
-    { id: 'cobalt', label: 'Cobalt Blue', hex: '#1E40AF' },
-    { id: 'emerald', label: 'Emerald Green', hex: '#047857' },
-    { id: 'burgundy', label: 'Burgundy Wine', hex: '#881337' },
-    { id: 'teal', label: 'Nordic Teal', hex: '#0E7490' },
-    { id: 'slate', label: 'Graphite', hex: '#334155' },
-    { id: 'black', label: 'Pure Black', hex: '#000000' },
 ];
 
 export default function DemoPage() {
@@ -82,9 +74,8 @@ export default function DemoPage() {
     }, []);
 
     const handleDownloadDemoPdf = async () => {
-        const toastId = toast.loading('Compiling pixel-perfect demo PDF...');
+        const toastId = toast.loading('Compiling pixel-perfect demo PDF…');
         try {
-
             const typstCode = generateTypst(DEMO_RESUME_DATA, selectedTemplate, selectedTheme);
             const res = await fetch('/api/v1/resume/compile', {
                 method: 'POST',
@@ -101,324 +92,350 @@ export default function DemoPage() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Alex_Morgan_Tailored_${selectedTemplate}.pdf`;
+            a.download = `Alex_Chen_Stripe_Sample_${selectedTemplate}.pdf`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            toast.success('Downloaded Sample PDF', { id: toastId });
+            toast.success('Downloaded compiled sample PDF', { id: toastId });
         } catch {
-            toast.error('Compile failed', { id: toastId });
+            toast.error('Sample compilation error', { id: toastId });
         }
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary flex flex-col justify-between">
             <AppHeader />
 
-            {/* Public Demo Notification Banner */}
-            <div className="bg-primary/10 border-b border-primary/20 px-4 py-2.5">
-                <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2 text-foreground">
-                        <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="font-semibold">Interactive Demo Mode:</span>
-                        <span className="text-muted-foreground">
-                            Viewing sample candidate (Alex Morgan) tailored for <strong>Senior Full Stack Engineer @ Stripe</strong>.
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Button asChild size="sm" className="h-7 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm">
-                            <Link href="/builder">
-                                Tailor Your Own Resume
-                                <ArrowRight className="h-3 w-3" />
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-5">
-                {/* Demo Action Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card">
+            <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 py-8 flex-1">
+                {/* Header Strip */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/50 pb-6 mb-8">
                     <div>
-                        <h1 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
-                            <span>Alex Morgan — Senior Full Stack Engineer @ Stripe</span>
-                            <span className="rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold">
-                                {demoScore}/100 Match
-                            </span>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-2">
+                            <Sparkles className="h-3 w-3" />
+                            <span>Interactive Demonstration</span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
+                            Live Optimization Sample
                         </h1>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                            Sub-50ms native formatting • ATS-ready vector document
+                        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                            Target Role: <strong className="text-foreground">Senior Full Stack Engineer @ Stripe</strong> • Candidate: Alex Chen
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <Button
-                            size="sm"
                             onClick={handleDownloadDemoPdf}
-                            className="h-8 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm"
+                            variant="outline"
+                            size="sm"
+                            className="h-9 text-xs font-medium border-border/80 hover:bg-muted/40 gap-1.5"
                         >
                             <Download className="h-3.5 w-3.5" />
                             <span>Download Sample PDF</span>
                         </Button>
 
-                        <Button asChild variant="outline" size="sm" className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40">
-                            <Link href="/builder">Start With Your Resume</Link>
+                        <Button asChild size="sm" className="h-9 px-4 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-xs">
+                            <Link href="/builder">
+                                <span>Tailor Your Own Resume</span>
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
                         </Button>
                     </div>
                 </div>
 
-                {/* 60/40 Split Workspace */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                    {/* LEFT (60%): Live Preview & Visual Templates Below */}
-                    <div className="lg:col-span-7 space-y-4">
-                        {/* Live Sample Preview Frame */}
-                        <div className="rounded-xl border border-border/70 overflow-hidden bg-white shadow-xl h-[760px] relative">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={`/templates/${selectedTemplate}.png`}
-                                alt={`${selectedTemplate} template preview`}
-                                className="w-full h-full object-contain object-top"
-                            />
-                        </div>
-
-
-                        {/* Design & Template Controls (Positioned Below Document) */}
-                        <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-4 space-y-3.5">
+                {/* Workspace Split Preview */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Interactive Controls, ATS Score & Diffs */}
+                    <div className="lg:col-span-6 space-y-6">
+                        {/* Interactive Template Bar */}
+                        <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4 shadow-card">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                                    <Layers className="h-3.5 w-3.5 text-primary" />
-                                    Choose Typesetting Template
+                                <span className="text-xs font-display font-bold uppercase tracking-wider text-foreground">
+                                    Switch Typesetting Template
                                 </span>
-                                <span className="text-[11px] text-muted-foreground">
-                                    Click any template to switch instantly
+                                <span className="text-[11px] font-mono text-muted-foreground">
+                                    Sub-50ms render
                                 </span>
                             </div>
 
-                            {/* Template mini cards with real PNGs */}
-                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-                                {templateOptions.map((opt) => {
-                                    const isSelected = selectedTemplate === opt.id;
+                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                {templateOptions.map((t) => {
+                                    const isSelected = selectedTemplate === t.id;
                                     return (
                                         <button
-                                            key={opt.id}
-                                            onClick={() => setSelectedTemplate(opt.id)}
+                                            key={t.id}
+                                            type="button"
+                                            onClick={() => setSelectedTemplate(t.id)}
                                             className={cn(
-                                                "group flex flex-col rounded-lg border p-1.5 text-left transition-all",
+                                                "group flex flex-col justify-between rounded-xl border p-2 text-left transition-all",
                                                 isSelected
-                                                    ? "border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-sm"
-                                                    : "border-border/60 bg-muted/20 hover:border-primary/40 hover:bg-muted/30"
+                                                    ? "border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-xs"
+                                                    : "border-border/60 bg-muted/20 hover:border-primary/40"
                                             )}
                                         >
-                                            <MiniLayoutRepresentation type={opt.id} isSelected={isSelected} />
-                                            <div className="mt-2 flex items-center justify-between text-[11px]">
-                                                <span className="font-semibold text-foreground truncate">{opt.name}</span>
-                                                {isSelected && <Check className="h-3 w-3 text-primary stroke-[3]" />}
-                                            </div>
+                                            <MiniLayoutRepresentation type={t.id} isSelected={isSelected} />
+                                            <span className="mt-2 text-[10px] font-semibold text-foreground block truncate">
+                                                {t.name}
+                                            </span>
                                         </button>
-
                                     );
                                 })}
                             </div>
 
-                            {/* Color Swatches */}
-                            <div className="pt-2 border-t border-border/40 flex items-center justify-between">
-                                <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                                    <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                                    Accent Palette
+                            {/* Accent Palette Swatches */}
+                            <div className="pt-3 border-t border-border/40 flex items-center justify-between">
+                                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                    <Palette className="h-3.5 w-3.5 text-primary" />
+                                    Accent Palette:
                                 </span>
-                                <div className="flex items-center gap-1.5">
-                                    {colorSwatches.map((swatch) => (
+
+                                <div className="flex items-center gap-2">
+                                    {Object.values(PALETTES).map((p) => (
                                         <button
-                                            key={swatch.id}
-                                            onClick={() => setSelectedTheme(swatch.id)}
+                                            key={p.id}
+                                            type="button"
+                                            onClick={() => setSelectedTheme(p.id)}
+                                            aria-label={`Select ${p.label} palette`}
                                             className={cn(
-                                                "h-5 w-5 rounded-full border transition-transform",
-                                                selectedTheme === swatch.id
-                                                    ? "ring-2 ring-primary ring-offset-1 ring-offset-background scale-110"
+                                                "h-6 w-6 rounded-full border transition-transform flex items-center justify-center",
+                                                selectedTheme === p.id
+                                                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
                                                     : "border-border/60 hover:scale-105 opacity-80 hover:opacity-100"
                                             )}
-                                            style={{ backgroundColor: swatch.hex }}
-                                            title={swatch.label}
-                                        />
+                                            style={{ backgroundColor: p.hex }}
+                                            title={p.label}
+                                        >
+                                            {selectedTheme === p.id && (
+                                                <span className="h-1.5 w-1.5 rounded-full bg-white shadow-xs" />
+                                            )}
+                                        </button>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* RIGHT (40%): Focused Intelligence Tabs */}
-                    <div className="lg:col-span-5 rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-4 shadow-md space-y-4">
-                        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'score' | 'diff' | 'keywords')} className="w-full">
-                            <TabsList className="grid grid-cols-3 h-8 bg-muted/40 p-0.5 text-xs">
-                                <TabsTrigger value="score" className="text-[11px]">Match Score</TabsTrigger>
-                                <TabsTrigger value="diff" className="text-[11px]">AI Diffs</TabsTrigger>
-                                <TabsTrigger value="keywords" className="text-[11px]">Keywords</TabsTrigger>
-                            </TabsList>
+                        {/* Interactive Analysis & Diff Tabs */}
+                        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-card space-y-4">
+                            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'score' | 'diff' | 'keywords')}>
+                                <TabsList className="grid grid-cols-3 h-9 bg-muted/30 p-1">
+                                    <TabsTrigger value="score" className="text-xs font-medium">ATS Match Score</TabsTrigger>
+                                    <TabsTrigger value="diff" className="text-xs font-medium">Bullet Diff Studio</TabsTrigger>
+                                    <TabsTrigger value="keywords" className="text-xs font-medium">Keywords</TabsTrigger>
+                                </TabsList>
 
-                            {/* TAB 1: Match Score & Analysis */}
-                            <TabsContent value="score" className="space-y-4 mt-4">
-                                <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
-                                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                                        ATS Alignment Score
-                                    </span>
-                                    <div className="mt-1 flex items-baseline gap-2">
-                                        <span className="text-3xl font-extrabold text-foreground tabular-nums">
-                                            {demoScore}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">/ 100</span>
-                                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-500 border border-emerald-500/20">
-                                            <TrendingUp className="h-3 w-3" />
-                                            +{delta} pts from original
-                                        </span>
+                                {/* TAB 1: ATS SCORE */}
+                                <TabsContent value="score" className="space-y-4 mt-4">
+                                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03] p-4 flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block font-display">
+                                                Tailored Alignment Score
+                                            </span>
+                                            <div className="flex items-baseline gap-2 mt-0.5">
+                                                <span className="text-3xl font-display font-bold text-foreground">
+                                                    <AnimatedCounter value={demoScore} suffix="/100" />
+                                                </span>
+                                                <span className="text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                    +{delta} pts tailored gain
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-right text-[11px] text-muted-foreground font-mono">
+                                            <span>Original: 67%</span>
+                                            <span className="block text-emerald-500">Target Match: 89%</span>
+                                        </div>
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground mt-1">
-                                        Calculated from Stripe Senior Full Stack JD requirements.
-                                    </p>
-                                </div>
 
-                                <div className="space-y-2">
-                                    {[
-                                        { label: 'Required Skills', ratio: 94, weight: 40 },
-                                        { label: 'Responsibilities Alignment', ratio: 88, weight: 25 },
-                                        { label: 'Preferred Stack & Tools', ratio: 84, weight: 20 },
-                                        { label: 'Core Technical Terminology', ratio: 90, weight: 15 },
-                                    ].map((cat) => (
-                                        <div key={cat.label} className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1 text-xs">
-                                            <div className="flex justify-between font-medium">
-                                                <span>{cat.label}</span>
-                                                <span className="font-semibold text-emerald-500">{cat.ratio}%</span>
+                                    {/* 4 Vector Category Instruments */}
+                                    <div className="space-y-2 text-xs">
+                                        <div className="p-2.5 rounded-lg bg-muted/20 border border-border/50 space-y-1">
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="font-medium text-foreground">Required Skills (Weight: 40%)</span>
+                                                <span className="font-bold text-emerald-500 font-mono">94% (+27%)</span>
                                             </div>
                                             <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${cat.ratio}%` }} />
+                                                <div className="h-full bg-emerald-500 rounded-full w-[94%]" />
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground block">
-                                                Weight: {cat.weight}% of total score
-                                            </span>
                                         </div>
-                                    ))}
-                                </div>
 
-                                {/* Quality Checks & Page Warnings */}
-                                <div className="rounded-lg border border-border/40 bg-muted/10 p-3 space-y-2 text-xs">
-                                    <span className="font-semibold text-foreground block flex items-center gap-1.5">
-                                        <FileCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                        Document Quality & Layout Checks
+                                        <div className="p-2.5 rounded-lg bg-muted/20 border border-border/50 space-y-1">
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="font-medium text-foreground">Responsibilities Alignment (Weight: 25%)</span>
+                                                <span className="font-bold text-primary font-mono">88% (+18%)</span>
+                                            </div>
+                                            <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                                                <div className="h-full bg-primary rounded-full w-[88%]" />
+                                            </div>
+                                        </div>
+
+                                        <div className="p-2.5 rounded-lg bg-muted/20 border border-border/50 space-y-1">
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="font-medium text-foreground">Preferred Competencies (Weight: 20%)</span>
+                                                <span className="font-bold text-primary font-mono">85% (+20%)</span>
+                                            </div>
+                                            <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                                                <div className="h-full bg-primary rounded-full w-[85%]" />
+                                            </div>
+                                        </div>
+
+                                        <div className="p-2.5 rounded-lg bg-muted/20 border border-border/50 space-y-1">
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="font-medium text-foreground">Domain Terminology (Weight: 15%)</span>
+                                                <span className="font-bold text-primary font-mono">90% (+15%)</span>
+                                            </div>
+                                            <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                                                <div className="h-full bg-primary rounded-full w-[90%]" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+
+                                {/* TAB 2: BULLET DIFF STUDIO */}
+                                <TabsContent value="diff" className="space-y-3 mt-4">
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        Click &ldquo;Revert&rdquo; to test live rollback to the candidate&apos;s un-tailored draft:
+                                    </p>
+
+                                    <div className="space-y-3">
+                                        {explainableBullets.map((item, idx) => {
+                                            const isReverted = revertedMap[idx];
+                                            return (
+                                                <div key={idx} className="rounded-xl border border-border/60 bg-muted/15 p-3.5 space-y-2 text-xs">
+                                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                                        <span className="font-semibold text-foreground">{item.role} • {item.company}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setRevertedMap(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                                                            className="text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                                                        >
+                                                            {isReverted ? (
+                                                                <>
+                                                                    <Undo2 className="h-3 w-3" /> Re-apply Tailored
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Check className="h-3 w-3 text-emerald-500" /> Accepted
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="space-y-1.5">
+                                                        {isReverted ? (
+                                                            <div className="p-2.5 rounded-lg bg-muted/40 text-[11px] text-muted-foreground font-mono">
+                                                                {item.original}
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div className="p-2 rounded-lg bg-muted/40 text-[10px] text-muted-foreground line-through font-mono">
+                                                                    {item.original}
+                                                                </div>
+                                                                <div className="p-2.5 rounded-lg bg-primary/[0.06] border border-primary/20 text-[11px] text-foreground font-medium leading-relaxed">
+                                                                    {item.tailored}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="text-[10px] text-muted-foreground bg-background/60 p-2 rounded border border-border/40">
+                                                        <strong>Why:</strong> {item.reason}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </TabsContent>
+
+                                {/* TAB 3: KEYWORDS */}
+                                <TabsContent value="keywords" className="space-y-3 mt-4">
+                                    <span className="text-xs font-semibold text-foreground block">
+                                        Stripe Job Competencies Detected
                                     </span>
-                                    <ul className="space-y-1.5 text-[11px] text-muted-foreground">
-                                        <li className="flex items-center gap-1.5">
-                                            <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
-                                            <span><strong>Page Fit:</strong> Fits cleanly onto 1 page with no overflow.</span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {['Next.js App Router', 'TypeScript', 'PostgreSQL', 'Microservices', 'Distributed Systems', 'Redis', 'REST APIs', 'Edge Runtime', 'p99 Latency'].map(k => (
+                                            <span key={k} className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-500">
+                                                ✓ {k}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Realistic Document Wireframe */}
+                    <div className="lg:col-span-6 rounded-2xl border border-border/70 bg-card p-6 shadow-modal space-y-5 text-left">
+                        <div className="border-b border-border/50 pb-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-display font-bold text-foreground tracking-tight">ALEX CHEN</h2>
+                                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary uppercase">
+                                    Template: {selectedTemplate}
+                                </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 font-mono">
+                                San Francisco, CA • alex.chen@example.com • github.com/alexchen • linkedin.com/in/alexchen
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-display font-bold text-primary tracking-wider uppercase">PROFESSIONAL SUMMARY</h3>
+                            <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                                Staff Full Stack Engineer with 7+ years of experience architecting high-throughput distributed systems, modern React/Next.js client applications, and reliable financial microservices. Proven track record reducing p99 API latencies and scaling mission-critical platforms to millions of users.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-display font-bold text-primary tracking-wider uppercase">WORK EXPERIENCE</h3>
+                            <div className="mt-2.5 space-y-4 text-xs">
+                                <div>
+                                    <div className="flex justify-between font-semibold text-foreground">
+                                        <span>Staff Full Stack Engineer — Vercel Inc.</span>
+                                        <span className="text-muted-foreground font-normal text-[11px]">2022 – Present</span>
+                                    </div>
+                                    <ul className="mt-1.5 space-y-1.5 list-disc pl-4 text-muted-foreground text-[11px] leading-relaxed">
+                                        <li>
+                                            Architected edge data delivery layer using Next.js App Router and TypeScript, reducing p99 API response latencies by 38% for 4M+ daily active sessions.
                                         </li>
-                                        <li className="flex items-center gap-1.5">
-                                            <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
-                                            <span><strong>Action Verbs:</strong> 100% of experience bullets start with strong past-tense verbs.</span>
-                                        </li>
-                                        <li className="flex items-center gap-1.5">
-                                            <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
-                                            <span><strong>Quantifiable Metrics:</strong> 6 quantifiable impact metrics included.</span>
+                                        <li>
+                                            Led frontend performance task force cutting total JavaScript bundle sizes across flagship web console by 310KB and improving Core Web Vitals to 99+.
                                         </li>
                                     </ul>
                                 </div>
-                            </TabsContent>
 
-                            {/* TAB 2: AI Diffs */}
-                            <TabsContent value="diff" className="space-y-3 mt-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-semibold text-foreground">
-                                        Before → After Bullet Alignments
-                                    </span>
-                                    <span className="text-[11px] text-muted-foreground">3 changes</span>
-                                </div>
-
-                                <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-                                    {explainableBullets.map((item, idx) => {
-                                        const isReverted = revertedMap[idx];
-                                        return (
-                                            <div key={idx} className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2 text-xs">
-                                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                                    <span className="font-semibold text-foreground">{item.role} • {item.company}</span>
-                                                    <button
-                                                        onClick={() => setRevertedMap(prev => ({ ...prev, [idx]: !prev[idx] }))}
-                                                        className="text-primary hover:underline flex items-center gap-1 font-medium"
-                                                    >
-                                                        {isReverted ? (
-                                                            <>
-                                                                <Undo2 className="h-3 w-3" /> Re-apply AI Version
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Check className="h-3 w-3 text-emerald-500" /> Accepted
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </div>
-
-                                                {/* Before / After comparison */}
-                                                <div className="space-y-1.5">
-                                                    <div className="p-2 rounded bg-muted/40 text-[11px] text-muted-foreground line-through">
-                                                        {item.original}
-                                                    </div>
-                                                    <div className="p-2 rounded bg-primary/[0.06] border border-primary/20 text-[11px] text-foreground font-medium">
-                                                        {item.tailored}
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-[10px] text-muted-foreground leading-relaxed">
-                                                    <strong className="text-primary">Reason:</strong> {item.reason}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </TabsContent>
-
-                            {/* TAB 3: Keywords */}
-                            <TabsContent value="keywords" className="space-y-4 mt-4">
                                 <div>
-                                    <span className="text-xs font-semibold text-foreground block">
-                                        Target JD Keywords & Coverage
-                                    </span>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                        Core technical requirements identified in Stripe Senior Full Stack Engineer role.
-                                    </p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <span className="text-[11px] font-medium text-emerald-500 flex items-center gap-1">
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Matched in Resume (14 terms)
-                                    </span>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {['TypeScript', 'React 19', 'Next.js', 'Node.js', 'PostgreSQL', 'Redis', 'WebSockets', 'GraphQL', 'AWS (ECS)', 'Docker', 'Distributed Systems', 'CI/CD', 'p99 Latency', 'Core Web Vitals'].map(k => (
-                                            <span key={k} className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500">
-                                                {k}
-                                            </span>
-                                        ))}
+                                    <div className="flex justify-between font-semibold text-foreground">
+                                        <span>Senior Software Engineer — Cloudflare</span>
+                                        <span className="text-muted-foreground font-normal text-[11px]">2020 – 2022</span>
                                     </div>
+                                    <ul className="mt-1.5 space-y-1.5 list-disc pl-4 text-muted-foreground text-[11px] leading-relaxed">
+                                        <li>
+                                            Engineered high-throughput caching and proxy orchestration services handling 180k+ requests/sec with a 99.99% uptime availability SLA.
+                                        </li>
+                                    </ul>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div className="space-y-2 pt-2 border-t border-border/40">
-                                    <span className="text-[11px] font-medium text-muted-foreground">
-                                        Missing from Resume (Optional Terms)
-                                    </span>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {['Apache Kafka', 'gRPC', 'FinOps'].map(k => (
-                                            <span key={k} className="rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
-                                                {k}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        These terms were mentioned as preferred qualifications in the JD.
-                                    </p>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
+                        <div>
+                            <h3 className="text-xs font-display font-bold text-primary tracking-wider uppercase">TECHNICAL COMPETENCIES</h3>
+                            <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                                <strong>Languages & Frameworks:</strong> TypeScript, JavaScript, Python, Rust, React, Next.js, Node.js, Tailwind CSS<br />
+                                <strong>Infrastructure & Databases:</strong> PostgreSQL, Redis, Docker, Kubernetes, AWS, Cloudflare Workers, GraphQL
+                            </p>
+                        </div>
+
+                        <div className="pt-4 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5 text-emerald-500 font-medium">
+                                <ShieldCheck className="h-3.5 w-3.5" />
+                                100% Fact Checked
+                            </span>
+                            <span className="font-mono text-[11px]">Sub-50ms Vector Binary</span>
+                        </div>
                     </div>
                 </div>
             </main>
+
+            <AppFooter />
         </div>
     );
 }

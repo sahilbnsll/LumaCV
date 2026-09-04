@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import { ArrowLeft, CheckCircle2, Lock } from 'lucide-react';
-
+import { AppFooter } from '@/components/app-footer';
+import { ArrowLeft, CheckCircle2, Lock, ShieldCheck, EyeOff, Server, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary flex flex-col justify-between">
             <AppHeader />
 
-            <main className="mx-auto max-w-3xl px-4 sm:px-6 py-12">
+            <main id="main-content" className="mx-auto max-w-reading px-4 sm:px-6 py-12 flex-1">
                 <div className="mb-6">
                     <Button asChild variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 -ml-2">
                         <Link href="/">
@@ -21,64 +21,95 @@ export default function PrivacyPage() {
                     </Button>
                 </div>
 
-                <div className="space-y-2 border-b border-border/60 pb-6 mb-8">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 mb-2">
+                <div className="space-y-3 border-b border-border/50 pb-6 mb-8">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                         <Lock className="h-3 w-3" />
                         <span>Privacy Commitment</span>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Privacy Policy</h1>
-                    <p className="text-sm text-muted-foreground">Last updated: September 2026</p>
+                    <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-foreground">
+                        Privacy Policy
+                    </h1>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>Last updated: September 2026</span>
+                        <span>•</span>
+                        <span>3 min read</span>
+                        <span>•</span>
+                        <span className="text-emerald-500 font-medium">Zero Model Training</span>
+                    </div>
                 </div>
 
-                <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
+                {/* Privacy Guarantee Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 rounded-xl border border-border/70 bg-card space-y-2 shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-display font-bold text-foreground">
+                            <EyeOff className="h-4 w-4 text-primary" />
+                            <span>Zero AI Model Training</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Your resume contents, employment history, and job descriptions are never sold, shared, or used to train public or proprietary AI models.
+                        </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-border/70 bg-card space-y-2 shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-display font-bold text-foreground">
+                            <Server className="h-4 w-4 text-emerald-500" />
+                            <span>Zero Server Key Storage</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Personal API keys provided under BYOK stay strictly in your local encrypted browser storage and are passed solely as per-request TLS headers.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-8 text-xs sm:text-sm leading-relaxed text-muted-foreground">
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            1. Data Privacy Principles
+                            1. Data Collection & Processing Scope
                         </h2>
                         <p>
-                            We believe your career history and resumes belong exclusively to you. When you use LumaCV to tailor a resume or analyze a job description:
+                            We believe your career history belongs exclusively to you. When you use LumaCV to tailor a resume or analyze a job description:
                         </p>
-                        <ul className="list-disc pl-5 space-y-1.5">
-                            <li><strong>Resume Content:</strong> Extracted directly in your browser session for tailoring.</li>
-                            <li><strong>Job Descriptions:</strong> Analyzed strictly for keyword matching and requirement extraction.</li>
-                            <li><strong>Zero AI Training:</strong> Your private resumes are never shared, sold, or used to train third-party language models.</li>
+                        <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                            <li><strong>Resume Content:</strong> Extracted directly client-side via WebAssembly/pdf.js. Only text tokens necessary for alignment are transmitted over encrypted TLS.</li>
+                            <li><strong>Job Descriptions:</strong> Analyzed solely in-memory to extract competency requirements and calculate 4-vector matching.</li>
+                            <li><strong>Document Telemetry:</strong> Anonymized performance metrics (e.g. compilation duration, page count) are logged to optimize our native vector engine.</li>
                         </ul>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            2. Account Storage & Security
+                            2. Cloud Storage & Account Security
                         </h2>
                         <p>
-                            If you create an account, your resumes and tailored drafts are stored in secure cloud infrastructure protected by row-level encryption. You can export or permanently delete your resumes at any time from your dashboard.
+                            If you sign in with Supabase Authentication, your saved projects and snapshots are stored in PostgreSQL protected by Row-Level Security (RLS) policies. Only your authenticated user account possesses cryptographic permission to query or update your resumes. You can export your data or permanently wipe your account at any time.
                         </p>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            3. Privacy-Conscious Analytics
+                            3. Third-Party AI Inference Providers
                         </h2>
                         <p>
-                            We collect anonymized, non-identifying telemetry (such as error rates, PDF compile speed, and feature clicks) to improve system performance. We strictly never log resume text, employer names, or candidate identities.
+                            LumaCV routes inference requests to Google Gemini, OpenAI, Anthropic, or Groq Cloud via their official enterprise APIs. All provider agreements explicitly state that API-transmitted payloads are not utilized to train foundational LLMs.
                         </p>
                     </section>
 
                     <section className="space-y-3">
-                        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            4. Data Inquiries & Deletion
+                            4. Inquiries & Data Rights
                         </h2>
                         <p>
-                            To request complete data deletion or if you have privacy questions, please contact our team at{' '}
-                            <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>.
+                            Under GDPR and CCPA, you have the right to inspect, correct, or request total deletion of all associated account records. Contact our engineering team at <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>.
                         </p>
-
                     </section>
                 </div>
             </main>
+
+            <AppFooter />
         </div>
     );
 }
