@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Sparkles, Heart, Github, Linkedin, ShieldCheck, Cpu } from 'lucide-react';
+import { Sparkles, Github, Linkedin, ShieldCheck, Cpu } from 'lucide-react';
 
 export function AppFooter() {
     return (

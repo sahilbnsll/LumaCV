@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { useAuth } from '@/components/auth-provider';
-import { Sparkles, FileText, Plus, ChevronRight, Menu, X, ArrowRight } from 'lucide-react';
+import { Sparkles, FileText, Plus, ChevronRight, Menu, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CommandMenu } from '@/components/command-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
+import { AppFooter } from '@/components/app-footer';
 import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,13 +94,13 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
             <AppHeader />
 
-            <main className="mx-auto max-w-2xl px-4 sm:px-6 py-8">
+            <main className="flex-1 mx-auto max-w-2xl px-4 sm:px-6 py-8 w-full">
                 {/* Back to Dashboard */}
                 <div className="mb-6">
-                    <Button asChild variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 -ml-2">
+                    <Button asChild variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 -ml-2 cursor-pointer">
                         <Link href="/dashboard">
                             <ArrowLeft className="h-3.5 w-3.5" />
                             Back to My Resumes
@@ -108,19 +109,19 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="border-b border-border/50 pb-5">
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Account & Security</h1>
+                    <h1 className="text-2xl font-bold font-display tracking-tight text-foreground">Account & Security</h1>
                     <p className="mt-1 text-xs text-muted-foreground">Manage your credentials, authentication status, and active plan.</p>
                 </div>
 
                 <div className="mt-8 space-y-6">
                     {/* 1. Account & Identity */}
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-6 space-y-5">
+                    <div className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm">
                         <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                 <User className="h-4 w-4" />
                             </div>
                             <div>
-                                <h2 className="text-sm font-semibold text-foreground">Profile Information</h2>
+                                <h2 className="text-sm font-semibold font-display text-foreground">Profile Information</h2>
                                 <p className="text-[11px] text-muted-foreground">Your personal contact details</p>
                             </div>
                         </div>
@@ -130,10 +131,12 @@ export default function ProfilePage() {
                                 <Label htmlFor="name" className="text-xs">Full Name</Label>
                                 <Input
                                     id="name"
+                                    name="name"
+                                    autoComplete="name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Your Full Name"
-                                    className="h-9 text-xs bg-muted/20"
+                                    className="h-9 text-xs bg-muted/20 rounded-lg border-border/70"
                                 />
                             </div>
 
@@ -141,9 +144,11 @@ export default function ProfilePage() {
                                 <Label htmlFor="email" className="text-xs">Email Address</Label>
                                 <Input
                                     id="email"
+                                    name="email"
+                                    autoComplete="email"
                                     value={user?.email || 'guest@lumacv.local'}
                                     disabled
-                                    className="h-9 text-xs bg-muted/30 text-muted-foreground cursor-not-allowed"
+                                    className="h-9 text-xs bg-muted/30 text-muted-foreground cursor-not-allowed rounded-lg"
                                 />
                                 <span className="text-[10px] text-muted-foreground">
                                     Email is linked to your authentication provider.
@@ -152,7 +157,7 @@ export default function ProfilePage() {
 
                             {user && (
                                 <div className="pt-1">
-                                    <Button type="submit" size="sm" disabled={updatingProfile} className="h-8 text-xs font-medium bg-primary hover:bg-primary/90">
+                                    <Button type="submit" size="sm" disabled={updatingProfile} className="h-8 text-xs font-medium bg-primary hover:bg-primary/90 cursor-pointer">
                                         {updatingProfile ? 'Saving...' : 'Update Name'}
                                     </Button>
                                 </div>
@@ -162,13 +167,13 @@ export default function ProfilePage() {
 
                     {/* 2. Change Password */}
                     {user && (
-                        <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-6 space-y-5">
+                        <div className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm">
                             <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                     <KeyRound className="h-4 w-4" />
                                 </div>
                                 <div>
-                                    <h2 className="text-sm font-semibold text-foreground">Change Password</h2>
+                                    <h2 className="text-sm font-semibold font-display text-foreground">Change Password</h2>
                                     <p className="text-[11px] text-muted-foreground">Update your account login password</p>
                                 </div>
                             </div>
@@ -179,11 +184,13 @@ export default function ProfilePage() {
                                         <Label htmlFor="new-password" text-xs>New Password</Label>
                                         <Input
                                             id="new-password"
+                                            name="password"
+                                            autoComplete="new-password"
                                             type="password"
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            className="h-9 text-xs bg-muted/20"
+                                            className="h-9 text-xs bg-muted/20 rounded-lg border-border/70"
                                         />
                                     </div>
 
@@ -191,11 +198,13 @@ export default function ProfilePage() {
                                         <Label htmlFor="confirm-password" text-xs>Confirm New Password</Label>
                                         <Input
                                             id="confirm-password"
+                                            name="confirmPassword"
+                                            autoComplete="new-password"
                                             type="password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            className="h-9 text-xs bg-muted/20"
+                                            className="h-9 text-xs bg-muted/20 rounded-lg border-border/70"
                                         />
                                     </div>
                                 </div>
@@ -204,7 +213,7 @@ export default function ProfilePage() {
                                     type="submit"
                                     size="sm"
                                     disabled={updatingPassword || !newPassword}
-                                    className="h-8 text-xs font-medium bg-primary hover:bg-primary/90"
+                                    className="h-8 text-xs font-medium bg-primary hover:bg-primary/90 cursor-pointer"
                                 >
                                     {updatingPassword ? 'Updating...' : 'Update Password'}
                                 </Button>
@@ -213,7 +222,7 @@ export default function ProfilePage() {
                     )}
 
                     {/* 3. AI Provider Keys (BYOK) */}
-                    <div id="api-keys" className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-6 space-y-5">
+                    <div id="api-keys" className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm">
                         <div className="flex items-center justify-between pb-3 border-b border-border/40">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
@@ -431,19 +440,19 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 4. Authentication Status & Current Plan */}
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-6 space-y-4">
+                    <div className="rounded-xl border border-border/70 bg-card p-6 space-y-4 shadow-sm">
                         <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                 <Shield className="h-4 w-4" />
                             </div>
                             <div>
-                                <h2 className="text-sm font-semibold text-foreground">Authentication & Plan</h2>
+                                <h2 className="text-sm font-semibold font-display text-foreground">Authentication & Plan</h2>
                                 <p className="text-[11px] text-muted-foreground">Account tier and session status</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                            <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+                            <div className="rounded-lg border border-border/50 bg-muted/20 p-3">
                                 <span className="text-muted-foreground text-[10px] block">Authentication Status</span>
                                 <div className="mt-1 flex items-center gap-1.5 font-medium text-foreground">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -451,7 +460,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+                            <div className="rounded-lg border border-border/50 bg-muted/20 p-3">
                                 <span className="text-muted-foreground text-[10px] block">Active Plan</span>
                                 <div className="mt-1 flex items-center gap-1.5 font-medium text-foreground">
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
@@ -462,10 +471,10 @@ export default function ProfilePage() {
                     </div>
 
 
-                    {/* 4. Sign Out */}
+                    {/* 5. Sign Out */}
                     <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.03] p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h3 className="text-sm font-semibold text-foreground">Session Control</h3>
+                            <h3 className="text-sm font-semibold font-display text-foreground">Session Control</h3>
                             <p className="text-xs text-muted-foreground mt-0.5">Sign out of your active LumaCV account.</p>
                         </div>
 
@@ -474,19 +483,21 @@ export default function ProfilePage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => signOut()}
-                                className="h-8 text-xs text-red-500 hover:bg-red-500/10 border-red-500/30 gap-1.5 shrink-0"
+                                className="h-8 text-xs text-red-500 hover:bg-red-500/10 border-red-500/30 gap-1.5 shrink-0 cursor-pointer"
                             >
                                 <LogOut className="h-3.5 w-3.5" />
-                                Sign Out
+                                <span>Sign Out</span>
                             </Button>
                         ) : (
-                            <Button asChild size="sm" className="h-8 text-xs font-medium bg-primary hover:bg-primary/90">
+                            <Button asChild size="sm" className="h-8 text-xs font-medium bg-primary hover:bg-primary/90 cursor-pointer">
                                 <Link href="/login">Sign In</Link>
                             </Button>
                         )}
                     </div>
                 </div>
             </main>
+
+            <AppFooter />
         </div>
     );
 }

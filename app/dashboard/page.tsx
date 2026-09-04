@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
+import { AppFooter } from '@/components/app-footer';
 import { useAuth } from '@/components/auth-provider';
 import { useAppStore } from '@/lib/store';
 import { getLocalResumes, deleteLocalResume, formatResumeDate, SavedResume } from '@/lib/user-resumes-store';
@@ -221,10 +222,10 @@ export default function DashboardPage() {
     }, [resumes, searchQuery, filterTemplate, sortBy]);
 
     return (
-        <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
             <AppHeader />
 
-            <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+            <main className="flex-1 mx-auto max-w-6xl px-4 sm:px-6 py-8 w-full">
                 <OnboardingModal />
 
                 {/* Header & New Button */}
@@ -249,15 +250,15 @@ export default function DashboardPage() {
 
                 {/* Workspace Metrics Cards */}
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-3.5 shadow-xs">
+                    <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs">
                         <span className="text-[11px] font-medium text-muted-foreground">Total Resumes</span>
-                        <div className="mt-1 text-xl font-bold text-foreground tracking-tight">
+                        <div className="mt-1 text-xl font-bold font-display text-foreground tracking-tight">
                             <AnimatedCounter value={resumes.length} />
                         </div>
                     </div>
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-3.5 shadow-xs">
+                    <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs">
                         <span className="text-[11px] font-medium text-muted-foreground">Average Match Score</span>
-                        <div className="mt-1 text-xl font-bold text-emerald-500 tracking-tight">
+                        <div className="mt-1 text-xl font-bold font-display text-emerald-500 tracking-tight">
                             <AnimatedCounter
                                 value={resumes.length > 0 ? Math.round(resumes.reduce((acc, r) => acc + (r.atsScore || 80), 0) / resumes.length) : 0}
                                 suffix="%"
@@ -265,17 +266,17 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-3.5 shadow-xs">
+                    <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs">
                         <span className="text-[11px] font-medium text-muted-foreground">Fact Integrity</span>
-                        <div className="mt-1 text-xl font-bold text-foreground tracking-tight flex items-center gap-1.5">
+                        <div className="mt-1 text-xl font-bold font-display text-foreground tracking-tight flex items-center gap-1.5">
                             <span>100%</span>
                             <span className="text-[10px] text-emerald-500 font-semibold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">Locked</span>
                         </div>
                     </div>
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-3.5 shadow-xs flex flex-col justify-between">
+                    <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs flex flex-col justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground">Active Plan</span>
                         <div className="mt-1 flex items-center justify-between">
-                            <span className="text-base font-bold text-foreground tracking-tight">Free Starter</span>
+                            <span className="text-base font-bold font-display text-foreground tracking-tight">Free Starter</span>
                             <Link href="/billing" className="text-[11px] text-primary hover:underline font-medium">Upgrade</Link>
                         </div>
                     </div>
@@ -290,12 +291,13 @@ export default function DashboardPage() {
                             placeholder="Search by role, company, or title..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-9 text-xs bg-muted/20 border-border/60 focus:border-primary/50"
+                            className="pl-9 h-9 text-xs bg-muted/20 border-border/60 focus:border-primary/50 rounded-lg"
                         />
                     </div>
 
                     <div className="flex items-center gap-2">
                         <select
+                            aria-label="Filter resumes by template"
                             value={filterTemplate}
                             onChange={(e) => setFilterTemplate(e.target.value)}
                             className="h-9 rounded-lg border border-border/60 bg-muted/20 px-3 text-xs text-muted-foreground focus:outline-none focus:border-primary/50"
@@ -310,6 +312,7 @@ export default function DashboardPage() {
                         </select>
 
                         <select
+                            aria-label="Sort resumes by"
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as 'updated' | 'score' | 'title')}
                             className="h-9 rounded-lg border border-border/60 bg-muted/20 px-3 text-xs text-muted-foreground focus:outline-none focus:border-primary/50"
@@ -352,7 +355,7 @@ export default function DashboardPage() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.96 }}
                                         onClick={() => handleOpenResume(resume)}
-                                        className="group relative rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-5 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/[0.04] transition-all duration-200 flex flex-col justify-between cursor-pointer"
+                                        className="group relative rounded-xl border border-border/70 bg-card p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-200 flex flex-col justify-between cursor-pointer"
                                     >
                                         {/* Card Top: Template pill & ATS Match Score */}
                                         <div>
@@ -486,6 +489,8 @@ export default function DashboardPage() {
                     </div>
                 )}
             </main>
+
+            <AppFooter />
         </div>
     );
 }

@@ -82,27 +82,31 @@ export function VersionHistoryDrawer({
 
                     {/* Drawer Panel */}
                     <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Resume Version History"
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                        className="relative z-10 w-full max-w-md h-full bg-card border-l border-border/60 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto"
+                        className="relative z-10 w-full max-w-md h-full bg-card border-l border-border/70 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto"
                     >
                         <div>
                             {/* Drawer Header */}
                             <div className="flex items-center justify-between pb-4 border-b border-border/50">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2.5">
                                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                         <History className="h-4 w-4" />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-foreground">Version History</h2>
+                                        <h2 className="text-sm font-bold font-display text-foreground">Version History</h2>
                                         <p className="text-[11px] text-muted-foreground">Snapshot timeline of changes & scores</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    aria-label="Close version history"
+                                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>

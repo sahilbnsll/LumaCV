@@ -10,15 +10,11 @@ import {
     CheckCircle2,
     Sparkles,
     Cpu,
-    FileCheck,
     ChevronRight,
     Heart,
     Copy,
     CheckCheck,
     Wallet,
-    TrendingUp,
-    ShieldAlert,
-    Clock,
     Lock,
     Scale
 } from 'lucide-react';

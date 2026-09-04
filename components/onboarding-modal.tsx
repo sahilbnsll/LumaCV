@@ -56,14 +56,18 @@ export function OnboardingModal() {
                     />
 
                     <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Welcome to LumaCV onboarding guide"
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.1] bg-card p-6 shadow-2xl space-y-5"
+                        className="relative z-10 w-full max-w-md rounded-2xl border border-border/80 bg-card p-6 shadow-2xl space-y-5"
                     >
                         <button
                             onClick={handleDismiss}
-                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-1"
+                            aria-label="Close welcome guide"
+                            className="absolute top-3.5 right-3.5 h-8 w-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -72,7 +76,7 @@ export function OnboardingModal() {
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                 <Sparkles className="h-3.5 w-3.5" />
                             </div>
-                            <span className="font-semibold text-sm text-foreground">Welcome to LumaCV</span>
+                            <span className="font-semibold font-display text-sm text-foreground">Welcome to LumaCV</span>
                         </div>
 
                         {/* Step Card */}

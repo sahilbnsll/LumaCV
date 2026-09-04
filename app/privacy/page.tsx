@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
-import { ArrowLeft, CheckCircle2, Lock, ShieldCheck, EyeOff, Server, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Lock, EyeOff, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function PrivacyPage() {

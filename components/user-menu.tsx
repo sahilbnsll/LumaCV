@@ -47,8 +47,9 @@ export function UserMenu() {
         <div className="relative" ref={menuRef}>
             <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
                 aria-expanded={open}
+                aria-haspopup="true"
                 aria-label="User menu"
             >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 border border-primary/30 text-xs font-semibold text-primary">
@@ -63,11 +64,13 @@ export function UserMenu() {
             <AnimatePresence>
                 {open && (
                     <motion.div
+                        role="menu"
+                        aria-label="User options"
                         initial={{ opacity: 0, y: 6, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 6, scale: 0.98 }}
                         transition={{ duration: 0.15, ease: 'easeOut' }}
-                        className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-white/[0.09] bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl z-50 text-xs text-foreground"
+                        className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border/70 bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl z-50 text-xs text-foreground"
                     >
                         <div className="px-3 py-2 border-b border-border/50">
                             <p className="font-medium truncate">{email}</p>

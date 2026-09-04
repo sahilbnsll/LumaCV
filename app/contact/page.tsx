@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
-import { ArrowLeft, Mail, Send, CheckCircle2, HelpCircle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Mail, Send, CheckCircle2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';

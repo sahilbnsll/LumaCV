@@ -12,13 +12,9 @@ import { PALETTES } from '@/lib/design-tokens';
 import {
     Download,
     ArrowRight,
-    TrendingUp,
-    CheckCircle2,
     Check,
     Undo2,
     Palette,
-    Layers,
-    FileCheck,
     Sparkles,
     ShieldCheck
 } from 'lucide-react';

@@ -16,7 +16,6 @@ import {
     Sun,
     X,
     Key,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAppStore } from '@/lib/store';
