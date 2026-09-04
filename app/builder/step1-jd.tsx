@@ -140,10 +140,10 @@ export function Step1JD() {
         <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* 1. Left: Job Description Input */}
-                <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-5 space-y-4">
+                <div className="rounded-xl border border-border/70 bg-card p-5 space-y-4 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+                            <h2 className="text-base font-semibold font-display tracking-tight text-foreground flex items-center gap-2">
                                 <FileText className="h-4 w-4 text-primary" />
                                 Target Job Description
                             </h2>
@@ -157,20 +157,22 @@ export function Step1JD() {
                             variant="outline"
                             size="sm"
                             onClick={handleUseSampleJD}
-                            className="h-7 text-xs border-border/70 hover:bg-muted/50 gap-1.5"
+                            className="h-8 text-xs border-border/70 hover:bg-muted/50 gap-1.5 cursor-pointer"
                         >
-                            <Sparkles className="h-3 w-3 text-primary" />
-                            Try Sample JD
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                            <span>Try Sample JD</span>
                         </Button>
                     </div>
 
                     <div className="space-y-2">
+                        <label htmlFor="jd" className="sr-only">Target job description text</label>
                         <Textarea
                             id="jd"
+                            aria-label="Target job description"
                             placeholder="Paste the complete job description here, including responsibilities, qualifications, and required tech stack..."
                             value={jd}
                             onChange={(e) => setJD(e.target.value)}
-                            className="min-h-[380px] resize-none text-xs leading-relaxed bg-muted/20 border-border/50 focus:border-primary/60 font-mono"
+                            className="min-h-[380px] resize-none text-xs leading-relaxed bg-muted/20 border-border/60 focus-visible:ring-1 focus-visible:ring-primary font-mono rounded-lg"
                         />
 
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
@@ -181,11 +183,11 @@ export function Step1JD() {
                 </div>
 
                 {/* 2. Right: Resume Upload */}
-                <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-5 space-y-4 flex flex-col justify-between">
+                <div className="rounded-xl border border-border/70 bg-card p-5 space-y-4 flex flex-col justify-between shadow-sm">
                     <div>
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+                                <h2 className="text-base font-semibold font-display tracking-tight text-foreground flex items-center gap-2">
                                     <FileCheck2 className="h-4 w-4 text-primary" />
                                     Your Current Resume
                                 </h2>

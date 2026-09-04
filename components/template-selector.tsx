@@ -233,7 +233,7 @@ export function TemplateSelector() {
     const { template, setTemplate, theme = 'none', setTheme, resumeData } = useAppStore();
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-5">
             <div>
                 <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Typesetting Template
@@ -243,8 +243,12 @@ export function TemplateSelector() {
                 </p>
             </div>
 
-            {/* Compact Template Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            {/* Compact Template Grid with ARIA radiogroup */}
+            <div
+                role="radiogroup"
+                aria-label="Select resume layout template"
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5"
+            >
                 {templateOptions.map((opt) => {
                     const isSelected = template === opt.value;
                     const fitLevel = resumeData ? getTemplateFitLevel(resumeData, opt.value) : 'recommended';
@@ -254,9 +258,12 @@ export function TemplateSelector() {
                         <button
                             key={opt.value}
                             type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            aria-label={`${opt.label} template: ${opt.description}`}
                             onClick={() => setTemplate(opt.value)}
                             className={cn(
-                                "group relative flex flex-col justify-between rounded-xl border p-2.5 text-left transition-all",
+                                "group relative flex flex-col justify-between rounded-xl border p-2.5 text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
                                 isSelected
                                     ? "border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-sm"
                                     : "border-border/60 bg-muted/15 hover:border-primary/40 hover:bg-muted/25"
@@ -289,8 +296,8 @@ export function TemplateSelector() {
                 })}
             </div>
 
-            {/* Accent Color Swatches */}
-            <div className="pt-3 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Accent Color Swatches with ARIA radiogroup & >=40px touch targets */}
+            <div className="pt-4 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                     <Palette className="h-4 w-4 text-primary" />
                     <div>
@@ -303,24 +310,35 @@ export function TemplateSelector() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div
+                    role="radiogroup"
+                    aria-label="Accent Color Palette"
+                    className="flex items-center gap-1 flex-wrap"
+                >
                     {colorSwatches.map((swatch) => (
                         <button
                             key={swatch.id}
                             type="button"
+                            role="radio"
+                            aria-checked={theme === swatch.id}
+                            aria-label={`${swatch.label} accent color`}
                             onClick={() => setTheme(swatch.id)}
-                            className={cn(
-                                "h-6 w-6 rounded-full border transition-transform relative flex items-center justify-center",
-                                theme === swatch.id
-                                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
-                                    : "border-border/60 hover:scale-105 opacity-80 hover:opacity-100"
-                            )}
-                            style={{ backgroundColor: swatch.hex }}
+                            className="h-9 w-9 rounded-lg flex items-center justify-center transition-all hover:bg-muted/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                             title={swatch.label}
                         >
-                            {theme === swatch.id && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-white shadow-xs" />
-                            )}
+                            <span
+                                className={cn(
+                                    "h-6 w-6 rounded-full border transition-transform flex items-center justify-center",
+                                    theme === swatch.id
+                                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 shadow-xs"
+                                        : "border-border/60 hover:scale-105 opacity-80 hover:opacity-100"
+                                )}
+                                style={{ backgroundColor: swatch.hex }}
+                            >
+                                {theme === swatch.id && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-white shadow-xs" />
+                                )}
+                            </span>
                         </button>
                     ))}
                 </div>

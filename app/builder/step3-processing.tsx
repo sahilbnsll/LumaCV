@@ -201,7 +201,7 @@ export function Step3Processing() {
 
     return (
         <div className="min-h-[580px] flex items-center justify-center p-4">
-            <div className="w-full max-w-lg rounded-2xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="w-full max-w-lg rounded-2xl border border-border/80 bg-card/90 p-6 sm:p-8 shadow-xl backdrop-blur-xl space-y-6 relative overflow-hidden">
                 {/* Subtle top ambient glow */}
                 <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 

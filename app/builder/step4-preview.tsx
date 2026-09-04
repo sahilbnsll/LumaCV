@@ -26,7 +26,9 @@ import {
     ShieldCheck,
     Target,
     History,
-    Palette
+    Palette,
+    Copy,
+    CheckCheck
 } from 'lucide-react';
 
 
@@ -122,6 +124,14 @@ export function Step4Preview() {
 
     // AI Bullet changes tracking state (allows reverting/keeping individual bullets)
     const [revertedBullets, setRevertedBullets] = useState<Record<string, boolean>>({});
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+    const handleCopyBullet = (text: string, index: number) => {
+        navigator.clipboard.writeText(text);
+        setCopiedIndex(index);
+        toast.success('Bullet copied to clipboard');
+        setTimeout(() => setCopiedIndex(null), 2000);
+    };
 
     const confidenceScore = generatedResume?.confidenceScore || 0;
 
@@ -324,13 +334,13 @@ export function Step4Preview() {
     return (
         <div className="space-y-4">
             {/* Unified Workspace Action Bar (Single Bar - No Duplicates) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-xl border border-border/70 bg-card/95 shadow-sm">
                 <div className="flex items-center gap-3">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setStep(2)}
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1 -ml-1"
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1 -ml-1 cursor-pointer"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Edit Experience</span>
@@ -339,7 +349,7 @@ export function Step4Preview() {
                     <div className="h-4 w-[1px] bg-border/60 hidden sm:block" />
 
                     <div>
-                        <h1 className="text-xs sm:text-sm font-semibold text-foreground tracking-tight flex items-center gap-2">
+                        <h1 className="text-xs sm:text-sm font-semibold font-display text-foreground tracking-tight flex items-center gap-2">
                             <span>{currentData?.personalInfo.name || 'Tailored Resume'}</span>
                             <span className="text-muted-foreground font-normal text-xs">
                                 • {template.toUpperCase()}
@@ -371,7 +381,7 @@ export function Step4Preview() {
                         variant="outline"
                         size="sm"
                         onClick={() => setDesignSheetOpen(true)}
-                        className="h-8 text-xs font-medium border-border/70 hover:border-primary/50 hover:bg-muted/40 gap-1.5"
+                        className="h-8 text-xs font-medium border-border/70 hover:border-primary/50 hover:bg-muted/40 gap-1.5 cursor-pointer"
                     >
                         <Palette className="h-3.5 w-3.5 text-primary" />
                         <span>Design & Style</span>
@@ -380,7 +390,7 @@ export function Step4Preview() {
                     {/* Edit Form Sheet Trigger */}
                     <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
                         <SheetTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5">
+                            <Button variant="outline" size="sm" className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 cursor-pointer">
                                 <Edit2 className="h-3.5 w-3.5" />
                                 <span>Edit Fields</span>
                             </Button>
@@ -399,7 +409,7 @@ export function Step4Preview() {
                         variant="outline"
                         size="sm"
                         onClick={() => setHistoryDrawerOpen(true)}
-                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 hidden sm:flex"
+                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 hidden sm:flex cursor-pointer"
                         title="Snapshot timeline & rollback"
                     >
                         <History className="h-3.5 w-3.5 text-primary" />
@@ -412,7 +422,7 @@ export function Step4Preview() {
                         size="sm"
                         onClick={() => handleSaveToDashboard(false)}
                         disabled={isSaving}
-                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5"
+                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 cursor-pointer"
                     >
                         <Bookmark className="h-3.5 w-3.5 text-primary" />
                         <span>Save</span>
@@ -423,7 +433,7 @@ export function Step4Preview() {
                         variant="outline"
                         size="sm"
                         onClick={handleDownloadSource}
-                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 hidden md:flex"
+                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 hidden md:flex cursor-pointer"
                         title="Download markup source (.typ)"
                     >
                         <FileText className="h-3.5 w-3.5" />
@@ -434,7 +444,7 @@ export function Step4Preview() {
                     <Button
                         size="sm"
                         onClick={handleDownloadPdf}
-                        className="h-8 px-3.5 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm"
+                        className="h-8 px-3.5 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm cursor-pointer"
                     >
                         <Download className="h-3.5 w-3.5" />
                         <span>Download PDF</span>
@@ -481,12 +491,12 @@ export function Step4Preview() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                 {/* 1. LEFT WORKSPACE (60% Desktop): Document Preview as Primary Visual Focus */}
                 <div className="lg:col-span-7 space-y-3">
-                    <div className="rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-3 shadow-md overflow-hidden">
+                    <div className="rounded-xl border border-border/70 bg-card p-3 shadow-sm overflow-hidden">
                         <PdfPreview />
                     </div>
 
                     {templateFitCopy && (
-                        <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2 text-xs flex items-center justify-between text-muted-foreground">
+                        <div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs flex items-center justify-between text-muted-foreground">
                             <span>Fit estimate: <strong className="text-foreground">{templateFitCopy.label}</strong></span>
                             <span className="text-[11px]">{templateFitCopy.detail}</span>
                         </div>
@@ -494,7 +504,7 @@ export function Step4Preview() {
                 </div>
 
                 {/* 2. RIGHT WORKSPACE (40% Desktop): Rich Intelligence & Insights Tabs */}
-                <div className="lg:col-span-5 rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-black/[0.08] bg-card p-4 shadow-md space-y-4">
+                <div className="lg:col-span-5 rounded-xl border border-border/70 bg-card p-4 shadow-sm space-y-4">
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'diff' | 'keywords')} className="w-full">
                         <TabsList className="grid grid-cols-3 h-8 bg-muted/40 p-0.5 text-xs">
                             <TabsTrigger value="analysis" className="text-[11px] px-1 py-1">Match & Quality</TabsTrigger>
@@ -504,28 +514,58 @@ export function Step4Preview() {
 
                         {/* TAB 1: Match Score & Quality Insights */}
                         <TabsContent value="analysis" className="space-y-4 mt-4">
-                            {/* Score Card */}
-                            <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
-                                <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold block">
-                                    ATS Alignment Score
-                                </span>
-                                <div className="mt-1 flex items-baseline gap-2">
-                                    <AnimatedCounter
-                                        value={afterScoreNumber}
-                                        className="text-3xl font-extrabold text-foreground"
-                                    />
-                                    <span className="text-xs text-muted-foreground">/ 100</span>
+                            {/* Precision Score Instrument */}
+                            <div className="rounded-xl border border-border/70 bg-muted/20 p-4 shadow-xs">
+                                <div className="flex items-center gap-4">
+                                    {/* Circular Progress Gauge */}
+                                    <div className="relative h-20 w-20 shrink-0 flex items-center justify-center">
+                                        <svg className="h-full w-full -rotate-90" viewBox="0 0 80 80">
+                                            <circle
+                                                cx="40"
+                                                cy="40"
+                                                r="34"
+                                                className="text-muted/40 stroke-current"
+                                                strokeWidth="6"
+                                                fill="transparent"
+                                            />
+                                            <circle
+                                                cx="40"
+                                                cy="40"
+                                                r="34"
+                                                className="text-primary stroke-current transition-all duration-1000 ease-out"
+                                                strokeWidth="6"
+                                                strokeLinecap="round"
+                                                strokeDasharray="213.6"
+                                                strokeDashoffset={213.6 * (1 - Math.min(Math.max(afterScoreNumber, 0), 100) / 100)}
+                                                fill="transparent"
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <AnimatedCounter
+                                                value={afterScoreNumber}
+                                                className="text-xl font-bold font-display text-foreground leading-none"
+                                            />
+                                            <span className="text-[9px] font-mono text-muted-foreground uppercase mt-0.5">ATS</span>
+                                        </div>
+                                    </div>
 
-                                    {improvement > 0 && (
-                                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-500 border border-emerald-500/20">
-                                            <TrendingUp className="h-3 w-3" />
-                                            +{improvement} pts tailored improvement
-                                        </span>
-                                    )}
+                                    <div className="space-y-1 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                                                Alignment Score
+                                            </span>
+                                            {improvement > 0 && (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-500 border border-emerald-500/20">
+                                                    <TrendingUp className="h-3 w-3" />
+                                                    +{improvement} pts
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                            Evaluated across 4 diagnostic competency pillars against JD requirements.
+                                        </p>
+                                    </div>
                                 </div>
-                                <p className="text-[11px] text-muted-foreground mt-1">
-                                    Evaluated against JD requirement weights & verified competency coverage.
-                                </p>
                             </div>
 
                             {/* 4 Category Breakdown Bars */}
@@ -695,42 +735,73 @@ export function Step4Preview() {
                             <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
                                 {explainableBullets.map((item) => {
                                     const isReverted = revertedBullets[item.index];
+                                    const activeText = isReverted ? item.original : item.tailored;
+
                                     return (
                                         <div
                                             key={item.index}
-                                            className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2 text-xs"
+                                            className="rounded-xl border border-border/60 bg-muted/20 p-3.5 space-y-2.5 text-xs shadow-xs"
                                         >
-                                            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                                <span className="font-semibold text-foreground">{item.role} • {item.company}</span>
-                                                <button
-                                                    onClick={() => setRevertedBullets(prev => ({ ...prev, [item.index]: !prev[item.index] }))}
-                                                    className="text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer"
-                                                >
-                                                    {isReverted ? (
-                                                        <>
-                                                            <Undo2 className="h-3 w-3" /> Re-apply AI Version
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Check className="h-3 w-3 text-emerald-500" /> Accepted
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-
-                                            {/* Before vs After */}
-                                            <div className="space-y-1.5">
-                                                {item.original !== item.tailored && (
-                                                    <div className="p-2 rounded bg-muted/40 text-[11px] text-muted-foreground line-through">
-                                                        {item.original}
-                                                    </div>
-                                                )}
-                                                <div className="p-2 rounded bg-primary/[0.06] border border-primary/20 text-[11px] text-foreground font-medium">
-                                                    {isReverted ? item.original : item.tailored}
+                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground pb-1.5 border-b border-border/40">
+                                                <span className="font-semibold text-foreground truncate max-w-[200px]">
+                                                    {item.role} • {item.company}
+                                                </span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopyBullet(activeText, item.index)}
+                                                        aria-label="Copy bullet point text"
+                                                        className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+                                                        title="Copy bullet"
+                                                    >
+                                                        {copiedIndex === item.index ? (
+                                                            <CheckCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                        ) : (
+                                                            <Copy className="h-3.5 w-3.5" />
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setRevertedBullets(prev => ({ ...prev, [item.index]: !prev[item.index] }))}
+                                                        className={cn(
+                                                            "text-[11px] px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none",
+                                                            isReverted
+                                                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/25 hover:bg-amber-500/20"
+                                                                : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 hover:bg-emerald-500/20"
+                                                        )}
+                                                    >
+                                                        {isReverted ? (
+                                                            <>
+                                                                <Undo2 className="h-3 w-3" />
+                                                                <span>Restore AI</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Check className="h-3 w-3 text-emerald-500" />
+                                                                <span>Accepted</span>
+                                                            </>
+                                                        )}
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded w-fit">
+                                            {/* Before vs After */}
+                                            <div className="space-y-2">
+                                                {item.original !== item.tailored && (
+                                                    <div className="p-2.5 rounded-lg bg-muted/40 border border-border/40 text-[11px] text-muted-foreground space-y-1">
+                                                        <span className="text-[10px] font-mono text-muted-foreground/80 uppercase block">Original Draft</span>
+                                                        <p className="line-through leading-relaxed opacity-75">{item.original}</p>
+                                                    </div>
+                                                )}
+                                                <div className="p-2.5 rounded-lg bg-primary/[0.05] border border-primary/20 text-[11px] text-foreground space-y-1">
+                                                    <span className="text-[10px] font-mono text-primary font-medium uppercase block">
+                                                        {isReverted ? 'Original Kept' : 'Tailored Alignment'}
+                                                    </span>
+                                                    <p className="leading-relaxed font-medium">{activeText}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md w-fit border border-emerald-500/20">
                                                 <Sparkles className="h-3 w-3" />
                                                 <span>Enhanced action verb & metric focus</span>
                                             </div>

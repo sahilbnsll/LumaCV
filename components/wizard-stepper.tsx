@@ -16,7 +16,7 @@ export function WizardStepper() {
     const { step: currentStep, setStep } = useAppStore();
 
     return (
-        <div className="flex items-center gap-1 sm:gap-2">
+        <nav aria-label="Resume creation steps" className="flex items-center gap-1 sm:gap-2">
             {steps.map((step, index) => {
                 const isCompleted = currentStep > step.id;
                 const isCurrent = currentStep === step.id;
@@ -27,14 +27,16 @@ export function WizardStepper() {
                         <button
                             type="button"
                             disabled={!isAccessible}
+                            aria-current={isCurrent ? "step" : undefined}
+                            aria-label={`Step ${step.id}: ${step.name}${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
                             onClick={() => {
                                 if (isAccessible && step.id !== currentStep) {
                                     setStep(step.id);
                                 }
                             }}
                             className={cn(
-                                "flex items-center gap-1.5 rounded-lg px-2 py-1 transition-all text-xs group",
-                                isCurrent && "bg-muted/50 font-semibold",
+                                "flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-all text-xs group min-h-[36px] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                                isCurrent && "bg-muted/60 font-semibold shadow-xs",
                                 isCompleted && "hover:bg-muted/40 cursor-pointer",
                                 !isAccessible && "cursor-not-allowed opacity-40"
                             )}
@@ -42,7 +44,7 @@ export function WizardStepper() {
                         >
                             <div
                                 className={cn(
-                                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition-all",
+                                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition-all",
                                     isCompleted
                                         ? "bg-emerald-500 text-white"
                                         : isCurrent
@@ -51,7 +53,7 @@ export function WizardStepper() {
                                 )}
                             >
                                 {isCompleted ? (
-                                    <Check className="h-3 w-3 stroke-[3]" />
+                                    <Check className="h-3.5 w-3.5 stroke-[3]" />
                                 ) : (
                                     <span>{step.id}</span>
                                 )}
@@ -68,7 +70,7 @@ export function WizardStepper() {
                         </button>
 
                         {index < steps.length - 1 && (
-                            <div className="w-3 sm:w-6 mx-1 h-[1px] bg-border/60 relative">
+                            <div className="w-3 sm:w-6 mx-1 h-[1px] bg-border/60 relative overflow-hidden" aria-hidden="true">
                                 {isCompleted && (
                                     <motion.div
                                         initial={{ width: "0%" }}
@@ -81,7 +83,6 @@ export function WizardStepper() {
                     </div>
                 );
             })}
-        </div>
+        </nav>
     );
 }
-
