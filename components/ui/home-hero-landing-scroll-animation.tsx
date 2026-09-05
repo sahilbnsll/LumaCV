@@ -77,19 +77,19 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
   const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
   const heroY = useTransform(smoothProgress, [0, 0.15], [0, -35]);
   const heroScale = useTransform(smoothProgress, [0, 0.15], [1, 0.96]);
-  const heroPointerEvents = useTransform(smoothProgress, (p) => (p > 0.1 ? "none" : "auto"));
+  const heroPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.1 ? "none" : "auto"));
 
   // 2. Initial Bottom Template Dock animations (Scroll: 0.00 -> 0.16)
   const dockOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
   const dockY = useTransform(smoothProgress, [0, 0.15], [0, 45]);
   const dockScale = useTransform(smoothProgress, [0, 0.15], [1, 0.94]);
-  const dockPointerEvents = useTransform(smoothProgress, (p) => (p > 0.1 ? "none" : "auto"));
+  const dockPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.1 ? "none" : "auto"));
 
   // 3. Kinetic Headline Master Container animations (Scroll: 0.12 -> 0.25)
   const kineticOpacity = useTransform(smoothProgress, [0.12, 0.22], [0, 1]);
   const kineticY = useTransform(smoothProgress, [0.12, 0.22], [30, 0]);
   const kineticScale = useTransform(smoothProgress, [0.12, 0.25], [0.96, 1]);
-  const kineticPointerEvents = useTransform(smoothProgress, (p) => (p > 0.15 ? "auto" : "none"));
+  const kineticPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.15 ? "auto" : "none"));
 
   // 4. Staggered phrase & inline template card illumination across scroll (0.20 -> 0.85)
   // Segment 1: "Deterministic Typst compilation" + Modern Cobalt
@@ -219,7 +219,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
             opacity: heroOpacity,
             y: heroY,
             scale: heroScale,
-            pointerEvents: heroPointerEvents as any,
+            pointerEvents: heroPointerEvents,
           }}
           className="relative z-30 max-w-3xl mx-auto text-center space-y-3.5 sm:space-y-4 px-4 will-change-transform mt-[-40px] sm:mt-[-50px]"
         >
@@ -283,7 +283,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
             opacity: dockOpacity,
             y: dockY,
             scale: dockScale,
-            pointerEvents: dockPointerEvents as any,
+            pointerEvents: dockPointerEvents,
           }}
           className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 sm:gap-3 w-[92%] max-w-2xl will-change-transform z-20"
         >
@@ -330,7 +330,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
             opacity: kineticOpacity,
             y: kineticY,
             scale: kineticScale,
-            pointerEvents: kineticPointerEvents as any,
+            pointerEvents: kineticPointerEvents,
           }}
           className="absolute inset-0 flex items-center justify-center px-4 md:px-8 z-20 will-change-transform"
         >

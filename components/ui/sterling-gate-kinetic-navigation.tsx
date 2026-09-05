@@ -32,13 +32,16 @@ export function Component({
   const isControlled = controlledIsOpen !== undefined;
   const isMenuOpen = isControlled ? controlledIsOpen : internalIsOpen;
 
-  const setIsMenuOpen = (value: boolean | ((prev: boolean) => boolean)) => {
-    const nextValue = typeof value === "function" ? value(isMenuOpen) : value;
-    if (!isControlled) {
-      setInternalIsOpen(nextValue);
-    }
-    onOpenChange?.(nextValue);
-  };
+  const setIsMenuOpen = React.useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      setInternalIsOpen((prev) => {
+        const nextValue = typeof value === "function" ? value(prev) : value;
+        onOpenChange?.(nextValue);
+        return nextValue;
+      });
+    },
+    [onOpenChange]
+  );
 
   // Initial Setup & Hover Effects
   useEffect(() => {
@@ -54,6 +57,8 @@ export function Component({
       console.warn("CustomEase failed to load, falling back to default.", e);
       gsap.defaults({ ease: "power2.out", duration: 0.7 });
     }
+
+    const cleanups: (() => void)[] = [];
 
     const ctx = gsap.context(() => {
       // 1. Arrow Animation (Safe check)
@@ -108,19 +113,16 @@ export function Component({
         item.addEventListener("mouseenter", onEnter);
         item.addEventListener("mouseleave", onLeave);
 
-        (item as any)._cleanup = () => {
+        cleanups.push(() => {
           item.removeEventListener("mouseenter", onEnter);
           item.removeEventListener("mouseleave", onLeave);
-        };
+        });
       });
     }, containerRef);
 
     return () => {
       ctx.revert();
-      if (containerRef.current) {
-        const items = containerRef.current.querySelectorAll(".menu-list-item[data-shape]");
-        items.forEach((item: any) => item._cleanup && item._cleanup());
-      }
+      cleanups.forEach((fn) => fn());
     };
   }, []);
 
@@ -406,10 +408,10 @@ export function Component({
                 </li>
                 <li className="menu-list-item" data-shape="2">
                   <a
-                    href="/#templates"
+                    href="/templates"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleNavigate("/#templates");
+                      handleNavigate("/templates");
                     }}
                     className="nav-link w-inline-block group"
                   >
@@ -434,15 +436,15 @@ export function Component({
                 </li>
                 <li className="menu-list-item" data-shape="4">
                   <a
-                    href="/#faq"
+                    href="/support"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleNavigate("/#faq");
+                      handleNavigate("/support");
                     }}
                     className="nav-link w-inline-block group"
                   >
                     <span className="text-xs font-mono text-primary/70 mr-3">04</span>
-                    <p className="nav-link-text">FAQ & Support</p>
+                    <p className="nav-link-text">Support & FAQ</p>
                     <ArrowRight className="h-6 w-6 opacity-0 -translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary" />
                   </a>
                 </li>

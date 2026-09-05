@@ -15,7 +15,7 @@
   <a href="#templates">Templates</a> •
   <a href="#contributing">Contributing</a> •
   <a href="LICENSE">License</a> •
-  <a href="http://localhost:3000/docs">Interactive Docs</a>
+  <a href="/docs">Documentation</a>
 </p>
 
 ---
@@ -140,7 +140,7 @@ npm run build
 ## Documentation
 
 Full architectural guides, environment variable specifications, workflow breakdowns, and API references are available in the dedicated documentation center:
-- Live in-app: [http://localhost:3000/docs](http://localhost:3000/docs)
+- Live in-app: [`/docs`](/docs)
 - In repository: [`docs/`](docs/) and [`app/docs/page.tsx`](app/docs/page.tsx)
 
 ---

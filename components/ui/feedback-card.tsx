@@ -135,10 +135,10 @@ export const FeedbackCard = ({
       >
         <AnimatePresence mode="wait">
           {!isSubmitted ? (
-            <motion.div
+              <motion.div
               key="form"
-              exit={{ opacity: 0, y: -6 }}
-              initial={{ opacity: 0, y: 6 }}
+              exit={{ opacity: 0, y: direction === 'up' ? 6 : -6 }}
+              initial={{ opacity: 0, y: direction === 'up' ? -6 : 6 }}
               animate={{ opacity: 1, y: 0 }}
               className="pt-2 pb-1 flex flex-col justify-between h-full"
             >
@@ -151,7 +151,7 @@ export const FeedbackCard = ({
                     ? "What went well, and what could be even better?"
                     : happiness === 2
                     ? "What frustrated you or felt confusing?"
-                    : "Tell us what went wrong so we can fix it ASAP..."
+                    : (placeholder || "Tell us what went wrong so we can fix it ASAP...")
                 }
                 rows={4}
                 className="w-full resize-none rounded-xl border border-border/80 bg-muted/25 dark:bg-white/[0.03] p-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary/25 transition-all leading-relaxed"

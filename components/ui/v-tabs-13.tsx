@@ -4,14 +4,12 @@ import React, { useState, useEffect } from "react";
 import {
   UserIcon,
   KeyRound,
-  SlidersHorizontal,
   LockIcon,
   MessageSquareQuote,
   Check,
   Eye,
   EyeOff,
   Shield,
-  Sparkles,
   Lock,
   Laptop,
   FileCode2,
@@ -19,6 +17,7 @@ import {
   Star,
   CheckCircle2,
   ExternalLink,
+  X,
 } from "lucide-react";
 import { Separator } from "@/components/ui/v-tabs-13-utils/separator";
 import {
@@ -44,7 +43,7 @@ export interface PatternProps {
 }
 
 export function Pattern({ onClose }: PatternProps) {
-  const { user, supabase, signOut } = useAuth();
+  const { user, supabase } = useAuth();
 
   // 1. Profile State
   const initialName = user?.user_metadata?.full_name || (user?.email ? user.email.split("@")[0].replace(".", " ") : "Sahil Bansal");
@@ -235,10 +234,22 @@ export function Pattern({ onClose }: PatternProps) {
                   Your authenticated account and workspace credentials.
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground border border-border/60">
-                <span className="h-1.5 w-1.5 rounded-full bg-foreground/40" />
-                Verified User
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground border border-border/60">
+                  <span className="h-1.5 w-1.5 rounded-full bg-foreground/40" />
+                  Verified User
+                </span>
+                {onClose && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                    aria-label="Close settings"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <Separator />

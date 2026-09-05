@@ -759,3 +759,25 @@
   line-height: 1.1;
   margin: 0;
 }
+
+/* Accessibility: High-Fidelity Prefers Reduced Motion Respect */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-float-drift-1,
+  .animate-float-drift-2,
+  .animate-float-drift-3,
+  .animate-pulse,
+  .animate-spin,
+  .animate-marquee,
+  .animate-marquee-vertical {
+    animation: none !important;
+  }
+}

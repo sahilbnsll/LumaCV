@@ -15,13 +15,14 @@ const AnalyzeJDRequestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    // Strictly enforce authentication for all resume operations
+    const auth = await requireUser();
+    if (auth.response) return auth.response;
+
     const userKeys = extractUserApiKeys(req);
     const usingCustomKeys = hasCustomKeys(userKeys);
 
     if (!usingCustomKeys) {
-        const auth = await requireUser();
-        if (auth.response) return auth.response;
-
         const ip = req.ip ?? '127.0.0.1';
         const { success } = await ratelimit.limit(ip);
         if (!success) {

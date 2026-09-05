@@ -265,6 +265,15 @@ export function Step4Preview() {
 
     // Download PDF directly
     const handleDownloadPdf = async () => {
+        if (!user) {
+            toast.error('Please sign in to download your tailored resume.', {
+                action: {
+                    label: 'Sign In',
+                    onClick: () => router.push('/login?redirect=/builder'),
+                },
+            });
+            return;
+        }
         trackEvent('pdf_downloaded', { template, theme });
         const toastId = toast.loading('Compiling pixel-perfect PDF...');
 
@@ -298,6 +307,15 @@ export function Step4Preview() {
 
     // Download .typ source directly
     const handleDownloadSource = () => {
+        if (!user) {
+            toast.error('Please sign in to export markup source.', {
+                action: {
+                    label: 'Sign In',
+                    onClick: () => router.push('/login?redirect=/builder'),
+                },
+            });
+            return;
+        }
         trackEvent('source_exported', { template });
         const typCode = generatedResume?.typst || '';
 

@@ -22,6 +22,7 @@ import { useTheme } from 'next-themes';
 import { useAppStore } from '@/lib/store';
 import { motionTokens } from '@/lib/design-tokens';
 import { ALL_TEMPLATES } from '@/lib/templates-data';
+import { TemplateType } from '@/lib/resume-schema';
 
 export function CommandMenu() {
     const [open, setOpen] = useState(false);
@@ -106,7 +107,7 @@ export function CommandMenu() {
             category: `Templates (${tmpl.categoryLabel})`,
             icon: LayoutTemplate,
             action: () => {
-                setTemplate(tmpl.id as any);
+                setTemplate(tmpl.id as TemplateType);
                 router.push('/builder');
             },
         })),

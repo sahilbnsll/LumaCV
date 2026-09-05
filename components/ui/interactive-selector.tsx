@@ -118,7 +118,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
         if (found !== -1 && found !== activeIndex) {
             setActiveIndex(found);
         }
-    }, [currentActiveTemplate]);
+    }, [currentActiveTemplate, activeIndex]);
 
     // Staggered initial entrance without causing lag or frame drops
     useEffect(() => {

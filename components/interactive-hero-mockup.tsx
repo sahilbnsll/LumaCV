@@ -853,14 +853,17 @@ export function InteractiveHeroMockup() {
                                         </div>
 
                                         <div className="space-y-1.5 pt-1">
-                                            {currentPersona.roles[selectedRoleIndex].bullets.map((bullet, bIdx) => (
-                                                <div key={bIdx} className="flex items-start gap-2 text-muted-foreground text-[10.5px] leading-relaxed group/bullet">
-                                                    <span className="text-primary mt-0.5">•</span>
-                                                    <span className="flex-1 select-text">
-                                                        {bullet}
-                                                    </span>
-                                                </div>
-                                            ))}
+                                            {currentPersona.roles[selectedRoleIndex].bullets.map((bullet, bIdx) => {
+                                                const bulletText = editedBullets[currentPersona.id]?.[bIdx] ?? bullet;
+                                                return (
+                                                    <div key={bIdx} className="flex items-start gap-2 text-muted-foreground text-[10.5px] leading-relaxed group/bullet">
+                                                        <span className="text-primary mt-0.5">•</span>
+                                                        <span className="flex-1 select-text">
+                                                            {bulletText}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
