@@ -18,7 +18,6 @@ import {
     CheckCircle2,
     Sparkles,
     Download,
-    FileText,
     FileCode2,
     Bookmark,
     TrendingUp,

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { useAuth } from '@/components/auth-provider';
-import { Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { LumaLogo } from '@/components/luma-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

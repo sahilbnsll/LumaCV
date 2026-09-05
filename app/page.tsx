@@ -1,32 +1,22 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
-import { LumaLogo } from '@/components/luma-logo';
 import { InteractiveWatermark } from '@/components/interactive-watermark';
 import { PulsingHeart } from '@/components/pulsing-heart';
 import {
-    ArrowRight,
     Sparkles,
     Heart,
     Copy,
     Check,
     ShieldCheck,
-    Code2,
-    Database,
-    FileText,
-    Download,
-    ChevronDown,
-    Palette,
     Zap,
     Users,
     KeyRound,
     SlidersHorizontal,
     EyeOff,
-    CheckCircle2,
     Wrench,
     Rocket,
     Languages,
@@ -39,20 +29,14 @@ import {
     LockKeyhole,
     FileCode2,
     Target,
-    Github,
-    Layers,
-    Search,
     HelpCircle,
     Send,
     MessageSquarePlus
 } from 'lucide-react';
-import Image from 'next/image';
 import { AnimatedCounter } from '@/components/animated-counter';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { RxTemplatesShowcase } from '@/components/rx-templates-showcase';
 import HomeHeroLandingScrollAnimation from '@/components/ui/home-hero-landing-scroll-animation';
-import { ALL_TEMPLATES, TEMPLATE_CATEGORIES } from '@/lib/templates-data';
 import {
     Dialog,
     DialogContent,

@@ -571,7 +571,7 @@ export default function DocsPage() {
                                     <span>Target Job Description & Client-Side Extraction</span>
                                 </h3>
                                 <p className="text-xs text-muted-foreground">
-                                    Text extraction executes in your browser using Mozilla's <code className="text-foreground font-mono">pdfjs-dist</code> with a dedicated web worker (<code className="text-foreground font-mono">pdf.worker.min.js</code>). Text chunks and embedded hyperlink annotations (LinkedIn, GitHub, portfolios) are normalized locally before passing to the structured schema parser.
+                                    Text extraction executes in your browser using Mozilla&apos;s <code className="text-foreground font-mono">pdfjs-dist</code> with a dedicated web worker (<code className="text-foreground font-mono">pdf.worker.min.js</code>). Text chunks and embedded hyperlink annotations (LinkedIn, GitHub, portfolios) are normalized locally before passing to the structured schema parser.
                                 </p>
                             </div>
 
@@ -591,7 +591,7 @@ export default function DocsPage() {
                                     <span>Dual-Vector Processing & Bullet Tailoring</span>
                                 </h3>
                                 <p className="text-xs text-muted-foreground">
-                                    The AI service evaluates alignment across four weighted vectors (Required Skills 40%, Responsibilities 25%, Preferred Skills 20%, Terminology 15%). Bullet points are strengthened to highlight quantifiable outcomes matching target role expectations, verified against the candidate's immutable factual background.
+                                    The AI service evaluates alignment across four weighted vectors (Required Skills 40%, Responsibilities 25%, Preferred Skills 20%, Terminology 15%). Bullet points are strengthened to highlight quantifiable outcomes matching target role expectations, verified against the candidate&apos;s immutable factual background.
                                 </p>
                             </div>
 
@@ -1209,7 +1209,7 @@ npm run build`}
                             </div>
 
                             <div className="p-4 rounded-xl border border-border/70 bg-card space-y-1.5">
-                                <strong className="text-foreground text-xs">Q: "Too many requests" (HTTP 429) during peak hours?</strong>
+                                <strong className="text-foreground text-xs">Q: &quot;Too many requests&quot; (HTTP 429) during peak hours?</strong>
                                 <p className="text-xs text-muted-foreground">
                                     The free community quota enforces per-IP rate limits to prevent automated abuse. To bypass all platform rate limits, configure your own free personal API key in <Link href="/profile" className="text-primary hover:underline font-medium">Settings (BYOK)</Link>.
                                 </p>

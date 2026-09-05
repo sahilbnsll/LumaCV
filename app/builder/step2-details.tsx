@@ -4,7 +4,7 @@ import { useAppStore } from '@/lib/store';
 import { ResumeDataSchema } from '@/lib/resume-schema';
 import { Button } from '@/components/ui/button';
 import { ResumeForm } from '@/components/resume-form';
-import { ArrowLeft, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function Step2Details() {

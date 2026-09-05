@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
     ArrowLeft,
     ArrowRight,
-    RotateCcw,
-    Sparkles
+    RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 

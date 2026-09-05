@@ -10,8 +10,6 @@ import {
     FileCheck2,
     FileUp,
     ShieldCheck,
-    Cpu,
-    Check,
     RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -112,7 +110,7 @@ export function Step1JD() {
             const message = error instanceof Error ? error.message : 'Failed to parse resume';
             toast.error(message);
         }
-    }, [setFile, setExtractedText, setResumeDataFromParse]);
+    }, [setFile, setExtractedText, setResumeDataFromParse, user]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,

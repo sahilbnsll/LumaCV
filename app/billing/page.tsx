@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
-import { ArrowLeft, Check, Sparkles, Heart, Copy, CheckCheck, Wallet, Zap, Server } from 'lucide-react';
+import { ArrowLeft, Check, Heart, Copy, CheckCheck, Wallet, Zap, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 

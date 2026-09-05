@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Github, Linkedin, ShieldCheck, Cpu, Heart, BriefcaseBusiness } from 'lucide-react';
+import { Github, Linkedin, ShieldCheck, Heart, BriefcaseBusiness } from 'lucide-react';
 import { LumaLogo } from '@/components/luma-logo';
 
 export function AppFooter() {

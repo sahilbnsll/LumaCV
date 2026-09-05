@@ -18,9 +18,6 @@ import {
     CheckCircle2,
     Eye,
     X,
-    Filter,
-    Layers,
-    FileText,
     Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

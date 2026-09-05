@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Heart, Sparkles, Rocket, Wrench, Users, Copy, Check, ArrowLeft, Zap } from 'lucide-react';
+import { Heart, Rocket, Wrench, Users, Copy, Check, ArrowLeft, Zap } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { PulsingHeart } from '@/components/pulsing-heart';

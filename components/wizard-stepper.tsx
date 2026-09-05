@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';

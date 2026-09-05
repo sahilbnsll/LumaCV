@@ -12,10 +12,7 @@ import {
     ShieldCheck, 
     FileCode2, 
     Check, 
-    RotateCcw,
-    Zap,
-    Lock,
-    ArrowRight
+    RotateCcw
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { AuthForm } from '@/components/auth-form';
@@ -53,7 +54,9 @@ export default function SignupPage() {
                         </div>
                     </div>
 
-                    <AuthForm mode="signup" />
+                    <Suspense fallback={<div className="h-48 animate-pulse rounded-lg bg-muted/20" />}>
+                        <AuthForm mode="signup" />
+                    </Suspense>
 
                     <div className="mt-8 pt-6 border-t border-border/60 text-center">
                         <p className="text-xs text-muted-foreground">
