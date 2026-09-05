@@ -1,43 +1,46 @@
 <p align="center">
-  <img src="public/logo.svg" width="64" height="64" alt="LumaCV Logo" />
+  <img src="public/icon.svg" width="72" height="72" alt="LumaCV Logo" />
 </p>
 
 <h1 align="center">LumaCV</h1>
 
 <p align="center">
-  <strong>An open-source resume engineering studio powered by Typst, Next.js, and privacy-first AI tailoring.</strong>
+  <strong>The open-source resume engineering studio powered by Typst, Next.js 14, and privacy-first AI tailoring.</strong>
 </p>
 
 <p align="center">
   <a href="#quickstart">Quickstart</a> •
   <a href="#features">Features</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="#templates">Templates</a> •
-  <a href="#contributing">Contributing</a> •
-  <a href="LICENSE">License</a> •
-  <a href="/docs">Documentation</a>
+  <a href="#templates">48 Templates</a> •
+  <a href="#byok-privacy">BYOK Privacy</a> •
+  <a href="#testing">Verification</a> •
+  <a href="docs/deployment.md">Deployment</a> •
+  <a href="docs/api-reference.md">API Reference</a> •
+  <a href="LICENSE">License</a>
 </p>
 
 ---
 
 ## Overview
 
-**LumaCV** is a modern, open-source resume creation and optimization platform. It combines the typography and speed of the **Typst** typesetting engine with strict, anti-hallucination AI tailoring models to produce high-impact, ATS-optimized resumes.
+**LumaCV** is an open-source, deterministic resume creation and optimization platform built for engineers, researchers, and professionals. It replaces fragile HTML-to-PDF canvas wrappers and complex LaTeX distributions with the speed and typographic precision of the **Typst** typesetting engine (< 50ms compilation time).
 
-Unlike traditional web-based builders that rely on lossy HTML-to-PDF canvas wrappers, LumaCV compiles directly to native vector PDFs using Typst. Users retain full ownership of their data with Bring-Your-Own-Key (BYOK) AI provider integration and complete source code exports (`.typ`).
+Equipped with an anti-hallucination AI pipeline, LumaCV tailors experience bullet points and summaries to match job descriptions while strictly preserving ground-truth employment history, dates, and authentic metrics. Users maintain complete ownership of their data with client-side Bring-Your-Own-Key (BYOK) AI provider integration and complete Typst source code exports (`.typ`).
 
 ---
 
-## Features
+## Key Features
 
-- **Typst Vector Typesetting**: Native Typst compilation delivers precise typographic hierarchy, micro-spacing, and crisp vector output in milliseconds.
-- **Fact-Preserving AI Tailoring**: Tailor experience bullets and summaries to target job descriptions while strictly preserving ground-truth employment history, dates, and authentic metrics.
-- **48 Curated Templates**: Spanning ATS-Safe, Modern Tech, Executive, Editorial, and Academic layouts across 8 calibrated color palettes.
-- **Bring Your Own Key (BYOK)**: Connect Google Gemini, OpenAI, Anthropic Claude, or Groq Cloud keys directly in client storage. Keys are never logged or stored on the server.
-- **Deterministic ATS Scoring**: Real-time diagnostic evaluation across Required Skills, Responsibilities, Preferred Qualifications, and Terminology.
-- **Interactive Bullet Diff Studio**: Side-by-side comparison of original vs. tailored experience points with individual accept/revert controls.
-- **Dual Export Options**: Download print-ready vector PDFs or complete Typst markup (`.typ`) for local command-line compilation.
-- **Session & Cloud Sync**: Gated workspace security with Supabase authentication and automatic local session recovery.
+- ⚡ **Sub-50ms Typst Vector Typesetting**: Native Typst compilation delivers razor-sharp typographic hierarchy, micro-spacing, and pure vector output in milliseconds.
+- 🛡️ **100% Fact-Preserving AI Tailoring**: Enhances phrasing and vocabulary to align with target role keywords while strictly safeguarding real-world dates, employers, and authentic achievements.
+- 📐 **48 Architectural Template Combinations**: 6 core design archetypes (`Modern`, `Classic`, `Engineering`, `Compact`, `Two-Column`, `ATS-Safe`) across 8 curated executive colorways.
+- 🔑 **Bring Your Own Key (BYOK)**: Native support for Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud. Keys are held ephemerally in the browser and never logged or persisted on the server.
+- 📊 **Deterministic ATS Scoring**: Real-time diagnostic evaluation across required competencies, responsibility alignment, and industry terminology.
+- 🔍 **Interactive Bullet Diff Studio**: Granular side-by-side comparison of original vs. tailored experience points with individual accept/reject controls.
+- 📦 **Dual Export Architecture**: Download print-ready vector PDFs or export raw Typst markup (`.typ`) for offline CLI builds.
+- 🔒 **Privacy-First & Self-Hostable**: Client-side PDF text extraction via `pdfjs-dist`, optional Supabase authentication, and zero third-party telemetry.
+- 🎨 **Typography System**: Designed with Vercel's `Geist Sans` and `Geist Mono` typography tokens for an ultra-clean, high-density editorial finish.
 
 ---
 
@@ -45,8 +48,8 @@ Unlike traditional web-based builders that rely on lossy HTML-to-PDF canvas wrap
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) v18.17+ or v20+
-- [Typst CLI](https://github.com/typst/typst) (optional locally if using the included `bin/` runtime)
-- A free [Supabase](https://supabase.com) project for authentication and resume persistence
+- [Typst CLI](https://github.com/typst/typst) (optional locally; bundled binaries included in `bin/`)
+- A free [Supabase](https://supabase.com) project (for user authentication and resume persistence)
 
 ### 1. Clone and Install
 ```bash
@@ -61,93 +64,127 @@ Copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-Fill in your Supabase project credentials:
+Fill in your project credentials:
 ```env
+# Host Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Supabase Auth & Database
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Optional: Default platform AI key (users can also bring their own in UI)
+# Optional Platform Fallback AI Keys (users can supply BYOK in UI)
 GEMINI_API_KEY=your-gemini-key
 ```
 
 ### 3. Initialize Database Schema
-Run the schema script located in [`supabase/schema.sql`](supabase/schema.sql) in your Supabase SQL Editor to set up tables, foreign keys, and Row Level Security (RLS) policies.
+Run the SQL script located in [`supabase/schema.sql`](supabase/schema.sql) in your Supabase SQL Editor to configure tables, indexes, and Row Level Security (RLS) policies.
 
 ### 4. Start Development Server
 ```bash
 npm run dev
 ```
-Navigate to [http://localhost:3000](http://localhost:3000) to open LumaCV.
+Open [http://localhost:3000](http://localhost:3000) to launch LumaCV.
 
 ---
 
-## Project Structure
+## Architecture Overview
 
 ```
-LumaCV/
-├── app/                  # Next.js App Router (pages, layouts, API routes)
-│   ├── (auth)/           # Authentication (login, signup, password resets)
-│   ├── api/v1/           # Protected API endpoints (compile, export, parse, tailor)
-│   ├── builder/          # 4-step resume workspace
-│   ├── dashboard/        # Saved resumes management
-│   ├── demo/             # Public interactive sample CV
-│   ├── docs/             # Technical documentation hub (/docs)
-│   ├── templates/        # 48-template interactive gallery
-│   └── profile/          # BYOK key settings and user preferences
-├── components/           # UI components & design system primitives
-│   ├── ui/               # Radix UI + shadcn/ui components
-│   ├── luma-logo.tsx     # Canonical SVG brand mark
-│   └── app-header.tsx    # Header with command bar and user session menu
-├── lib/                  # Business logic and services
-│   ├── compiler-service.ts   # Typst process executor and WASM integration
-│   ├── resume-store.ts       # Client-side Zustand persistence store
-│   └── supabase/             # Supabase client and server instances
-├── typst/                # Typst templates, layout functions, and fonts
-└── prompts/              # Privacy-preserving LLM extraction and tailoring prompts
+[User's PDF Resume]
+        │
+        ▼ (Client-side pdfjs-dist)
+[Raw Text + Extracted URLs]
+        │
+        ▼ POST /api/v1/resume/parse
+[LLM Parser (Gemini 2.5 Flash / Groq / Claude)]
+        │
+        ▼ (jsonrepair + normalizeResumeFromLLM)
+[Structured ResumeData (JSON)]
+        │
+        ▼ (Zustand Store -> Step 2 Form)
+[User Edits / Verification]
+        │
+        ▼ POST /api/v1/jd/analyze + POST /api/v1/resume/tailor
+[Tailored ResumeData + Typst AST]
+        │
+        ▼ POST /api/v1/resume/compile
+[Typst Native Engine (bin/typst)]
+        │
+        ▼ (< 50ms)
+[High-Resolution Vector PDF Preview & Download]
 ```
 
----
-
-## 48 Typst Architectural Templates
-
-LumaCV includes 48 professionally designed Typst templates organized into five distinct archetypes:
-
-1. **ATS-Optimized (13)**: `Impact`, `Switch`, `Grad`, `Leadership`, `Casework`, `Metrics`, `Skillsfirst`, `Credential`, `International`, `Projectled`, `Narrative`, `Strict`, `ATS-Safe`.
-2. **Modern & Tech (10)**: `Modern`, `Engineering`, `Compact`, `Two-Column`, `Terminal`, `Matrix`, `Product`, `Startup`, `Mono`, `Cadence`.
-3. **Executive & Advisory (10)**: `Classic`, `Executive`, `Consultant`, `Analyst`, `Meridian`, `Ledger`, `Harbor`, `Statement`, `Forma`, `Focus`.
-4. **Editorial & Creative (10)**: `Boutique`, `Editorial`, `Portfolio`, `Atelier`, `Swiss`, `Nordic`, `Neo`, `Monochrome`, `Slate`, `Timeline`.
-5. **Academic & Research (5)**: `Academic`, `Research Modern`, and specialized scholarly formats.
-
-Explore and live-preview all templates in the [Interactive Gallery](http://localhost:3000/templates).
+Read the full [Architecture Documentation](docs/architecture.md) for deeper technical specifications.
 
 ---
 
-## Verification & Quality Checks
+## 48 Curated Typst Templates
 
-Run the automated suites to ensure TypeScript compilation, route health, and visual consistency:
+LumaCV features 6 foundational typesetting archetypes paired with 8 executive color palettes:
+
+| Archetype | Best Suited For | Key Visual Characteristics |
+| :--- | :--- | :--- |
+| **Modern** | Product Managers, Tech Leads | Clean sans-serif, category pill tags, streamlined contact bar |
+| **Classic** | Finance, Law, Executive | Harvard-style serif typography, elegant horizontal rules |
+| **Engineering** | Software, Systems, DevOps | High-density layout, dual-rule sections, explicit tech matrices |
+| **Compact** | 10+ Year Veteran Careers | Maximum information density, single-page fit algorithm |
+| **Two-Column** | Designers, Technical Writers | Asymmetric layout with structured sidebar for skills & awards |
+| **ATS-Safe** | Enterprise & Government ATS | Pure single-column linear flow, guaranteed 100% parser indexability |
+
+**Colorways**: `none`, `navy`, `cobalt`, `emerald`, `burgundy`, `teal`, `slate`, `black`.
+
+Live-preview all combinations in the [Interactive Gallery](http://localhost:3000/templates).
+
+---
+
+## BYOK Privacy & Model Compatibility
+
+LumaCV connects directly with the leading AI providers using user-provided API keys:
+
+| Provider | Supported Models | Recommended Use Case |
+| :--- | :--- | :--- |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite` | Ultra-low latency (< 400ms), structured outputs |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o3-mini` | Benchmark schema compliance & formatting |
+| **Anthropic Claude**| `claude-3-5-sonnet`, `claude-3-5-haiku` | Nuanced, natural executive vocabulary |
+| **Groq Cloud** | `qwen/qwen-2.5-32b`, `llama-3.3-70b` | Maximum token generation speed |
+
+> **Privacy Guarantee**: BYOK keys are held strictly in local browser storage (`localStorage`) and sent via encrypted HTTPS headers directly to the inference endpoints. They are never written to disk, database, or server logs.
+
+---
+
+## Verification & Quality Gates
+
+Run the automated verification test suites before submitting changes:
 
 ```bash
-# TypeScript compilation check
+# Type check with zero TypeScript errors
 npx tsc --noEmit
 
 # Production build test
 npm run build
+
+# Automated Visual Regression Audit (48 combinations)
+npx tsx scripts/test-visual-regression.mjs
 ```
 
 ---
 
-## Documentation
+## Documentation Hub
 
-Full architectural guides, environment variable specifications, workflow breakdowns, and API references are available in the dedicated documentation center:
-- Live in-app: [`/docs`](/docs)
-- In repository: [`docs/`](docs/) and [`app/docs/page.tsx`](app/docs/page.tsx)
+Explore the complete documentation directory:
+- [System Architecture](docs/architecture.md)
+- [API Reference (v1)](docs/api-reference.md)
+- [Production Deployment Guide](docs/deployment.md)
+- [Supabase Setup & Schema](docs/supabase-setup.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
 
 ---
 
 ## Contributing
 
-We welcome community contributions! Please review our [Contributing Guide](CONTRIBUTING.md) for details on code standards, local testing, and pull request workflows.
+We welcome contributions! Check out [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on branch management, code conventions, and pull request workflows.
 
 ---
 

@@ -9,6 +9,11 @@ import { requireUser } from '@/lib/auth';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+    }
+
     const ip = req.ip ?? "127.0.0.1";
     const { success } = await ratelimit.limit(ip);
     if (!success) {

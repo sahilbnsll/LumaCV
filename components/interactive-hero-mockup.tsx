@@ -528,7 +528,7 @@ export function InteractiveHeroMockup() {
                             className="font-mono text-[11px] text-foreground hover:text-primary transition-colors flex items-center gap-2 bg-background/80 hover:bg-background px-3 py-1 rounded-md border border-border/60 shadow-xs focus:outline-none"
                         >
                             <LumaLogo size={14} />
-                            <span className="font-semibold">{currentPersona.filename}</span>
+                            <span className="font-semibold truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">{currentPersona.filename}</span>
                             <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform duration-200", isPersonaMenuOpen && "rotate-180")} />
                         </button>
 
@@ -807,7 +807,8 @@ export function InteractiveHeroMockup() {
                                 className="shrink-0 flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 hover:bg-muted/80 px-2.5 py-1 text-[10px] text-muted-foreground hover:text-primary font-mono transition-all hover:scale-105 shadow-xs"
                             >
                                 <Zap className={cn("h-3 w-3", isCompiling ? "text-amber-400 animate-spin" : "text-emerald-400")} />
-                                <span>{isCompiling ? "Compiling..." : `Sub-${compileSpeed}ms Typst Vector`}</span>
+                                <span className="hidden sm:inline">{isCompiling ? "Compiling..." : `Sub-${compileSpeed}ms Typst Vector`}</span>
+                                <span className="sm:hidden">{isCompiling ? "..." : `Sub-50ms`}</span>
                             </button>
                         </div>
 

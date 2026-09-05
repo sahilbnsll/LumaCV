@@ -1,16 +1,16 @@
 "use client";
 
 import Link from 'next/link';
-import { Github, Linkedin, ShieldCheck, Heart, BriefcaseBusiness } from 'lucide-react';
+import { Github, Linkedin, Heart, BriefcaseBusiness } from 'lucide-react';
 import { LumaLogo } from '@/components/luma-logo';
 
 export function AppFooter() {
     return (
         <footer className="glass border-t border-border/50 text-muted-foreground transition-colors">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-12 border-b border-border/40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 pb-12 border-b border-border/40">
                     {/* Brand column */}
-                    <div className="md:col-span-2 space-y-4">
+                    <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 space-y-4">
                         <Link href="/" className="inline-flex items-center gap-2.5 group">
                             <LumaLogo size={26} />
                             <span className="font-display text-base font-bold tracking-tight text-foreground">
@@ -114,10 +114,6 @@ export function AppFooter() {
                                 <Link href="/docs#license" className="hover:text-foreground transition-colors">
                                     MIT License
                                 </Link>
-                            </li>
-                            <li className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80 pt-1">
-                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                                <span>Zero Model Training</span>
                             </li>
                         </ul>
                     </div>

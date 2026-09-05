@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { generateTypst } from '../lib/typst-generator.js';
-import { DEMO_RESUME_DATA } from '../lib/demo-data.js';
+import { generateTypst } from '../lib/typst-generator.ts';
+import { DEMO_RESUME_DATA } from '../lib/demo-data.ts';
 
 const templates = ['modern', 'classic', 'engineering', 'compact', 'two_column', 'ats_safe'];
 const themes = ['none', 'navy', 'cobalt', 'emerald', 'burgundy', 'teal', 'slate', 'black'];

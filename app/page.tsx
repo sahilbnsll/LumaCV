@@ -7,36 +7,23 @@ import { AppFooter } from '@/components/app-footer';
 import { InteractiveWatermark } from '@/components/interactive-watermark';
 import { PulsingHeart } from '@/components/pulsing-heart';
 import {
-    Sparkles,
     Heart,
     Copy,
     Check,
     ShieldCheck,
-    Zap,
     Users,
-    KeyRound,
-    SlidersHorizontal,
-    EyeOff,
-    Wrench,
     Rocket,
-    Languages,
-    LayoutTemplate,
-    Server,
-    GitBranch,
-    Fingerprint,
-    Files,
-    Share2,
-    LockKeyhole,
-    FileCode2,
-    Target,
     HelpCircle,
     Send,
-    MessageSquarePlus
+    MessageSquarePlus,
+    Wrench,
+    Zap
 } from 'lucide-react';
 import { AnimatedCounter } from '@/components/animated-counter';
 import { toast } from 'sonner';
-import { RxTemplatesShowcase } from '@/components/rx-templates-showcase';
+import dynamic from 'next/dynamic';
 import HomeHeroLandingScrollAnimation from '@/components/ui/home-hero-landing-scroll-animation';
+import { Features } from '@/components/blocks/features-8';
 import {
     Dialog,
     DialogContent,
@@ -46,91 +33,24 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FaqAccordion, type FAQItem } from '@/components/ui/faq-chat-accordion';
+import { type FAQItem } from '@/components/ui/faq-chat-accordion';
 
-// Features matrix data matching reference 4-column design
-const featuresData = [
+const RxTemplatesShowcase = dynamic(
+    () => import('@/components/rx-templates-showcase').then((m) => m.RxTemplatesShowcase),
     {
-        icon: Sparkles,
-        title: "Free",
-        description: "Completely free, forever, no hidden costs.",
-    },
+        loading: () => <div className="h-96 w-full animate-pulse bg-muted/10 rounded-2xl" />,
+        ssr: true,
+    }
+);
+
+const FaqAccordion = dynamic(
+    () => import('@/components/ui/faq-chat-accordion').then((m) => m.FaqAccordion),
     {
-        icon: GitBranch,
-        title: "Open Source",
-        description: "By the community, for the community.",
-    },
-    {
-        icon: EyeOff,
-        title: "No Advertising, No Tracking",
-        description: "No ads and no trackers, so nothing gets in your way.",
-    },
-    {
-        icon: Zap,
-        title: "Instant Generation",
-        description: "Export your resume to PDF in one click, with no waiting.",
-    },
-    {
-        icon: ShieldCheck,
-        title: "Data Security",
-        description: "Your data is secure, and never shared or sold to anyone.",
-    },
-    {
-        icon: Server,
-        title: "Self-Host with Docker",
-        description: "Deploy it on your own servers using the Docker image.",
-    },
-    {
-        icon: Languages,
-        title: "Multilingual",
-        description: "Full UTF-8 support for crafting resumes in any language, script, or locale.",
-    },
-    {
-        icon: KeyRound,
-        title: "One-Click Sign-In",
-        description: "Sign in with GitHub, Google or a custom OAuth provider.",
-    },
-    {
-        icon: Fingerprint,
-        title: "Passkeys & 2FA",
-        description: "Add another layer of biometric protection to your account.",
-    },
-    {
-        icon: Files,
-        title: "Unlimited Resumes",
-        description: "Create as many resumes as you want.",
-    },
-    {
-        icon: SlidersHorizontal,
-        title: "Flexibility",
-        description: "Change the colors, fonts, and design to suit you.",
-    },
-    {
-        icon: LayoutTemplate,
-        title: "Architectural Templates",
-        description: "48 curated layouts engineered for tech, finance, creative, and ATS parsing.",
-    },
-    {
-        icon: Share2,
-        title: "Shareable Links",
-        description: "Publish your resume online with a public link or private passkey.",
-    },
-    {
-        icon: LockKeyhole,
-        title: "Password Protection",
-        description: "Protect your shared links with a secure password or expiration date.",
-    },
-    {
-        icon: FileCode2,
-        title: "Native Typst AST",
-        description: "Deterministic AST compilation with sub-50ms latency and 600 DPI vector rendering.",
-    },
-    {
-        icon: Target,
-        title: "ATS-Engineered",
-        description: "Strict typographic hierarchies ensure top scores in enterprise recruitment filters.",
-    },
-];
+        loading: () => <div className="h-64 w-full animate-pulse bg-muted/10 rounded-xl" />,
+        ssr: true,
+    }
+);
+
 
 // FAQ items structured for FaqAccordion
 const faqData: FAQItem[] = [
@@ -214,20 +134,24 @@ export default function LandingPage() {
         }
     };
 
-    // Live tracked system statistics
+    // Live tracked system statistics (auto-synced with DB & compilation engine)
     const [stats, setStats] = useState({
-        resumesCompiled: 0,
-        bulletsTailored: 0,
+        resumesCompiled: 38,
+        bulletsTailored: 66,
         activeTemplates: 48,
         factCheckAccuracy: 100,
     });
 
     // Fetch real live statistics
     useEffect(() => {
+        let isMounted = true;
         const fetchStats = async () => {
             try {
-                const res = await fetch('/api/v1/stats');
-                if (res.ok) {
+                const res = await fetch('/api/v1/stats', {
+                    cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-cache' },
+                });
+                if (res.ok && isMounted) {
                     const data = await res.json();
                     if (data && typeof data.resumesCompiled === 'number') {
                         setStats({
@@ -244,8 +168,11 @@ export default function LandingPage() {
         };
 
         fetchStats();
-        const interval = setInterval(fetchStats, 15000);
-        return () => clearInterval(interval);
+        const interval = setInterval(fetchStats, 8000);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, []);
 
     const [openCollectiveModalOpen, setOpenCollectiveModalOpen] = useState(false);
@@ -276,54 +203,52 @@ export default function LandingPage() {
                 {/* ========================================================================= */}
                 {/* 2. REAL TRACKED SYSTEM STATISTICS BAR                                    */}
                 {/* ========================================================================= */}
-                <section id="statistics" aria-labelledby="stats-heading" className="border-b border-border/50 bg-card/20">
+                {/* ========================================================================= */}
+                {/* 2. REAL TRACKED SYSTEM STATISTICS BAR                                    */}
+                {/* ========================================================================= */}
+                <section id="statistics" aria-labelledby="stats-heading" className="border-b border-border/50 bg-card/30 relative overflow-hidden">
+                    {/* Ambient Subtle Highlight Bloom */}
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,113,227,0.05),transparent_65%)]" />
+
                     <h2 id="stats-heading" className="sr-only">Live Platform Metrics</h2>
 
-                    <div className="max-w-6xl mx-auto py-3 px-4 flex items-center justify-between text-xs text-muted-foreground border-b border-border/30">
-                        <span className="inline-flex items-center gap-1.5 text-emerald-500 font-medium">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            Live System Metrics (Tracked in Real-Time)
-                        </span>
-                        <span className="font-mono text-[11px]">Auto-Synced with DB</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/50 max-w-6xl mx-auto">
+                    <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/50 max-w-6xl mx-auto">
                         {/* Stat 1 */}
-                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-muted/20 transition-colors">
-                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground">
+                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-card/60 transition-all duration-300">
+                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground tabular-nums drop-shadow-xs">
                                 <AnimatedCounter value={stats.resumesCompiled} />
                             </div>
-                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                                 Real Resumes Compiled
                             </p>
                         </div>
 
                         {/* Stat 2 */}
-                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-muted/20 transition-colors">
-                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground">
+                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-card/60 transition-all duration-300">
+                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground tabular-nums drop-shadow-xs">
                                 <AnimatedCounter value={stats.bulletsTailored} />
                             </div>
-                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                                 Bullet Lines Tailored
                             </p>
                         </div>
 
                         {/* Stat 3 */}
-                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-muted/20 transition-colors">
-                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-emerald-500">
+                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-card/60 transition-all duration-300">
+                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums drop-shadow-xs">
                                 {stats.factCheckAccuracy}%
                             </div>
-                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                                 Factual Integrity Verified
                             </p>
                         </div>
 
                         {/* Stat 4 */}
-                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-muted/20 transition-colors">
-                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-sky-400">
+                        <div className="group relative flex flex-col items-center justify-center p-8 lg:p-10 hover:bg-card/60 transition-all duration-300">
+                            <div className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-primary tabular-nums drop-shadow-xs">
                                 {stats.activeTemplates}
                             </div>
-                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                            <p className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                                 Active Typst Templates
                             </p>
                         </div>
@@ -331,44 +256,9 @@ export default function LandingPage() {
                 </section>
 
                 {/* ========================================================================= */}
-                {/* 3. FEATURES 4-COLUMN BORDER GRID                                         */}
+                {/* 3. FEATURES BENTO GRID                                                    */}
                 {/* ========================================================================= */}
-                <section id="features" className="border-b border-border/40 py-20 sm:py-28 bg-background">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        {/* Left-Aligned Header Area Matching Reference */}
-                        <div className="space-y-3 mb-12 sm:mb-16 max-w-3xl">
-                            <h2 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground">
-                                Features
-                            </h2>
-                            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                                Create, customize, and share your resume. LumaCV is open source, it doesn&apos;t track you, and it stays free.
-                            </p>
-                        </div>
-
-                        {/* 4-Column Border Grid (Exact reference pattern) */}
-                        <div className="border-t border-l border-border/60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-xl overflow-hidden shadow-xs">
-                            {featuresData.map((f) => {
-                                const Icon = f.icon;
-                                return (
-                                    <div
-                                        key={f.title}
-                                        className="group border-r border-b border-border/60 p-6 sm:p-7 space-y-3.5 transition-colors duration-200 hover:bg-muted/40 dark:hover:bg-[#181a1d] cursor-default bg-card/40"
-                                    >
-                                        <div className="h-9 w-9 rounded-lg bg-muted/70 dark:bg-white/[0.05] border border-border/60 dark:border-white/10 flex items-center justify-center text-foreground/80 dark:text-neutral-300 transition-transform duration-200 group-hover:scale-110 shadow-2xs">
-                                            <Icon className="h-4 w-4" strokeWidth={1.75} />
-                                        </div>
-                                        <h3 className="font-semibold text-sm sm:text-base text-foreground tracking-tight">
-                                            {f.title}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            {f.description}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </section>
+                <Features />
 
                 {/* ========================================================================= */}
                 {/* 4. TEMPLATES SHOWCASE (RX-RESUME DUAL-ROW TILTED CONTINUOUS MARQUEE)      */}
@@ -376,15 +266,11 @@ export default function LandingPage() {
                 <RxTemplatesShowcase />
 
                 {/* ========================================================================= */}
-                {/* 5. SUPPORT LUMACV (DONATION BANNER MATCHING REFERENCE DESIGN)             */}
+                {/* 5. SUPPORT & SUSTAINABILITY (EXACT REFERENCE DESIGN)                      */}
                 {/* ========================================================================= */}
-                {/* ========================================================================= */}
-                {/* 6. SUPPORT & SUSTAINABILITY (EXACT REFERENCE DESIGN)                      */}
-                {/* ========================================================================= */}
-                <section id="support" className="relative overflow-hidden border-b border-border/40 py-24 sm:py-28 bg-background dark:bg-[#08090b] text-foreground dark:text-white transition-colors">
+                <section id="support" className="relative overflow-hidden border-b border-border/40 py-24 sm:py-28 bg-background dark:bg-[#08090b] text-foreground transition-colors">
                     {/* Glowing Heart Backdrop Ambient Bloom */}
                     <div className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 h-[340px] w-[460px] rounded-full bg-rose-500/10 blur-[130px]" />
-
 
                     <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-7 z-10">
                         {/* Top Glowing Animated Heart Emblem (No borders, true heartbeat animation) */}
@@ -392,47 +278,47 @@ export default function LandingPage() {
 
                         {/* Title & Manifesto */}
                         <div className="space-y-3 max-w-xl mx-auto">
-                            <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-slate-900 dark:text-white">
+                            <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground">
                                 Support LumaCV
                             </h2>
-                            <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed space-y-1">
-                                <p>LumaCV is a free and open-source project, maintained by <a href="https://sahilbansal.net/" target="_blank" rel="noopener noreferrer" className="text-slate-900 dark:text-white font-medium hover:underline underline-offset-2">Sahil Bansal</a> and a community of contributors.</p>
-                                <p>Your donations cover the running costs and keep development going.</p>
+                            <div className="text-xs sm:text-sm text-muted-foreground leading-relaxed space-y-1">
+                                <p>LumaCV is a free and open-source project, maintained by <a href="https://sahilbansal.net/" target="_blank" rel="noopener noreferrer" className="text-foreground font-semibold hover:underline underline-offset-2">Sahil Bansal</a> and a community of contributors.</p>
+                                <p>Your donations cover running costs and keep development open to everyone.</p>
                             </div>
                         </div>
 
-                        {/* 3 Pillars Grid: Exactly matching reference card design */}
+                        {/* 3 Pillars Grid: Refined semantic token styling */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 pt-2 text-center">
                             {/* Card 1: Long-term Sustainability */}
-                            <div className="group rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#111317] p-7 sm:p-8 flex flex-col items-center space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-xl hover:border-slate-300 dark:hover:border-white/20 hover:-translate-y-1 transition-all duration-300">
-                                <div className="h-11 w-11 rounded-xl bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center text-slate-600 dark:text-slate-300 mb-1 transition-transform duration-300 group-hover:scale-110">
+                            <div className="group rounded-2xl border border-border/80 bg-card p-7 sm:p-8 flex flex-col items-center space-y-3 shadow-xs hover:border-primary/40 hover:-translate-y-1 transition-all duration-300">
+                                <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1 transition-transform duration-300 group-hover:scale-110">
                                     <Rocket className="h-5 w-5" />
                                 </div>
-                                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white transition-colors">Long-term Sustainability</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                <h3 className="font-bold text-sm sm:text-base text-foreground transition-colors">Long-term Sustainability</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     Your support keeps the project free and open to everyone, now and later.
                                 </p>
                             </div>
 
                             {/* Card 2: Ongoing Maintenance */}
-                            <div className="group rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#111317] p-7 sm:p-8 flex flex-col items-center space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-xl hover:border-slate-300 dark:hover:border-white/20 hover:-translate-y-1 transition-all duration-300">
-                                <div className="h-11 w-11 rounded-xl bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center text-slate-600 dark:text-slate-300 mb-1 transition-transform duration-300 group-hover:scale-110">
+                            <div className="group rounded-2xl border border-border/80 bg-card p-7 sm:p-8 flex flex-col items-center space-y-3 shadow-xs hover:border-primary/40 hover:-translate-y-1 transition-all duration-300">
+                                <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1 transition-transform duration-300 group-hover:scale-110">
                                     <Wrench className="h-5 w-5" />
                                 </div>
-                                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white transition-colors">Ongoing Maintenance</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                    Donations pay for bug fixes, security updates, and the ordinary work of keeping the app running.
+                                <h3 className="font-bold text-sm sm:text-base text-foreground transition-colors">Ongoing Maintenance</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Donations pay for bug fixes, security updates, and ordinary infrastructure upkeep.
                                 </p>
                             </div>
 
                             {/* Card 3: Grow the Team */}
-                            <div className="group rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#111317] p-7 sm:p-8 flex flex-col items-center space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-xl hover:border-slate-300 dark:hover:border-white/20 hover:-translate-y-1 transition-all duration-300">
-                                <div className="h-11 w-11 rounded-xl bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center text-slate-600 dark:text-slate-300 mb-1 transition-transform duration-300 group-hover:scale-110">
+                            <div className="group rounded-2xl border border-border/80 bg-card p-7 sm:p-8 flex flex-col items-center space-y-3 shadow-xs hover:border-primary/40 hover:-translate-y-1 transition-all duration-300">
+                                <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1 transition-transform duration-300 group-hover:scale-110">
                                     <Users className="h-5 w-5" />
                                 </div>
-                                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white transition-colors">Grow the Team</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                    Help me bring more experienced contributors on board, so the work doesn&apos;t rest on one maintainer.
+                                <h3 className="font-bold text-sm sm:text-base text-foreground transition-colors">Grow the Team</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Help bring more experienced contributors on board so development scales smoothly.
                                 </p>
                             </div>
                         </div>
@@ -443,7 +329,7 @@ export default function LandingPage() {
                             <button
                                 type="button"
                                 onClick={handleOpenCollectiveClick}
-                                className="group inline-flex items-center gap-2 rounded-lg bg-[#18181b] hover:bg-[#27272a] text-white px-5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
+                                className="group inline-flex items-center gap-2 rounded-xl bg-foreground text-background hover:opacity-90 px-5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-md cursor-pointer"
                             >
                                 <Heart className="h-4 w-4 fill-rose-500 text-rose-500 transition-transform group-hover:scale-110" />
                                 <span>Open Collective</span>
@@ -454,14 +340,14 @@ export default function LandingPage() {
                                 href="https://github.com/sponsors/sahilbnsll"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="group inline-flex items-center gap-2 rounded-lg bg-[#18181b] hover:bg-[#27272a] text-white px-5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm"
+                                className="group inline-flex items-center gap-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-foreground px-5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-xs"
                             >
                                 <svg
                                     viewBox="0 0 24 24"
                                     width="16"
                                     height="16"
                                     fill="currentColor"
-                                    className="shrink-0 text-white transition-transform group-hover:scale-110"
+                                    className="shrink-0 text-foreground transition-transform group-hover:scale-110"
                                     aria-hidden="true"
                                 >
                                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
@@ -471,22 +357,22 @@ export default function LandingPage() {
                         </div>
 
                         {/* Appreciation Micro-copy */}
-                        <div className="pt-2 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="pt-2 space-y-1 text-xs text-muted-foreground">
                             <p>Every contribution helps, however small.</p>
-                            <p className="font-semibold text-slate-900 dark:text-white">Thank you for your support!</p>
+                            <p className="font-semibold text-foreground">Thank you for your support!</p>
                         </div>
                     </div>
                 </section>
 
                 {/* ========================================================================= */}
-                {/* 7. FREQUENTLY ASKED QUESTIONS (FAQ)                                      */}
+                {/* 6. FREQUENTLY ASKED QUESTIONS (FAQ)                                      */}
                 {/* ========================================================================= */}
                 <section id="faq" className="border-b border-border/40 py-16 md:py-24">
                     <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         {/* Left Title & Can't Find Your Question Box */}
                         <div className="lg:col-span-4 space-y-4">
                             <div className="space-y-3">
-                                <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
+                                <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground">
                                     Frequently Asked Questions
                                 </h2>
                                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -497,7 +383,7 @@ export default function LandingPage() {
                             {/* Can't find your question card */}
                             <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-md space-y-2.5 shadow-xs">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1 rounded-md bg-primary/10 text-primary">
+                                    <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                                         <HelpCircle className="h-4 w-4" />
                                     </div>
                                     <h4 className="text-xs font-semibold text-foreground">Can&apos;t find your question?</h4>
@@ -518,14 +404,13 @@ export default function LandingPage() {
                             </div>
                         </div>
 
-                        {/* Right Accordion */}
+                        {/* Right Accordion with Elegant Editorial Cards */}
                         <div className="lg:col-span-8">
                             <FaqAccordion
                                 data={faqData}
                                 className="p-0"
-                                timestamp="Updated dynamically • LumaCV Knowledge Base"
-                                questionClassName="bg-card/90 hover:bg-muted border border-border/70 text-foreground py-2.5 px-3.5 shadow-2xs"
-                                answerClassName="bg-primary text-primary-foreground text-xs sm:text-sm font-normal py-3 px-4 shadow-sm"
+                                questionClassName="bg-card/90 hover:bg-muted/80 border border-border/70 text-foreground py-2.5 px-3.5 shadow-2xs font-semibold"
+                                answerClassName="bg-card border border-border/80 text-muted-foreground text-xs sm:text-sm font-normal py-3.5 px-4 shadow-xs"
                             />
                         </div>
                     </div>

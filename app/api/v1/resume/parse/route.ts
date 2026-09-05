@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateStream, collectStream, extractJsonObjectFromAssistantText } from '@/lib/llm-client';
 import { ParseResumeRequestSchema } from '@/lib/resume-schema';
 import { normalizeResumeFromLLM } from '@/lib/normalize-resume';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getPromptTemplate } from '@/lib/prompt-cache';
 import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
@@ -12,6 +11,11 @@ import { requireUser } from '@/lib/auth';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+    }
+
     // Strictly enforce authentication for all resume operations
     const auth = await requireUser();
     if (auth.response) return auth.response;
@@ -40,7 +44,7 @@ export async function POST(req: NextRequest) {
 
         const { extractedText } = validatedInput.data;
 
-        const promptTemplate = await fs.readFile(path.join(process.cwd(), 'prompts', 'resume-parse.txt'), 'utf-8');
+        const promptTemplate = await getPromptTemplate('resume-parse.txt');
         const prompt = promptTemplate.replace('{{EXTRACTED_TEXT}}', extractedText.substring(0, 20000));
 
         console.log(`[Parse] Starting streaming parse (BYOK: ${usingCustomKeys})...`);

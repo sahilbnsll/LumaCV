@@ -257,13 +257,13 @@ export default function TemplatesPage() {
             {/* Full Preview Lightbox Modal */}
             <AnimatePresence>
                 {previewTemplate && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-black/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/80 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             transition={{ duration: 0.2 }}
-                            className="relative w-full max-w-4xl max-h-[90vh] bg-card border border-border/80 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden"
+                            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] bg-card border border-border/80 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-y-auto md:overflow-hidden"
                         >
                             {/* Close Button */}
                             <button
@@ -275,8 +275,8 @@ export default function TemplatesPage() {
                             </button>
 
                             {/* Large A4 Preview Image */}
-                            <div className="relative flex-1 bg-muted/30 p-6 flex items-center justify-center overflow-auto max-h-[55vh] md:max-h-none">
-                                <div className="relative aspect-[1/1.414] w-full max-w-[420px] shadow-2xl rounded-lg overflow-hidden border border-border/60">
+                            <div className="relative flex-1 bg-muted/30 p-4 sm:p-6 flex items-center justify-center overflow-auto max-h-[50vh] md:max-h-none">
+                                <div className="relative aspect-[1/1.414] w-full max-w-[340px] sm:max-w-[420px] shadow-2xl rounded-lg overflow-hidden border border-border/60">
                                     <Image
                                         src={previewTemplate.previewImage}
                                         alt={previewTemplate.name}
@@ -288,7 +288,7 @@ export default function TemplatesPage() {
                             </div>
 
                             {/* Template Details & Actions Sidebar */}
-                            <div className="w-full md:w-80 p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border/70 bg-background/50 space-y-6">
+                            <div className="w-full md:w-80 p-5 sm:p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border/70 bg-background/50 space-y-6 shrink-0">
                                 <div className="space-y-4">
                                     <div>
                                         <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">

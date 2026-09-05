@@ -9,7 +9,7 @@ import { ALL_TEMPLATES, ResumeTemplate } from '@/lib/templates-data';
 import { useAppStore } from '@/lib/store';
 import { TemplateType } from '@/lib/resume-schema';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type TemplateMarqueeItem = {
@@ -141,11 +141,6 @@ export function RxTemplatesShowcase() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8 md:mb-12">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-3 max-w-2xl">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono font-medium">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span>48 Architectural Typst Templates</span>
-                        </div>
-
                         <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-foreground tracking-tight">
                             Templates
                         </h2>

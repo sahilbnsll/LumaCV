@@ -3,13 +3,13 @@ import { generateStream, collectStream, extractJsonObjectFromAssistantText } fro
 import { GenerateResumeRequestSchema, GenerateResumeResponseSchema, ResumeData } from '@/lib/resume-schema';
 import { normalizeResumeFromLLM } from '@/lib/normalize-resume';
 import { generateTypst } from '@/lib/typst-generator';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getPromptTemplate } from '@/lib/prompt-cache';
 import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
 import { validateAndCleanTailoredResume } from '@/lib/fact-validator';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
 import { requireUser } from '@/lib/auth';
+import { recordBulletTailored } from '@/lib/stats-service';
 
 export const maxDuration = 60;
 
@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
 
         const { resumeData, jdKeywords, template, theme } = validatedInput.data;
 
-        // Load prompt
-        const promptTemplate = await fs.readFile(path.join(process.cwd(), 'prompts', 'resume-tailor.txt'), 'utf-8');
+        // Load prompt from in-memory cache
+        const promptTemplate = await getPromptTemplate('resume-tailor.txt');
 
         const prompt = promptTemplate
             .replace('{{USER_RESUME_JSON}}', JSON.stringify(resumeData))
@@ -103,6 +103,15 @@ export async function POST(req: NextRequest) {
         if (!validatedOutput.success) {
             console.error('Final output validation failed:', validatedOutput.error);
             return NextResponse.json({ error: 'Generated invalid resume structure. Please try again.' }, { status: 500 });
+        }
+
+        // Track real tailored bullet counts in live platform metrics
+        const bulletsCount = tailoredResume.experience?.reduce(
+            (acc, exp) => acc + (exp.bullets?.length || 0),
+            0
+        ) || 0;
+        if (bulletsCount > 0) {
+            recordBulletTailored(bulletsCount).catch(() => {});
         }
 
         return NextResponse.json(validatedOutput.data);

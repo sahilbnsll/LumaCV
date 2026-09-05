@@ -28,8 +28,10 @@ export function AnimatedCounter({
     useEffect(() => {
         if (isInView) {
             motionValue.set(value);
+        } else if (ref.current) {
+            ref.current.textContent = `${prefix}${value}${suffix}`;
         }
-    }, [motionValue, isInView, value]);
+    }, [motionValue, isInView, value, prefix, suffix]);
 
     useEffect(() => {
         const unsubscribe = springValue.on('change', (latest) => {

@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
 import { ArrowRight, FileText, Github, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveBgIndex((prev) => (prev + 1) % lumacvHeroTemplates.length);
-    }, 4800);
+    }, 7000);
     return () => clearInterval(timer);
   }, [lumacvHeroTemplates.length, activeBgIndex]);
 
@@ -73,54 +73,57 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
     restDelta: 0.0005,
   });
 
+  // 0. Background Resume Showcase animation (Scroll: 0.00 -> 0.16)
+  const bgResumeOpacity = useTransform(smoothProgress, [0, 0.16], [1, 0]);
+
   // 1. Initial Hero Header animations (Scroll: 0.00 -> 0.16)
-  const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
-  const heroY = useTransform(smoothProgress, [0, 0.15], [0, -35]);
-  const heroScale = useTransform(smoothProgress, [0, 0.15], [1, 0.96]);
-  const heroPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.1 ? "none" : "auto"));
+  const heroOpacity = useTransform(smoothProgress, [0, 0.16], [1, 0]);
+  const heroY = useTransform(smoothProgress, [0, 0.16], [0, -25]);
+  const heroScale = useTransform(smoothProgress, [0, 0.16], [1, 0.96]);
+  const heroPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.14 ? "none" : "auto"));
 
-  // 2. Initial Bottom Template Dock animations (Scroll: 0.00 -> 0.16)
-  const dockOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
-  const dockY = useTransform(smoothProgress, [0, 0.15], [0, 45]);
-  const dockScale = useTransform(smoothProgress, [0, 0.15], [1, 0.94]);
-  const dockPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.1 ? "none" : "auto"));
+  // 2. Initial Bottom Template Dock animations (Scroll: 0.00 -> 0.14)
+  const dockOpacity = useTransform(smoothProgress, [0, 0.14], [1, 0]);
+  const dockY = useTransform(smoothProgress, [0, 0.14], [0, 30]);
+  const dockScale = useTransform(smoothProgress, [0, 0.14], [1, 0.95]);
+  const dockPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.12 ? "none" : "auto"));
 
-  // 3. Kinetic Headline Master Container animations (Scroll: 0.12 -> 0.25)
-  const kineticOpacity = useTransform(smoothProgress, [0.12, 0.22], [0, 1]);
-  const kineticY = useTransform(smoothProgress, [0.12, 0.22], [30, 0]);
-  const kineticScale = useTransform(smoothProgress, [0.12, 0.25], [0.96, 1]);
-  const kineticPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p > 0.15 ? "auto" : "none"));
+  // 3. Kinetic Headline Master Container animations (Crossfades in at 0.10, fully visible 0.22 -> 0.86, exits 0.86 -> 0.96)
+  const kineticOpacity = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [0, 1, 1, 0]);
+  const kineticY = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [20, 0, 0, -20]);
+    const kineticScale = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [0.97, 1, 1, 0.97]);
+  const kineticPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p >= 0.14 && p <= 0.92 ? "auto" : "none"));
 
-  // 4. Staggered phrase & inline template card illumination across scroll (0.20 -> 0.85)
+  // 4. Staggered phrase & inline template card illumination across scroll (0.20 -> 0.82)
   // Segment 1: "Deterministic Typst compilation" + Modern Cobalt
-  const seg1TextOpacity = useTransform(smoothProgress, [0.18, 0.30], [0.22, 1]);
-  const seg1CardOpacity = useTransform(smoothProgress, [0.18, 0.30], [0, 1]);
-  const seg1CardScale = useTransform(smoothProgress, [0.18, 0.30], [0.75, 1]);
-  const seg1CardY = useTransform(smoothProgress, [0.18, 0.30], [12, 0]);
+  const seg1TextOpacity = useTransform(smoothProgress, [0.20, 0.32], [0.40, 1]);
+  const seg1CardOpacity = useTransform(smoothProgress, [0.20, 0.32], [0.35, 1]);
+  const seg1CardScale = useTransform(smoothProgress, [0.20, 0.32], [0.85, 1]);
+  const seg1CardY = useTransform(smoothProgress, [0.20, 0.32], [6, 0]);
 
   // Segment 2: "builds the foundation" + Harvard Classic
-  const seg2TextOpacity = useTransform(smoothProgress, [0.30, 0.42], [0.22, 1]);
-  const seg2CardOpacity = useTransform(smoothProgress, [0.30, 0.42], [0, 1]);
-  const seg2CardScale = useTransform(smoothProgress, [0.30, 0.42], [0.75, 1]);
-  const seg2CardY = useTransform(smoothProgress, [0.30, 0.42], [12, 0]);
+  const seg2TextOpacity = useTransform(smoothProgress, [0.32, 0.44], [0.40, 1]);
+  const seg2CardOpacity = useTransform(smoothProgress, [0.32, 0.44], [0.35, 1]);
+  const seg2CardScale = useTransform(smoothProgress, [0.32, 0.44], [0.85, 1]);
+  const seg2CardY = useTransform(smoothProgress, [0.32, 0.44], [6, 0]);
 
   // Segment 3: "where verified ATS precision" + ATS-Safe Linear
-  const seg3TextOpacity = useTransform(smoothProgress, [0.42, 0.54], [0.22, 1]);
-  const seg3CardOpacity = useTransform(smoothProgress, [0.42, 0.54], [0, 1]);
-  const seg3CardScale = useTransform(smoothProgress, [0.42, 0.54], [0.75, 1]);
-  const seg3CardY = useTransform(smoothProgress, [0.42, 0.54], [12, 0]);
+  const seg3TextOpacity = useTransform(smoothProgress, [0.44, 0.56], [0.40, 1]);
+  const seg3CardOpacity = useTransform(smoothProgress, [0.44, 0.56], [0.35, 1]);
+  const seg3CardScale = useTransform(smoothProgress, [0.44, 0.56], [0.85, 1]);
+  const seg3CardY = useTransform(smoothProgress, [0.44, 0.56], [6, 0]);
 
   // Segment 4: "and zero-hallucination AI" + Engineering Mono
-  const seg4TextOpacity = useTransform(smoothProgress, [0.54, 0.66], [0.22, 1]);
-  const seg4CardOpacity = useTransform(smoothProgress, [0.54, 0.66], [0, 1]);
-  const seg4CardScale = useTransform(smoothProgress, [0.54, 0.66], [0.75, 1]);
-  const seg4CardY = useTransform(smoothProgress, [0.54, 0.66], [12, 0]);
+  const seg4TextOpacity = useTransform(smoothProgress, [0.56, 0.68], [0.40, 1]);
+  const seg4CardOpacity = useTransform(smoothProgress, [0.56, 0.68], [0.35, 1]);
+  const seg4CardScale = useTransform(smoothProgress, [0.56, 0.68], [0.85, 1]);
+  const seg4CardY = useTransform(smoothProgress, [0.56, 0.68], [6, 0]);
 
   // Segment 5: "engineer interview-winning" + Two-Column Split + "careers."
-  const seg5TextOpacity = useTransform(smoothProgress, [0.66, 0.80], [0.22, 1]);
-  const seg5CardOpacity = useTransform(smoothProgress, [0.66, 0.80], [0, 1]);
-  const seg5CardScale = useTransform(smoothProgress, [0.66, 0.80], [0.75, 1]);
-  const seg5CardY = useTransform(smoothProgress, [0.66, 0.80], [12, 0]);
+  const seg5TextOpacity = useTransform(smoothProgress, [0.68, 0.82], [0.40, 1]);
+  const seg5CardOpacity = useTransform(smoothProgress, [0.68, 0.82], [0.35, 1]);
+  const seg5CardScale = useTransform(smoothProgress, [0.68, 0.82], [0.85, 1]);
+  const seg5CardY = useTransform(smoothProgress, [0.68, 0.82], [6, 0]);
 
   const scrollToTemplates = () => {
     const target = document.getElementById("templates");
@@ -146,7 +149,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
     <motion.span
       style={{ scale, opacity, y }}
       onClick={scrollToTemplates}
-      className="inline-flex align-middle mx-1.5 sm:mx-2 md:mx-2.5 h-8 w-11 sm:h-11 sm:w-16 md:h-14 md:w-20 lg:h-16 lg:w-24 rounded-lg sm:rounded-xl overflow-hidden border border-border/80 dark:border-white/20 shadow-md sm:shadow-lg bg-card/90 backdrop-blur-xs relative group cursor-pointer select-none transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:border-primary/60 will-change-transform z-20"
+      className="inline-flex align-middle mx-1 sm:mx-1.5 md:mx-2 h-7 w-11 sm:h-9 sm:w-14 md:h-11 md:w-18 lg:h-12 lg:w-20 rounded-md sm:rounded-lg overflow-hidden border border-border/80 dark:border-white/20 shadow-sm sm:shadow-md bg-card/90 backdrop-blur-xs relative group cursor-pointer select-none transition-all duration-200 hover:scale-110 hover:shadow-lg hover:border-primary/60 will-change-transform z-20"
       title={`Explore ${template.name} (${template.badge})`}
     >
       <img
@@ -159,46 +162,51 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
         {template.name.split(" ")[0]}
       </span>
       {/* Subtle border glow effect */}
-      <span className="pointer-events-none absolute inset-0 rounded-lg sm:rounded-xl ring-1 ring-inset ring-white/10 group-hover:ring-primary/40 transition-colors" />
+      <span className="pointer-events-none absolute inset-0 rounded-md sm:rounded-lg ring-1 ring-inset ring-white/10 group-hover:ring-primary/40 transition-colors" />
     </motion.span>
   );
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[260vh] bg-background text-foreground"
+      className="relative w-full h-[225vh] bg-background text-foreground"
     >
       {/* Sticky Fullscreen Stage (GPU Composited) */}
       <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
         {/* Continuous Smooth Semi-Transparent Resume Showcase */}
-        <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
-          {lumacvHeroTemplates.map((tmpl, i) => {
-            const isActive = activeBgIndex === i;
-            return (
-              <div
-                key={tmpl.name}
-                className="absolute inset-0 w-full h-full pointer-events-none transition-all ease-in-out"
+        <motion.div
+          style={{ opacity: bgResumeOpacity }}
+          className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={lumacvHeroTemplates[activeBgIndex].name}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{
+                transform: "scale(1.15) translate3d(0, 0, 0)",
+                transformOrigin: "top left",
+              }}
+            >
+              <img
+                src={lumacvHeroTemplates[activeBgIndex].src}
+                alt={`${lumacvHeroTemplates[activeBgIndex].name} Typst Resume Template`}
+                className="w-full h-full object-cover object-left-top opacity-[0.20] dark:opacity-[0.14] pointer-events-none select-none"
                 style={{
-                  opacity: isActive ? 1 : 0,
-                  transform: isActive ? "scale(1.24) translate3d(0, 0, 0)" : "scale(1.16) translate3d(0, 0, 0)",
-                  transformOrigin: "top left",
-                  transition: "opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1), transform 2.6s cubic-bezier(0.16, 1, 0.3, 1)",
+                  objectPosition: "0% 0%",
                 }}
-              >
-                <img
-                  src={tmpl.src}
-                  alt={`${tmpl.name} Typst Resume Template`}
-                  className="w-full h-full object-cover object-left-top opacity-40 dark:opacity-32 pointer-events-none select-none"
-                  style={{
-                    objectPosition: "0% 0%",
-                  }}
-                />
-              </div>
-            );
-          })}
+              />
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Asymmetric Vignette: crystal-clear mapped to top-left candidate name, soft vignette toward center-right */}
-          <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_95%_95%_at_12%_12%,rgba(251,251,253,0.18)_0%,rgba(251,251,253,0.72)_46%,rgba(251,251,253,0.96)_82%)] dark:bg-[radial-gradient(ellipse_95%_95%_at_12%_12%,rgba(8,9,11,0.22)_0%,rgba(8,9,11,0.78)_46%,rgba(8,9,11,0.97)_82%)]" />
+          {/* Asymmetric Vignette: delicate top-left reveal, soft fade across center and edges */}
+          <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_90%_90%_at_15%_15%,rgba(251,251,253,0.12)_0%,rgba(251,251,253,0.80)_50%,rgba(251,251,253,0.98)_85%)] dark:bg-[radial-gradient(ellipse_90%_90%_at_15%_15%,rgba(8,9,11,0.14)_0%,rgba(8,9,11,0.84)_50%,rgba(8,9,11,0.98)_85%)]" />
+
+          {/* Central Radial Mask to guarantee pure text contrast in center */}
+          <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(251,251,253,0.85)_0%,transparent_75%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(8,9,11,0.88)_0%,transparent_75%)]" />
 
           {/* Floating Meta Tag Pill (Top Left - directly anchored over candidate name area) */}
           <div className="absolute top-5 sm:top-7 left-5 sm:left-7 z-2 hidden sm:inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-card/85 backdrop-blur-md px-4 py-1.5 text-xs text-foreground shadow-sm transition-all duration-500">
@@ -209,6 +217,11 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
             <span className="text-muted-foreground/50">•</span>
             <span className="text-muted-foreground text-[11px]">{lumacvHeroTemplates[activeBgIndex].tag}</span>
           </div>
+        </motion.div>
+
+        {/* Ambient Subtle Hero Glow */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[750px] rounded-full bg-primary/5 dark:bg-primary/[0.08] blur-[140px]" />
         </div>
 
         {/* ========================================================================= */}
@@ -221,20 +234,17 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
             scale: heroScale,
             pointerEvents: heroPointerEvents,
           }}
-          className="relative z-30 max-w-3xl mx-auto text-center space-y-3.5 sm:space-y-4 px-4 will-change-transform mt-[-40px] sm:mt-[-50px]"
+          className="relative z-30 max-w-3xl mx-auto text-center space-y-3.5 sm:space-y-4 px-4 will-change-transform mt-[-35px] sm:mt-[-45px]"
         >
-          {/* Tag Badge */}
-          <div className="flex justify-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold font-mono uppercase tracking-wider text-primary bg-primary/10 border border-primary/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              Finally, a modern way
-            </span>
-          </div>
+
 
           {/* Main Headline */}
-          <div className="space-y-1">
-            <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-foreground leading-[1.1] drop-shadow-xs">
-              A free and open-source resume builder
+          <div className="space-y-1 sm:space-y-2">
+            <h1 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl lg:text-[3.65rem] tracking-tight text-foreground leading-[1.12] drop-shadow-xs">
+              A free and open-source{" "}
+              <span className="bg-gradient-to-r from-primary via-blue-500 to-sky-400 bg-clip-text text-transparent">
+                resume builder
+              </span>
             </h1>
           </div>
 
@@ -244,13 +254,13 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2 relative z-40">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 relative z-40">
             <Link
               href="/builder"
-              className="h-10 px-5 rounded-xl font-semibold text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.98] select-none"
+              className="group relative h-11 px-6 rounded-xl font-semibold text-xs sm:text-sm bg-primary hover:bg-primary/95 text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-white/20 flex items-center gap-2 transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.98] select-none"
             >
               <span>Get Started Free</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <button
               type="button"
@@ -258,18 +268,18 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
                 e.preventDefault();
                 scrollToTemplates();
               }}
-              className="h-10 px-4 rounded-xl font-medium text-xs sm:text-sm border border-border/80 bg-card/90 hover:bg-card text-foreground backdrop-blur-md flex items-center gap-2 transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.98] select-none shadow-xs"
+              className="h-11 px-5 rounded-xl font-medium text-xs sm:text-sm border border-border/80 bg-card/90 hover:bg-muted/70 text-foreground backdrop-blur-md flex items-center gap-2 transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.98] select-none shadow-xs"
             >
-              <FileText className="h-3.5 w-3.5 text-primary" />
+              <FileText className="h-4 w-4 text-primary" />
               <span>Sample Typst Resumes</span>
             </button>
             <a
               href="https://github.com/sahilbnsll"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-10 px-3.5 rounded-xl font-medium text-xs sm:text-sm border border-border/50 bg-background/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 flex items-center gap-1.5 transition-all cursor-pointer select-none"
+              className="h-11 px-4 rounded-xl font-medium text-xs sm:text-sm border border-border/60 bg-background/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground flex items-center gap-2 transition-all cursor-pointer select-none"
             >
-              <Github className="h-3.5 w-3.5" />
+              <Github className="h-4 w-4" />
               <span>GitHub</span>
             </a>
           </div>
@@ -332,85 +342,87 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
             scale: kineticScale,
             pointerEvents: kineticPointerEvents,
           }}
-          className="absolute inset-0 flex items-center justify-center px-4 md:px-8 z-20 will-change-transform"
+          className="absolute inset-0 flex items-center justify-center px-4 md:px-6 z-20 will-change-transform"
         >
-          <h1 className="max-w-[95vw] md:max-w-[88vw] lg:max-w-[82vw] text-center text-foreground font-display font-bold leading-[1.35] md:leading-[1.28] tracking-tight text-[clamp(1.5rem,4.8vw,4.25rem)] select-none">
-            {/* Segment 1 */}
-            <motion.span
-              style={{ opacity: seg1TextOpacity }}
-              className="transition-colors duration-200"
-            >
-              Deterministic Typst compilation
-            </motion.span>
-            <InlineTemplateBox
-              template={lumacvHeroTemplates[0]}
-              scale={seg1CardScale}
-              opacity={seg1CardOpacity}
-              y={seg1CardY}
-            />
+          <div className="max-w-4xl mx-auto text-center px-2 sm:px-4">
+            <h2 className="font-display font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] tracking-tight leading-[1.42] md:leading-[1.38] text-foreground select-none">
+              {/* Segment 1 */}
+              <motion.span
+                style={{ opacity: seg1TextOpacity }}
+                className="transition-opacity duration-200"
+              >
+                Deterministic Typst compilation
+              </motion.span>
+              <InlineTemplateBox
+                template={lumacvHeroTemplates[0]}
+                scale={seg1CardScale}
+                opacity={seg1CardOpacity}
+                y={seg1CardY}
+              />
 
-            {/* Segment 2 */}
-            <motion.span
-              style={{ opacity: seg2TextOpacity }}
-              className="transition-colors duration-200"
-            >
-              builds the foundation
-            </motion.span>
-            <InlineTemplateBox
-              template={lumacvHeroTemplates[2]}
-              scale={seg2CardScale}
-              opacity={seg2CardOpacity}
-              y={seg2CardY}
-            />
+              {/* Segment 2 */}
+              <motion.span
+                style={{ opacity: seg2TextOpacity }}
+                className="transition-opacity duration-200"
+              >
+                builds the foundation
+              </motion.span>
+              <InlineTemplateBox
+                template={lumacvHeroTemplates[2]}
+                scale={seg2CardScale}
+                opacity={seg2CardOpacity}
+                y={seg2CardY}
+              />
 
-            {/* Segment 3 */}
-            <motion.span
-              style={{ opacity: seg3TextOpacity }}
-              className="transition-colors duration-200"
-            >
-              where verified ATS precision
-            </motion.span>
-            <InlineTemplateBox
-              template={lumacvHeroTemplates[4]}
-              scale={seg3CardScale}
-              opacity={seg3CardOpacity}
-              y={seg3CardY}
-            />
+              {/* Segment 3 */}
+              <motion.span
+                style={{ opacity: seg3TextOpacity }}
+                className="transition-opacity duration-200"
+              >
+                where verified ATS precision
+              </motion.span>
+              <InlineTemplateBox
+                template={lumacvHeroTemplates[4]}
+                scale={seg3CardScale}
+                opacity={seg3CardOpacity}
+                y={seg3CardY}
+              />
 
-            {/* Segment 4 */}
-            <motion.span
-              style={{ opacity: seg4TextOpacity }}
-              className="transition-colors duration-200"
-            >
-              and zero-hallucination AI
-            </motion.span>
-            <InlineTemplateBox
-              template={lumacvHeroTemplates[1]}
-              scale={seg4CardScale}
-              opacity={seg4CardOpacity}
-              y={seg4CardY}
-            />
+              {/* Segment 4 */}
+              <motion.span
+                style={{ opacity: seg4TextOpacity }}
+                className="transition-opacity duration-200"
+              >
+                and zero-hallucination AI
+              </motion.span>
+              <InlineTemplateBox
+                template={lumacvHeroTemplates[1]}
+                scale={seg4CardScale}
+                opacity={seg4CardOpacity}
+                y={seg4CardY}
+              />
 
-            {/* Segment 5 */}
-            <motion.span
-              style={{ opacity: seg5TextOpacity }}
-              className="transition-colors duration-200"
-            >
-              engineer interview-winning
-            </motion.span>
-            <InlineTemplateBox
-              template={lumacvHeroTemplates[3]}
-              scale={seg5CardScale}
-              opacity={seg5CardOpacity}
-              y={seg5CardY}
-            />
-            <motion.span
-              style={{ opacity: seg5TextOpacity }}
-              className="transition-colors duration-200"
-            >
-              careers.
-            </motion.span>
-          </h1>
+              {/* Segment 5 */}
+              <motion.span
+                style={{ opacity: seg5TextOpacity }}
+                className="transition-opacity duration-200"
+              >
+                engineer interview-winning
+              </motion.span>
+              <InlineTemplateBox
+                template={lumacvHeroTemplates[3]}
+                scale={seg5CardScale}
+                opacity={seg5CardOpacity}
+                y={seg5CardY}
+              />
+              <motion.span
+                style={{ opacity: seg5TextOpacity }}
+                className="transition-opacity duration-200"
+              >
+                careers.
+              </motion.span>
+            </h2>
+          </div>
         </motion.div>
       </div>
     </div>

@@ -37,18 +37,44 @@ interface CompileTypstOptions {
   typstCode?: string;
 }
 
+import crypto from 'crypto';
+
+interface CachedCompilation {
+  pdfBuffer: ArrayBuffer;
+  provider: string;
+  createdAt: number;
+}
+
+const MAX_CACHE_ENTRIES = 120;
+const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+const compileMemoryCache = new Map<string, CachedCompilation>();
+
+function getCompileCacheKey(options: CompileTypstOptions): string {
+  const hash = crypto.createHash('sha256');
+  if (options.typstCode && options.typstCode.trim()) {
+    hash.update('raw:' + options.typstCode.trim());
+  } else {
+    hash.update('data:' + JSON.stringify(options.resumeData || {}) + ':' + (options.template || '') + ':' + (options.theme || ''));
+  }
+  return hash.digest('hex');
+}
+
+let cachedTypstCmd: string | null = null;
+
 /**
  * Resolves the appropriate Typst executable for local Windows or Linux/Vercel serverless.
- * On Vercel / Linux: copies bin/typst-linux to /tmp/typst with chmod +x so it is executable in AWS Lambda.
- * On Windows: uses bin/typst.exe or system PATH.
+ * Result is cached in memory across requests for zero-overhead subsequent calls.
  */
 async function getTypstExecutable(): Promise<string> {
+  if (cachedTypstCmd) return cachedTypstCmd;
+
   const isLinux = process.platform === 'linux';
 
   if (isLinux) {
     const tmpTypst = path.join(os.tmpdir(), 'typst');
     try {
       await fs.access(tmpTypst);
+      cachedTypstCmd = tmpTypst;
       return tmpTypst;
     } catch {
       // Not yet extracted/copied to /tmp
@@ -59,9 +85,11 @@ async function getTypstExecutable(): Promise<string> {
       await fs.access(packagedLinuxBin);
       await fs.copyFile(packagedLinuxBin, tmpTypst);
       await fs.chmod(tmpTypst, 0o755);
+      cachedTypstCmd = tmpTypst;
       return tmpTypst;
     } catch {
       // Fallback to system PATH typst if available
+      cachedTypstCmd = 'typst';
       return 'typst';
     }
   }
@@ -70,8 +98,10 @@ async function getTypstExecutable(): Promise<string> {
   const winBin = path.join(process.cwd(), 'bin', 'typst.exe');
   try {
     await fs.access(winBin);
+    cachedTypstCmd = winBin;
     return winBin;
   } catch {
+    cachedTypstCmd = 'typst';
     return 'typst';
   }
 }
@@ -79,11 +109,21 @@ async function getTypstExecutable(): Promise<string> {
 /**
  * Executes Typst compilation.
  * 100% compatible with Vercel serverless functions:
+ * - Uses in-memory LRU cache for sub-millisecond instant repeat previews.
  * - Never writes to read-only directories.
  * - Uses os.tmpdir() exclusively for output PDFs.
  * - Streams custom markup via stdin or passes JSON directly in memory via --input data_json.
  */
 export async function compileTypst(options: CompileTypstOptions): Promise<ProviderResult> {
+  const cacheKey = getCompileCacheKey(options);
+  const existing = compileMemoryCache.get(cacheKey);
+  if (existing && (Date.now() - existing.createdAt) < CACHE_TTL_MS) {
+    return {
+      provider: `${existing.provider} (cached)`,
+      pdfBuffer: existing.pdfBuffer,
+    };
+  }
+
   const typstDir = path.join(process.cwd(), 'typst');
   const tempId = `typst_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const outputPdfPath = path.join(os.tmpdir(), `${tempId}.pdf`);
@@ -184,10 +224,22 @@ export async function compileTypst(options: CompileTypstOptions): Promise<Provid
       pdfBuffer.byteOffset + pdfBuffer.byteLength
     );
 
-    return {
+    const result: ProviderResult = {
       provider: `typst-serverless (${process.platform})`,
       pdfBuffer: arrayBuffer,
     };
+
+    if (compileMemoryCache.size >= MAX_CACHE_ENTRIES) {
+      const oldestKey = compileMemoryCache.keys().next().value;
+      if (oldestKey) compileMemoryCache.delete(oldestKey);
+    }
+    compileMemoryCache.set(cacheKey, {
+      pdfBuffer: arrayBuffer,
+      provider: result.provider,
+      createdAt: Date.now(),
+    });
+
+    return result;
   } catch (error) {
     if (error instanceof ProviderError) throw error;
     throw new ProviderError(error instanceof Error ? error.message : 'Unknown compile error', {

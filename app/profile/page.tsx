@@ -173,7 +173,7 @@ export default function ProfilePage() {
 
                 <div className="mt-8 space-y-6">
                     {/* 1. Account & Identity */}
-                    <div className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm">
+                    <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-6 space-y-5 shadow-sm">
                         <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                 <User className="h-4 w-4" />
@@ -225,7 +225,7 @@ export default function ProfilePage() {
 
                     {/* 2. Change Password */}
                     {user && (
-                        <div className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm">
+                        <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-6 space-y-5 shadow-sm">
                             <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                     <KeyRound className="h-4 w-4" />
@@ -280,7 +280,7 @@ export default function ProfilePage() {
                     )}
 
                     {/* 3. AI Provider Keys (BYOK) */}
-                    <div id="api-keys" className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm">
+                    <div id="api-keys" className="rounded-xl border border-border/70 bg-card p-4 sm:p-6 space-y-5 shadow-sm">
                         <div className="flex items-center justify-between pb-3 border-b border-border/40">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
@@ -498,7 +498,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 4. Authentication Status & Current Plan */}
-                    <div className="rounded-xl border border-border/70 bg-card p-6 space-y-4 shadow-sm">
+                    <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-6 space-y-4 shadow-sm">
                         <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                 <Shield className="h-4 w-4" />
@@ -529,7 +529,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 5. Community Feedback & Suggestions */}
-                    <div id="feedback" className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm scroll-mt-20">
+                    <div id="feedback" className="rounded-xl border border-border/70 bg-card p-4 sm:p-6 space-y-5 shadow-sm scroll-mt-20">
                         <div className="flex items-center gap-3 pb-3 border-b border-border/40">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
                                 <MessageSquareQuote className="h-4 w-4" />

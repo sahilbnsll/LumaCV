@@ -68,11 +68,11 @@ export function MorphingCardStack({
 
   // Smooth layout container dimensions
   const containerStyles = cardVariant === "resume" ? {
-    stack: "relative h-[500px] w-[310px] sm:w-[370px]",
+    stack: "relative h-[500px] w-full max-w-[310px] sm:max-w-[370px] mx-auto",
     grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl",
     list: "flex flex-col gap-4 max-w-3xl",
   } : {
-    stack: "relative h-[310px] w-[310px] sm:w-[380px]",
+    stack: "relative h-[310px] w-full max-w-[310px] sm:max-w-[380px] mx-auto",
     grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl",
     list: "flex flex-col gap-3.5 max-w-3xl",
   }

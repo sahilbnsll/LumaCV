@@ -10,9 +10,9 @@ const config: Config = {
     theme: {
         extend: {
             fontFamily: {
-                display: ["var(--font-display)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
-                sans: ["var(--font-ui)", "Inter", "system-ui", "sans-serif"],
-                mono: ["var(--font-mono)", "JetBrains Mono", "monospace"],
+                display: ["var(--font-display)", "var(--font-geist-sans)", "system-ui", "sans-serif"],
+                sans: ["var(--font-ui)", "var(--font-geist-sans)", "system-ui", "sans-serif"],
+                mono: ["var(--font-mono)", "var(--font-geist-mono)", "monospace"],
             },
             fontSize: {
                 "display-2xl": ["4rem", { lineHeight: "1.05", letterSpacing: "-0.035em" }],

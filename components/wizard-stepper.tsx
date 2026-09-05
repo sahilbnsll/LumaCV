@@ -16,14 +16,14 @@ export function WizardStepper() {
     const { step: currentStep, setStep } = useAppStore();
 
     return (
-        <nav aria-label="Resume studio workflow steps" className="flex items-center gap-1 sm:gap-2">
+        <nav aria-label="Resume studio workflow steps" className="flex items-center gap-1 sm:gap-2 max-w-full overflow-x-auto no-scrollbar py-1">
             {steps.map((step, index) => {
                 const isCompleted = currentStep > step.id;
                 const isCurrent = currentStep === step.id;
                 const isAccessible = step.id <= currentStep;
 
                 return (
-                    <div key={step.id} className="flex items-center">
+                    <div key={step.id} className="flex items-center shrink-0">
                         <button
                             type="button"
                             disabled={!isAccessible}
@@ -35,7 +35,7 @@ export function WizardStepper() {
                                 }
                             }}
                             className={cn(
-                                "relative flex items-center gap-2 rounded-xl px-2.5 sm:px-3 py-1.5 transition-all text-xs group min-h-[36px] focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-hidden select-none",
+                                "shrink-0 relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 transition-all text-xs group min-h-[36px] focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-hidden select-none",
                                 isCurrent && "bg-card/80 dark:bg-white/[0.07] border border-border/80 dark:border-white/15 shadow-sm font-semibold backdrop-blur-md",
                                 isCompleted && "hover:bg-muted/50 dark:hover:bg-white/[0.04] cursor-pointer text-foreground/90",
                                 !isAccessible && "cursor-not-allowed opacity-35"

@@ -5,15 +5,43 @@ import Link from 'next/link';
 import { BuilderWorkflowBar } from '@/components/builder-workflow-bar';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/components/auth-provider';
+import dynamic from 'next/dynamic';
 import { Step1JD } from './step1-jd';
-import { Step2Details } from './step2-details';
-import { Step3Processing } from './step3-processing';
-import { Step4Preview } from './step4-preview';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { Button } from '@/components/ui/button';
 import { Loader2, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const Step2Details = dynamic(() => import('./step2-details').then((m) => m.Step2Details), {
+    loading: () => (
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-xs font-mono">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            Loading experience studio...
+        </div>
+    ),
+    ssr: false,
+});
+
+const Step3Processing = dynamic(() => import('./step3-processing').then((m) => m.Step3Processing), {
+    loading: () => (
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-xs font-mono">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            Preparing AI tailoring pipeline...
+        </div>
+    ),
+    ssr: false,
+});
+
+const Step4Preview = dynamic(() => import('./step4-preview').then((m) => m.Step4Preview), {
+    loading: () => (
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-xs font-mono">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            Loading preview canvas & templates...
+        </div>
+    ),
+    ssr: false,
+});
 
 export default function BuilderPage() {
     const { user, loading: authLoading } = useAuth();

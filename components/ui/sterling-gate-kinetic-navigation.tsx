@@ -464,8 +464,8 @@ export function Component({
                 </li>
               </ul>
 
-              <div className="menu-footer-bar mt-10 pt-6 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-3">
+              <div className="menu-footer-bar mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <a href="/login" onClick={(e) => { e.preventDefault(); handleNavigate("/login"); }} className="hover:text-foreground transition-colors">
                     Sign in
                   </a>
@@ -487,7 +487,7 @@ export function Component({
                     Docs & Support
                   </a>
                 </div>
-                <span className="font-mono text-[11px] text-emerald-500">● Typst Vector Engine</span>
+                <span className="font-mono text-[11px] text-emerald-500 shrink-0">● Typst Vector Engine</span>
               </div>
             </div>
           </nav>

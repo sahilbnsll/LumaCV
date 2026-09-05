@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStream, collectStream, extractJsonObjectFromAssistantText } from '@/lib/llm-client';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getPromptTemplate } from '@/lib/prompt-cache';
 import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
@@ -43,10 +42,7 @@ export async function POST(req: NextRequest) {
 
         const { jd } = validated.data;
 
-        const promptTemplate = await fs.readFile(
-            path.join(process.cwd(), 'prompts', 'jd-analyze.txt'),
-            'utf-8'
-        );
+        const promptTemplate = await getPromptTemplate('jd-analyze.txt');
         const prompt = promptTemplate.replace('{{JD_TEXT}}', jd.substring(0, 12000));
 
         console.log(`[AnalyzeJD] Starting JD analysis (BYOK: ${usingCustomKeys})...`);

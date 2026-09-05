@@ -359,13 +359,13 @@ export function Step4Preview() {
     return (
         <div className="space-y-4">
             {/* Unified Workspace Action Bar (Single Bar - No Duplicates) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 glass-card shadow-lg">
-                <div className="flex items-center gap-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3.5 sm:p-5 glass-card shadow-lg">
+                <div className="flex items-center gap-2.5 sm:gap-3.5">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setStep(2)}
-                        className="h-9 px-3 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 gap-1.5 -ml-1 cursor-pointer transition-colors"
+                        className="h-9 px-2.5 sm:px-3 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 gap-1.5 -ml-1 cursor-pointer transition-colors"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline font-medium">Edit Experience</span>
@@ -433,7 +433,7 @@ export function Step4Preview() {
                                 <span>Edit Fields</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto border-border/70 dark:border-white/10 bg-background/95 dark:bg-[#0e1014]/95 backdrop-blur-xl">
+                        <SheetContent side="right" className="w-full max-w-[400px] sm:max-w-[540px] overflow-y-auto border-border/70 dark:border-white/10 bg-background/95 dark:bg-[#0e1014]/95 backdrop-blur-xl">
                             <SheetHeader className="mb-6">
                                 <SheetTitle className="font-display font-bold">Edit Structured Details</SheetTitle>
                                 <SheetDescription className="text-xs">Direct edits immediately re-render in the compiled resume.</SheetDescription>
@@ -486,10 +486,11 @@ export function Step4Preview() {
                     <Button
                         size="sm"
                         onClick={handleDownloadPdf}
-                        className="h-9 px-4 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 hover:shadow-primary/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                        className="h-9 px-3 sm:px-4 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 hover:shadow-primary/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                     >
                         <Download className="h-3.5 w-3.5" strokeWidth={2} />
-                        <span>Download PDF</span>
+                        <span className="hidden sm:inline">Download PDF</span>
+                        <span className="sm:hidden">PDF</span>
                     </Button>
                 </div>
             </div>
@@ -545,9 +546,18 @@ export function Step4Preview() {
                 <div className="lg:col-span-5 glass-card p-4 sm:p-5 shadow-xl space-y-4">
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'diff' | 'keywords')} className="w-full">
                         <TabsList className="grid grid-cols-3 h-9 bg-muted/40 dark:bg-[#15181e] p-1 rounded-xl text-xs border border-border/50 dark:border-white/5">
-                            <TabsTrigger value="analysis" className="text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm">Match & Quality</TabsTrigger>
-                            <TabsTrigger value="keywords" className="text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm">Skills & Keywords</TabsTrigger>
-                            <TabsTrigger value="diff" className="text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm">AI Bullet Diffs</TabsTrigger>
+                            <TabsTrigger value="analysis" className="text-[11px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm px-1 sm:px-3">
+                                <span className="hidden sm:inline">Match & Quality</span>
+                                <span className="sm:hidden">Match</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="keywords" className="text-[11px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm px-1 sm:px-3">
+                                <span className="hidden sm:inline">Skills & Keywords</span>
+                                <span className="sm:hidden">Skills</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="diff" className="text-[11px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm px-1 sm:px-3">
+                                <span className="hidden sm:inline">AI Bullet Diffs</span>
+                                <span className="sm:hidden">Diffs</span>
+                            </TabsTrigger>
                         </TabsList>
 
                         {/* TAB 1: Match Score & Quality Insights */}

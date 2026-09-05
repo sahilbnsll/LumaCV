@@ -10,22 +10,24 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# testing & coverage
 /coverage
+/.artifacts/
 
-# next.js
+# next.js build outputs
 /.next/
 /.next_stale_*/
 /out/
-
-# production
 /build
+/dist
 
-# misc
+# OS files
 .DS_Store
+Thumbs.db
+ehthumbs.db
 *.pem
 
-# debug
+# debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -33,27 +35,34 @@ yarn-error.log*
 *.log
 *.pid
 *.out
+*.seed
 
-# env files (can opt-in for committing if needed)
-.env*
+# environment files
+.env*.local
+.env
+.env.development
+.env.test
+.env.production
 !.env.example
 
-
-# vercel
+# vercel & caching
 .vercel
 .turbo
+.eslintcache
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# build/test artifacts
-.artifacts/
+# local test & scratch outputs
+bin/
+/bin/
+typst/scratch/
+scratch/
+/data/
+*.pdf
 
-# reference repos / scratch
-reactive-resume-main/
-
-# LaTeX temp artifacts
+# LaTeX & Typst temp artifacts
 *.aux
 *.bbl
 *.bcf
@@ -70,27 +79,18 @@ reactive-resume-main/
 *.toc
 *.xdv
 
-# IDEs and AI tools
+# IDEs and agent artifacts
 .claude/
 .cursor/
 .code-review-graph/
 .cursorrules
 .windsurfrules
+/.agents/
 AGENTS.md
 CLAUDE.md
 gemini.md
 .opencode.json
 .mcp.json
-
-# macOS
-._*
-
-*.pdf
-typst/scratch/
-bin/
-/.agents/
-/scratch/
 task.md
 walkthrough.md
 implementation_plan.md
-/data/

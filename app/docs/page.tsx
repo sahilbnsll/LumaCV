@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface DocSection {
     id: string;
@@ -43,6 +44,15 @@ interface DocSection {
     icon: React.ComponentType<{ className?: string }>;
     badge?: string;
 }
+
+const QUICK_JUMPS = [
+    { id: 'quickstart', label: '⚡ Quickstart Guide' },
+    { id: 'architecture', label: '📐 System Flow' },
+    { id: 'byok', label: '🔑 BYOK API Keys' },
+    { id: 'typst-engine', label: '🚀 Typst Engine' },
+    { id: 'ats-scoring', label: '📊 ATS Scoring Formula' },
+    { id: 'factuality', label: '🛡️ Factuality Diff Studio' },
+];
 
 const DOC_SECTIONS: DocSection[] = [
     { id: 'overview', title: 'Product Overview', category: 'Getting Started', icon: Sparkles },
@@ -262,56 +272,91 @@ export default function DocsPage() {
                         <Zap className="h-3 w-3 text-primary" />
                         Quick Jump:
                     </span>
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection('quickstart')}
-                        className="px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0 text-[11px] border border-border/50"
-                    >
-                        ⚡ Quickstart Guide
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection('architecture')}
-                        className="px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0 text-[11px] border border-border/50"
-                    >
-                        📐 System Flow
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection('byok')}
-                        className="px-2.5 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors shrink-0 text-[11px] border border-primary/20 font-medium"
-                    >
-                        🔑 BYOK API Keys
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection('typst-engine')}
-                        className="px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0 text-[11px] border border-border/50"
-                    >
-                        🚀 Typst Engine
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection('ats-scoring')}
-                        className="px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0 text-[11px] border border-border/50"
-                    >
-                        📊 ATS Scoring Formula
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection('factuality')}
-                        className="px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0 text-[11px] border border-border/50"
-                    >
-                        🛡️ Factuality Diff Studio
-                    </button>
+                    {QUICK_JUMPS.map((qj) => {
+                        const isActive = activeSection === qj.id;
+                        return (
+                            <button
+                                key={qj.id}
+                                type="button"
+                                onClick={() => scrollToSection(qj.id)}
+                                className={cn(
+                                    "px-2.5 py-1 rounded-full transition-colors shrink-0 text-[11px] border cursor-pointer font-medium",
+                                    isActive
+                                        ? "bg-primary/15 text-primary border-primary/30 shadow-2xs"
+                                        : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50"
+                                )}
+                            >
+                                {qj.label}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* Main Content Layout */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
                 
-                {/* Left Sticky Navigation Sidebar (Clean Minimal Active Tracking) */}
-                <aside className="lg:col-span-3 lg:sticky lg:top-36 space-y-6 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:pr-3 no-scrollbar">
+                {/* Mobile / Tablet Collapsible Table of Contents (< lg) */}
+                <div className="lg:hidden col-span-1 w-full">
+                    <details className="group rounded-2xl border border-border/70 bg-card/70 backdrop-blur-md p-3.5 transition-all shadow-xs">
+                        <summary className="flex items-center justify-between font-display text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer select-none">
+                            <div className="flex items-center gap-2">
+                                <Compass className="h-4 w-4 text-primary" />
+                                <span className="text-foreground font-semibold">Table of Contents</span>
+                                <span className="text-[10px] font-mono text-muted-foreground font-normal">
+                                    ({DOC_SECTIONS.length} Topics)
+                                </span>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-open:rotate-90" />
+                        </summary>
+
+                        <nav className="mt-3 pt-3 border-t border-border/40 space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+                            {categories.map((category) => {
+                                const sections = filteredSections.filter(s => s.category === category);
+                                if (sections.length === 0) return null;
+                                return (
+                                    <div key={category} className="space-y-1">
+                                        <h4 className="text-[11px] font-semibold text-foreground/75 uppercase tracking-wider px-2 py-0.5">
+                                            {category}
+                                        </h4>
+                                        <div className="space-y-0.5">
+                                            {sections.map((section) => {
+                                                const isActive = activeSection === section.id;
+                                                const Icon = section.icon;
+                                                return (
+                                                    <button
+                                                        key={section.id}
+                                                        type="button"
+                                                        onClick={() => scrollToSection(section.id)}
+                                                        className={`w-full flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg transition-colors text-left group cursor-pointer ${
+                                                            isActive
+                                                                ? 'bg-primary/10 text-primary font-medium'
+                                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            <Icon className={`h-3.5 w-3.5 shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground'}`} />
+                                                            <span className="truncate">{section.title}</span>
+                                                        </div>
+
+                                                        {section.badge && (
+                                                            <span className="text-[9px] font-medium px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
+                                                                {section.badge}
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </nav>
+                    </details>
+                </div>
+
+                {/* Left Sticky Navigation Sidebar (Desktop only) */}
+                <aside className="hidden lg:block lg:col-span-3 lg:sticky lg:top-36 space-y-6 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:pr-3 no-scrollbar">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between font-display text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/40">
                             <div className="flex items-center gap-2">

@@ -3,10 +3,24 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  poweredByHeader: false,
+  compress: true,
   experimental: {
     outputFileTracingIncludes: {
       '/api/**/*': ['./bin/**/*', './typst/**/*'],
     },
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-progress',
+      '@radix-ui/react-radio-group',
+      'sonner',
+    ],
   },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false;

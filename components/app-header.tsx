@@ -19,7 +19,7 @@ export function AppHeader() {
 
     return (
         <header className="sticky top-0 z-40 glass-nav transition-colors">
-            <div className="w-full flex h-14 items-center justify-between px-6 sm:px-10 lg:px-14">
+            <div className="w-full flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Left: Brand + Breadcrumbs */}
                 <div className="flex items-center gap-3 sm:gap-4">
                     <Link

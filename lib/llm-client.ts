@@ -13,12 +13,15 @@ import { UserApiKeys } from './ai-keys';
  * Groq Active Models
  */
 const GROQ_HEAVY_MODELS = [
+    'llama-3.3-70b-versatile',
     'qwen/qwen3.6-27b',
     'qwen/qwen3.8-27b',
     'openai/gpt-oss-120b'
 ];
 
 const GROQ_LIGHT_MODELS = [
+    'llama-3.1-8b-instant',
+    'llama-3.3-70b-versatile',
     'qwen/qwen3.6-27b',
     'openai/gpt-oss-20b'
 ];

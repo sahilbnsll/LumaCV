@@ -1,16 +1,17 @@
 # LumaCV System Architecture
 
-This document details the engineering design, component interactions, and data flow of LumaCV.
+This document details the engineering design, component interactions, security posture, and data flow of LumaCV.
 
 ---
 
 ## 1. High-Level Architecture Overview
 
 LumaCV is built as a modern, high-throughput resume builder designed around four core pillars:
-1. **Client-Side Extraction**: PDF parsing runs entirely in the browser using `pdfjs-dist`, avoiding heavy canvas/native binary dependencies on the server.
-2. **Dual-Provider High-Quota AI Engine**: Direct integration with Google Gemini and Groq Cloud, implementing automatic model-to-model and provider-to-provider failovers.
-3. **Native Typst Typesetting**: 100% native typesetting using the Typst compiler (< 50ms compile time), completely replacing legacy typesetting toolchains and external compilation farms.
+1. **Client-Side Extraction**: PDF parsing runs entirely in the browser using `pdfjs-dist`, avoiding heavy canvas or native binary dependencies on the server.
+2. **Multi-Provider BYOK AI Engine**: Direct integration with Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud, featuring client-side API key encryption, prompt caching, and zero telemetry.
+3. **Native Typst Typesetting**: 100% native typesetting using the Typst compiler (< 50ms compile time), completely replacing legacy LaTeX toolchains and external compilation services.
 4. **Resilient Persistence**: Client-side Zustand store with hydration guards combined with Supabase for user authentication and CV cloud storage.
+5. **Modern Design System**: Powered by Next.js 14 App Router, Tailwind CSS, and `Geist` + `Geist Mono` typography.
 
 ---
 
@@ -23,7 +24,7 @@ LumaCV is built as a modern, high-throughput resume builder designed around four
 [Raw Text + Extracted URLs]
         │
         ▼ POST /api/v1/resume/parse
-[LLM Parser (Gemini 2.5 Flash / Groq Qwen)]
+[LLM Parser (Gemini 2.5 Flash / Claude / Groq)]
         │
         ▼ (jsonrepair + normalizeResumeFromLLM)
 [Structured ResumeData (JSON)]
@@ -32,7 +33,7 @@ LumaCV is built as a modern, high-throughput resume builder designed around four
 [User Edits / Verification]
         │
         ▼ POST /api/v1/jd/analyze + POST /api/v1/resume/tailor
-[Tailored ResumeData + Typst Code]
+[Tailored ResumeData + Typst AST]
         │
         ▼ POST /api/v1/resume/compile
 [Typst Native Engine (bin/typst)]
@@ -51,54 +52,51 @@ LumaCV is built as a modern, high-throughput resume builder designed around four
 - Iterates over document pages, extracting plain text chunks and hyperlink annotations (e.g. LinkedIn, GitHub, and Portfolio URLs embedded in text).
 - Outputs normalized text with preserved line breaks directly to Step 1.
 
-### 3.2 AI Client & Failover Pipeline (`lib/llm-client.ts`)
-The AI engine implements a two-tier priority failover matrix:
+### 3.2 AI Client & BYOK Pipeline (`lib/llm-client.ts`)
+The AI engine implements multi-provider failover with support for user-supplied keys:
 
-| Task Type | Provider Priority | Models in Chain |
+| Provider | Supported Models | Primary Strength |
 | :--- | :--- | :--- |
-| **Heavy** (Resume Parsing & Tailoring) | 1. Google Gemini<br>2. Groq Cloud | `gemini-2.5-flash`<br>`gemini-flash-latest`<br>`gemini-3.5-flash`<br>`qwen/qwen3.6-27b`<br>`openai/gpt-oss-120b` |
-| **Light** (JD Analysis & Scoring) | 1. Google Gemini<br>2. Groq Cloud | `gemini-2.5-flash-lite`<br>`gemini-flash-lite-latest`<br>`qwen/qwen3.6-27b`<br>`openai/gpt-oss-20b` |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite` | Sub-400ms latency, native JSON schema support |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o3-mini` | High compliance with strict schema constraints |
+| **Anthropic Claude** | `claude-3-5-sonnet`, `claude-3-5-haiku` | Nuanced editorial vocabulary for senior roles |
+| **Groq Cloud** | `qwen/qwen-2.5-32b`, `llama-3.3-70b` | Ultra-high token generation throughput |
 
-**Resilience Features**:
-- 15-second abort controller timeout per model attempt.
-- Automatic failover on empty stream, HTTP 429 (rate limit), or HTTP 5xx errors.
-- Streaming response collection with server-side `jsonrepair` before JSON deserialization.
+**Security & Privacy**:
+- Keys provided in headers (`x-gemini-api-key`, etc.) are held in ephemeral memory per request and never logged.
+- The prompt caching layer (`lib/prompt-cache.ts`) deduplicates identical extraction and tailoring requests, avoiding redundant model calls.
 
 ### 3.3 Normalization Layer (`lib/normalize-resume.ts`)
-LLMs can occasionally return inconsistent schema variations (e.g. string dates vs date objects, missing arrays, unexpected section labels). The normalization layer:
+LLMs can occasionally return schema variations. The normalization layer:
 - Ensures all core arrays (`experience`, `education`, `projects`, `skills`) are non-null and correctly typed.
 - Sanitizes bullet points, converting markdown bold to clean plain text where required.
 - Enforces minimum summary lengths and ensures contact info has consistent URL formats (`https://`).
 
 ### 3.4 Typst Typesetting System (`lib/typst-generator.ts` & `typst/`)
 LumaCV uses **Typst**, a next-generation markup-based typesetting system written in Rust:
-- **Zero Heavy Compiler Dependencies**: Self-contained native binary without complex external distributions or third-party web services needed.
 - **Sub-50ms Compilation**: Compiles full multi-page resumes in 20–45ms.
-- **Embedded Templates**:
-  - `modern.typ`: Contemporary sans-serif layout with subtle category badges and contact strip.
-  - `classic.typ`: Harvard-style serif typography with elegant divider lines.
-  - `engineering.typ`: Dual-rule technical density designed for software and platform engineers.
-  - `compact.typ`: High-density single-page layout for long career histories.
-  - `two_column.typ`: Asymmetrical layout with an organized sidebar.
-  - `ats_safe.typ`: Pure linear layout designed for maximum ATS machine readability.
-- **Theme Color Matrix**: Dynamic injection of 8 curated swatches (`modern`, `classic`, `engineering`, `compact`, `two-column`, `ats-safe`, `emerald`, `burgundy`, `navy`, `cobalt`, `teal`, `slate`, `black`).
+- **48 Curated Layout Combinations**: 6 base archetypes (`modern`, `classic`, `engineering`, `compact`, `two_column`, `ats_safe`) mapped across 8 color themes (`none`, `navy`, `cobalt`, `emerald`, `burgundy`, `teal`, `slate`, `black`).
+- **Deterministic ATS Formatting**: Generates 100% vector text without font rasterization or embedded image artifacts, ensuring perfect optical character and text extraction for ATS parsers.
 
-### 3.5 State Management & Hydration (`lib/store.ts`)
-- Built with Zustand and `persist` middleware (storing state in `localStorage`).
-- Implements `resumeDataRevision` counter to ensure React Hook Form default values update cleanly when an AI parse completes.
-- Hydration guards prevent empty persisted snapshots from overriding in-progress parsing workflows.
+### 3.5 Typography & Design Tokens
+- **Typography**: Built on Vercel's `Geist Sans` and `Geist Mono` packages.
+- **CSS Variables**: Theme tokens `--font-display`, `--font-ui`, `--font-sans`, and `--font-mono` are mapped to `var(--font-geist-sans)` and `var(--font-geist-mono)`.
+- **Motion & Interactions**: Framer Motion and GSAP micro-animations with hardware acceleration and `prefers-reduced-motion` compliance.
+
+### 3.6 Automated Testing & Visual Regression (`scripts/test-visual-regression.mjs`)
+- Runs a 48-combination matrix across all templates and colorways.
+- Verifies binary size, single-page boundary compliance, and compilation integrity in under 2 seconds.
 
 ---
 
 ## 4. API Endpoints Reference
 
-| Method | Endpoint | Description | Max Duration |
+| Method | Endpoint | Description | Timeout |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/v1/resume/parse` | Parses raw resume text into structured `ResumeData` | 60s |
-| `POST` | `/api/v1/jd/analyze` | Extracts keywords and required skills from a JD | 60s |
+| `POST` | `/api/v1/jd/analyze` | Extracts keywords and required skills from a JD | 45s |
 | `POST` | `/api/v1/resume/tailor` | Generates tailored bullets and Typst source code | 60s |
 | `POST` | `/api/v1/resume/compile` | Compiles `ResumeData` or Typst source into PDF binary | 15s |
-| `POST` | `/api/v1/resume/score` | Calculates ATS keyword alignment percentage | Edge |
-| `POST` | `/api/v1/resume/render` | Initiates async PDF rendering and cache lookup | 10s |
-| `GET` | `/api/v1/resume/render` | Polls async PDF render job status or returns signed URL | 10s |
-| `POST` | `/api/v1/resume/export-typ` | Generates downloadable `.typ` source file | Standard |
+| `POST` | `/api/v1/resume/score` | Calculates deterministic ATS keyword alignment | Edge |
+| `GET` | `/api/v1/stats` | Aggregated platform compilation and uptime telemetry | 10s |
+| `POST` | `/api/v1/feedback` | User bug reports and feature requests | 10s |

@@ -25,7 +25,7 @@ export interface FaqAccordionProps {
 export function FaqAccordion({
   data,
   className,
-  timestamp = "Every day, 9:01 AM",
+  timestamp,
   questionClassName,
   answerClassName,
 }: FaqAccordionProps) {

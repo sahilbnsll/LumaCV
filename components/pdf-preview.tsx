@@ -309,10 +309,11 @@ export function PdfPreview() {
                             variant="default"
                             size="sm"
                             onClick={handleDownload}
-                            className="h-7 px-3 text-xs gap-1.5 bg-primary text-primary-foreground shadow-2xs"
+                            className="h-7 px-2.5 sm:px-3 text-xs gap-1.5 bg-primary text-primary-foreground shadow-2xs"
                         >
                             <Download className="h-3.5 w-3.5" />
-                            <span className="font-medium">Download PDF</span>
+                            <span className="font-medium hidden sm:inline">Download PDF</span>
+                            <span className="font-medium sm:hidden">PDF</span>
                         </Button>
                     )}
                 </div>
@@ -321,14 +322,14 @@ export function PdfPreview() {
             {/* ========================================================================= */}
             {/* 2. MAIN DOCUMENT DESK CANVAS                                              */}
             {/* ========================================================================= */}
-            <div className="relative min-h-[760px] sm:min-h-[820px] bg-slate-200/70 dark:bg-[#07080a] flex items-center justify-center p-3 sm:p-6 overflow-auto">
+            <div className="relative min-h-[500px] sm:min-h-[760px] md:min-h-[820px] bg-slate-200/70 dark:bg-[#07080a] flex items-center justify-center p-2.5 sm:p-6 overflow-auto">
                 {/* Desk Ambient Sheen in Dark Mode */}
                 <div className="absolute inset-0 bg-[radial-gradient(#0071e3_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03] dark:opacity-[0.06] pointer-events-none" />
 
                 {/* PDF Document Sheet Frame */}
                 <div 
                     style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
-                    className="relative w-full max-w-[760px] h-[780px] sm:h-[840px] rounded-xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.7)] border border-slate-300 dark:border-white/10 overflow-hidden transition-transform duration-200 flex flex-col"
+                    className="relative w-full max-w-[760px] h-[520px] sm:h-[780px] md:h-[840px] rounded-xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.7)] border border-slate-300 dark:border-white/10 overflow-hidden transition-transform duration-200 flex flex-col"
                 >
                     {/* ACTIVE COMPILING STATE (Luminous LiDAR Laser & Orbital AST Synthesis Visualizer) */}
                     <AnimatePresence>
