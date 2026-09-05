@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { PdfPreview } from '@/components/pdf-preview';
@@ -13,11 +14,12 @@ import { formatSaveStatus, ProjectSaveStatus } from '@/lib/project-store';
 
 import {
     ArrowLeft,
-    Edit2,
+    PenLine,
     CheckCircle2,
     Sparkles,
     Download,
     FileText,
+    FileCode2,
     Bookmark,
     TrendingUp,
     Check,
@@ -113,14 +115,15 @@ export function Step4Preview() {
     } = useAppStore();
 
     const { user } = useAuth();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'analysis' | 'diff' | 'keywords'>('analysis');
     const [sheetOpen, setSheetOpen] = useState(false);
     const [designSheetOpen, setDesignSheetOpen] = useState(false);
     const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    const [saveStatus, setSaveStatus] = useState<ProjectSaveStatus>('saved');
-    const [lastSavedAt, setLastSavedAt] = useState<string>(() => new Date().toISOString());
+    const [saveStatus, setSaveStatus] = useState<ProjectSaveStatus>('idle');
+    const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
     // AI Bullet changes tracking state (allows reverting/keeping individual bullets)
     const [revertedBullets, setRevertedBullets] = useState<Record<string, boolean>>({});
@@ -168,21 +171,39 @@ export function Step4Preview() {
     const templateFit = currentData ? getTemplateFitLevel(currentData, template) : null;
     const templateFitCopy = templateFit ? getTemplateFitCopy(templateFit) : null;
 
-    // Save resume to dashboard with complete state snapshot (supports silent autosave)
-    const handleSaveToDashboard = async (silent = false) => {
+    // Save resume to dashboard with complete state snapshot ONLY when user explicitly clicks Save
+    const handleSaveToDashboard = async () => {
         if (!currentData) return;
-        if (!silent) setIsSaving(true);
+
+        // Strictly require authentication to save resumes to account history
+        if (!user) {
+            toast.error('Please sign in to save resumes to your account.', {
+                action: {
+                    label: 'Sign In',
+                    onClick: () => router.push('/login?redirect=/builder'),
+                },
+            });
+            return;
+        }
+
+        setIsSaving(true);
         setSaveStatus('saving');
 
         const resumeId = `res-${Date.now()}`;
-        const targetTitle = jdAnalysis?.seniority_level ? `${jdAnalysis.seniority_level} Role` : 'Tailored Resume';
+        const targetTitle = jdAnalysis?.seniority_level ? `${jdAnalysis.seniority_level} Professional` : 'Executive Profile';
         const targetCompany = '';
-        const title = currentData?.personalInfo.title || `${currentData?.personalInfo.name || 'Resume'} - ${targetTitle}`;
+        const candidateName = currentData?.personalInfo.name?.trim();
+        const candidateRole = currentData?.personalInfo.title?.trim();
+        const title = candidateRole && candidateName
+            ? `${candidateName} — ${candidateRole}`
+            : candidateName
+                ? `${candidateName} — ${targetTitle}`
+                : targetTitle;
         const nowIso = new Date().toISOString();
 
         const savedItem: SavedResume = {
             id: resumeId,
-            userId: user?.id,
+            userId: user.id,
             title,
             targetJobTitle: targetTitle,
             targetJobCompany: targetCompany,
@@ -201,58 +222,45 @@ export function Step4Preview() {
             updatedAt: nowIso,
         };
 
-        saveLocalResume(savedItem);
+        // Save strictly for this authenticated user
+        saveLocalResume(savedItem, user.id);
 
-        if (user) {
-            try {
-                await fetch('/api/v1/resumes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title,
-                        templateId: template,
-                        resumeData: {
-                            ...currentData,
-                            _snapshot: {
-                                jd,
-                                jdAnalysis,
-                                generatedResume,
-                                originalScore,
-                                tailoredScore,
-                                template,
-                                theme,
-                                lastStep: 4
-                            }
-                        },
-                        typstCode: generatedResume?.typst || '',
-                        atsScore: afterScoreNumber,
-                        targetJobTitle: targetTitle,
-                        targetJobCompany: targetCompany,
-                    }),
-                });
-            } catch {
-                // local fallback handled
-            }
+        try {
+            await fetch('/api/v1/resumes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    templateId: template,
+                    resumeData: {
+                        ...currentData,
+                        _snapshot: {
+                            jd,
+                            jdAnalysis,
+                            generatedResume,
+                            originalScore,
+                            tailoredScore,
+                            template,
+                            theme,
+                            lastStep: 4
+                        }
+                    },
+                    typstCode: generatedResume?.typst || '',
+                    atsScore: afterScoreNumber,
+                    targetJobTitle: targetTitle,
+                    targetJobCompany: targetCompany,
+                }),
+            });
+        } catch {
+            // local fallback handled
         }
 
-        if (!silent) setIsSaving(false);
+        setIsSaving(false);
         setSaveStatus('saved');
         setLastSavedAt(nowIso);
-        if (!silent) {
-            toast.success('Resume and complete workspace state saved to My Resumes!');
-            trackEvent('project_saved', { template, theme, score: afterScoreNumber });
-        }
+        toast.success('Resume saved to My Resumes!');
+        trackEvent('project_saved', { template, theme, score: afterScoreNumber });
     };
-
-    // Debounced autosave on visual changes
-    useEffect(() => {
-        if (!currentData) return;
-        const timer = setTimeout(() => {
-            handleSaveToDashboard(true);
-        }, 1200);
-        return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [template, theme, revertedBullets]);
 
 
 
@@ -334,71 +342,84 @@ export function Step4Preview() {
     return (
         <div className="space-y-4">
             {/* Unified Workspace Action Bar (Single Bar - No Duplicates) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-xl border border-border/70 bg-card/95 shadow-sm">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 glass-card shadow-lg">
+                <div className="flex items-center gap-3.5">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setStep(2)}
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1 -ml-1 cursor-pointer"
+                        className="h-9 px-3 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 gap-1.5 -ml-1 cursor-pointer transition-colors"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Edit Experience</span>
+                        <span className="hidden sm:inline font-medium">Edit Experience</span>
                     </Button>
 
-                    <div className="h-4 w-[1px] bg-border/60 hidden sm:block" />
+                    <div className="h-5 w-[1px] bg-border/60 dark:bg-white/10 hidden sm:block" />
 
                     <div>
-                        <h1 className="text-xs sm:text-sm font-semibold font-display text-foreground tracking-tight flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                                Step 04 • Studio
+                            </span>
+                            {templateFitCopy && (
+                                <span className="rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-semibold hidden md:inline">
+                                    {templateFitCopy.label}
+                                </span>
+                            )}
+                        </div>
+                        <h1 className="text-sm sm:text-base font-bold font-display text-foreground tracking-tight flex items-center gap-2 mt-1">
                             <span>{currentData?.personalInfo.name || 'Tailored Resume'}</span>
                             <span className="text-muted-foreground font-normal text-xs">
                                 • {template.toUpperCase()}
                             </span>
-                            {templateFitCopy && (
-                                <span className="rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.2 text-[10px] font-semibold hidden md:inline">
-                                    {templateFitCopy.label}
-                                </span>
-                            )}
                         </h1>
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                            <span>Native compilation</span>
-                            <span>•</span>
-                            <span className="inline-flex items-center gap-1 font-medium">
-                                <span className={cn("h-1.5 w-1.5 rounded-full", saveStatus === 'saving' ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
-                                <span className={saveStatus === 'saving' ? "text-amber-500" : "text-muted-foreground"}>
-                                    {formatSaveStatus(lastSavedAt, saveStatus)}
-                                </span>
-                            </span>
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                            <span>Native Typst Compilation</span>
+                            {lastSavedAt ? (
+                                <>
+                                    <span>•</span>
+                                    <span className="inline-flex items-center gap-1.5 font-medium">
+                                        <span className={cn("h-1.5 w-1.5 rounded-full", saveStatus === 'saving' ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
+                                        <span className={saveStatus === 'saving' ? "text-amber-500" : "text-muted-foreground"}>
+                                            {formatSaveStatus(lastSavedAt, saveStatus)}
+                                        </span>
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>•</span>
+                                    <span className="text-muted-foreground/70">Unsaved draft</span>
+                                </>
+                            )}
                         </div>
-
                     </div>
                 </div>
 
                 {/* 1-Click Action Cluster */}
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* 1-Click Design & Layout Trigger (Opens slide-out Sheet) */}
+                    {/* 1-Click Design & Layout Trigger */}
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setDesignSheetOpen(true)}
-                        className="h-8 text-xs font-medium border-border/70 hover:border-primary/50 hover:bg-muted/40 gap-1.5 cursor-pointer"
+                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 hover:border-primary/50 gap-1.5 cursor-pointer shadow-xs transition-all"
                     >
-                        <Palette className="h-3.5 w-3.5 text-primary" />
+                        <Palette className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                         <span>Design & Style</span>
                     </Button>
 
                     {/* Edit Form Sheet Trigger */}
                     <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
                         <SheetTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 cursor-pointer">
-                                <Edit2 className="h-3.5 w-3.5" />
+                            <Button variant="outline" size="sm" className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 gap-1.5 cursor-pointer shadow-xs transition-all">
+                                <PenLine className="h-3.5 w-3.5" strokeWidth={2} />
                                 <span>Edit Fields</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto">
+                        <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto border-border/70 dark:border-white/10 bg-background/95 dark:bg-[#0e1014]/95 backdrop-blur-xl">
                             <SheetHeader className="mb-6">
-                                <SheetTitle>Edit Structured Details</SheetTitle>
-                                <SheetDescription>Direct edits immediately re-render in the compiled resume.</SheetDescription>
+                                <SheetTitle className="font-display font-bold">Edit Structured Details</SheetTitle>
+                                <SheetDescription className="text-xs">Direct edits immediately re-render in the compiled resume.</SheetDescription>
                             </SheetHeader>
                             <ResumeForm />
                         </SheetContent>
@@ -409,23 +430,27 @@ export function Step4Preview() {
                         variant="outline"
                         size="sm"
                         onClick={() => setHistoryDrawerOpen(true)}
-                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 hidden sm:flex cursor-pointer"
+                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 gap-1.5 hidden sm:flex cursor-pointer shadow-xs transition-all"
                         title="Snapshot timeline & rollback"
                     >
-                        <History className="h-3.5 w-3.5 text-primary" />
+                        <History className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                         <span>History</span>
                     </Button>
 
-                    {/* Save to Dashboard */}
+                    {/* Save to Dashboard (Explicit user click only) */}
                     <Button
-                        variant="outline"
+                        variant={saveStatus === 'saved' ? 'secondary' : 'outline'}
                         size="sm"
-                        onClick={() => handleSaveToDashboard(false)}
+                        onClick={handleSaveToDashboard}
                         disabled={isSaving}
-                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 cursor-pointer"
+                        className={cn(
+                            "h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:border-primary/50 hover:bg-muted/40 gap-1.5 cursor-pointer transition-all shadow-xs",
+                            saveStatus === 'saved' && "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                        )}
+                        title="Save this tailored resume to My Resumes"
                     >
-                        <Bookmark className="h-3.5 w-3.5 text-primary" />
-                        <span>Save</span>
+                        <Bookmark className={cn("h-3.5 w-3.5", saveStatus === 'saved' ? "text-emerald-500 fill-emerald-500/30" : "text-primary")} strokeWidth={2} />
+                        <span>{isSaving ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Save Resume'}</span>
                     </Button>
 
                     {/* Export Markup */}
@@ -433,10 +458,10 @@ export function Step4Preview() {
                         variant="outline"
                         size="sm"
                         onClick={handleDownloadSource}
-                        className="h-8 text-xs font-medium border-border/70 hover:bg-muted/40 gap-1.5 hidden md:flex cursor-pointer"
+                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 gap-1.5 hidden md:flex cursor-pointer shadow-xs transition-all"
                         title="Download markup source (.typ)"
                     >
-                        <FileText className="h-3.5 w-3.5" />
+                        <FileCode2 className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                         <span>Source</span>
                     </Button>
 
@@ -444,9 +469,9 @@ export function Step4Preview() {
                     <Button
                         size="sm"
                         onClick={handleDownloadPdf}
-                        className="h-8 px-3.5 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm cursor-pointer"
+                        className="h-9 px-4 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 hover:shadow-primary/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        <Download className="h-3.5 w-3.5" />
+                        <Download className="h-3.5 w-3.5" strokeWidth={2} />
                         <span>Download PDF</span>
                     </Button>
                 </div>
@@ -469,54 +494,51 @@ export function Step4Preview() {
                 />
             )}
 
-
             {/* Design & Styling Drawer (Reachable in 1-click anytime) */}
             <Sheet open={designSheetOpen} onOpenChange={setDesignSheetOpen}>
-                <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto sm:max-w-4xl mx-auto rounded-t-2xl p-6">
-                    <SheetHeader className="mb-4">
-                        <SheetTitle className="text-base flex items-center gap-2">
+                <SheetContent side="bottom" className="h-[88vh] max-h-[680px] flex flex-col overflow-hidden sm:max-w-5xl mx-auto rounded-t-3xl border-t border-border/70 dark:border-white/10 bg-background/95 dark:bg-[#0e1014]/95 backdrop-blur-2xl p-4 sm:p-5">
+                    <SheetHeader className="shrink-0 mb-2 text-left">
+                        <SheetTitle className="text-base sm:text-lg font-bold font-display flex items-center gap-2 text-foreground">
                             <Palette className="h-4 w-4 text-primary" />
                             Customize Typesetting & Style
                         </SheetTitle>
-                        <SheetDescription className="text-xs">
-                            Switch templates or accent colors. Changes recompile instantly.
+                        <SheetDescription className="text-xs text-muted-foreground">
+                            Switch templates or accent colors. Changes recompile instantly into your vector PDF.
                         </SheetDescription>
                     </SheetHeader>
                     <TemplateSelector />
                 </SheetContent>
             </Sheet>
 
-
             {/* Main Split Workspace */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                 {/* 1. LEFT WORKSPACE (60% Desktop): Document Preview as Primary Visual Focus */}
                 <div className="lg:col-span-7 space-y-3">
-                    <div className="rounded-xl border border-border/70 bg-card p-3 shadow-sm overflow-hidden">
-                        <PdfPreview />
-                    </div>
+                    <PdfPreview />
 
                     {templateFitCopy && (
-                        <div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs flex items-center justify-between text-muted-foreground">
+                        <div className="rounded-xl border border-border/70 dark:border-white/10 bg-card/60 dark:bg-[#0e1014]/60 px-4 py-2.5 text-xs flex items-center justify-between text-muted-foreground backdrop-blur-md">
                             <span>Fit estimate: <strong className="text-foreground">{templateFitCopy.label}</strong></span>
-                            <span className="text-[11px]">{templateFitCopy.detail}</span>
+                            <span className="text-[11px] font-mono">{templateFitCopy.detail}</span>
                         </div>
                     )}
                 </div>
 
                 {/* 2. RIGHT WORKSPACE (40% Desktop): Rich Intelligence & Insights Tabs */}
-                <div className="lg:col-span-5 rounded-xl border border-border/70 bg-card p-4 shadow-sm space-y-4">
+                <div className="lg:col-span-5 glass-card p-4 sm:p-5 shadow-xl space-y-4">
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'diff' | 'keywords')} className="w-full">
-                        <TabsList className="grid grid-cols-3 h-8 bg-muted/40 p-0.5 text-xs">
-                            <TabsTrigger value="analysis" className="text-[11px] px-1 py-1">Match & Quality</TabsTrigger>
-                            <TabsTrigger value="keywords" className="text-[11px] px-1 py-1">Skills & Keywords</TabsTrigger>
-                            <TabsTrigger value="diff" className="text-[11px] px-1 py-1">AI Bullet Diffs</TabsTrigger>
+                        <TabsList className="grid grid-cols-3 h-9 bg-muted/40 dark:bg-[#15181e] p-1 rounded-xl text-xs border border-border/50 dark:border-white/5">
+                            <TabsTrigger value="analysis" className="text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm">Match & Quality</TabsTrigger>
+                            <TabsTrigger value="keywords" className="text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm">Skills & Keywords</TabsTrigger>
+                            <TabsTrigger value="diff" className="text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm">AI Bullet Diffs</TabsTrigger>
                         </TabsList>
 
                         {/* TAB 1: Match Score & Quality Insights */}
                         <TabsContent value="analysis" className="space-y-4 mt-4">
                             {/* Precision Score Instrument */}
-                            <div className="rounded-xl border border-border/70 bg-muted/20 p-4 shadow-xs">
-                                <div className="flex items-center gap-4">
+                            <div className="relative rounded-2xl border border-border/70 dark:border-white/10 bg-gradient-to-br from-muted/30 via-background to-muted/20 dark:from-[#13161c] dark:to-[#0a0c10] p-4 sm:p-5 shadow-sm overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+                                <div className="flex items-center gap-5 relative z-10">
                                     {/* Circular Progress Gauge */}
                                     <div className="relative h-20 w-20 shrink-0 flex items-center justify-center">
                                         <svg className="h-full w-full -rotate-90" viewBox="0 0 80 80">
@@ -524,7 +546,7 @@ export function Step4Preview() {
                                                 cx="40"
                                                 cy="40"
                                                 r="34"
-                                                className="text-muted/40 stroke-current"
+                                                className="text-muted/30 dark:text-white/10 stroke-current"
                                                 strokeWidth="6"
                                                 fill="transparent"
                                             />
@@ -543,25 +565,25 @@ export function Step4Preview() {
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                                             <AnimatedCounter
                                                 value={afterScoreNumber}
-                                                className="text-xl font-bold font-display text-foreground leading-none"
+                                                className="text-2xl font-bold font-display text-foreground leading-none"
                                             />
-                                            <span className="text-[9px] font-mono text-muted-foreground uppercase mt-0.5">ATS</span>
+                                            <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider mt-0.5">ATS</span>
                                         </div>
                                     </div>
 
                                     <div className="space-y-1 flex-1">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                                            <span className="text-xs uppercase tracking-wider text-muted-foreground font-mono font-semibold">
                                                 Alignment Score
                                             </span>
                                             {improvement > 0 && (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-500 border border-emerald-500/20">
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-emerald-500 border border-emerald-500/20">
                                                     <TrendingUp className="h-3 w-3" />
                                                     +{improvement} pts
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        <p className="text-xs text-muted-foreground leading-relaxed">
                                             Evaluated across 4 diagnostic competency pillars against JD requirements.
                                         </p>
                                     </div>
@@ -583,21 +605,21 @@ export function Step4Preview() {
                             )}
 
                             {/* Resume Strengths Card */}
-                            <div className="rounded-lg border border-border/40 bg-muted/10 p-3.5 space-y-2.5 text-xs">
-                                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                            <div className="rounded-xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-4 space-y-2.5 text-xs">
+                                <span className="font-semibold text-foreground flex items-center gap-2">
                                     <Sparkles className="h-3.5 w-3.5 text-primary" />
                                     Resume Strengths
                                 </span>
-                                <ul className="space-y-1.5 text-[11px] text-muted-foreground">
-                                    <li className="flex items-start gap-1.5">
+                                <ul className="space-y-2 text-[11px] text-muted-foreground">
+                                    <li className="flex items-start gap-2">
                                         <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                                        <span><strong>Quantified Impact:</strong> 100% of experience entries include measurable metrics and business outcomes.</span>
+                                        <span><strong>Quantified Impact:</strong> Experience entries feature measurable business outcomes.</span>
                                     </li>
-                                    <li className="flex items-start gap-1.5">
+                                    <li className="flex items-start gap-2">
                                         <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
                                         <span><strong>Action-Oriented Framing:</strong> Active past-tense verbs replace passive phrasing across work history.</span>
                                     </li>
-                                    <li className="flex items-start gap-1.5">
+                                    <li className="flex items-start gap-2">
                                         <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
                                         <span><strong>Target Role Symmetry:</strong> Key architectural competencies mirror JD terminology directly.</span>
                                     </li>
@@ -605,28 +627,28 @@ export function Step4Preview() {
                             </div>
 
                             {/* Actionable Recommendations & Gaps */}
-                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.03] p-3.5 space-y-2 text-xs">
-                                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4 space-y-2 text-xs">
+                                <span className="font-semibold text-foreground flex items-center gap-2">
                                     <Target className="h-3.5 w-3.5 text-amber-500" />
                                     Actionable Recommendations
                                 </span>
                                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                    Tailored wording matches 90%+ of primary job requirements. Be prepared during technical screens to speak in depth about your quantifiable metrics.
+                                    Tailored wording aligns closely with primary job requirements. Be prepared during interviews to speak in depth about your projects and impact.
                                 </p>
                             </div>
 
                             {/* ATS Quality & Layout Checks */}
-                            <div className="rounded-lg border border-border/40 bg-muted/10 p-3.5 space-y-2.5 text-xs">
-                                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                            <div className="rounded-xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-4 space-y-2.5 text-xs">
+                                <span className="font-semibold text-foreground flex items-center gap-2">
                                     <FileCheck className="h-3.5 w-3.5 text-emerald-500" />
                                     ATS Quality & Layout Diagnostics
                                 </span>
 
-                                <div className="space-y-2 text-[11px] text-muted-foreground">
+                                <div className="space-y-2.5 text-[11px] text-muted-foreground">
                                     <div className="flex items-start gap-2">
                                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
                                         <div>
-                                            <strong className="text-foreground">ATS Machine Readability: 100%</strong>
+                                            <strong className="text-foreground">ATS Machine Readability Verified</strong>
                                             <p className="text-[10px] text-muted-foreground">Strict linear text hierarchy with standard headings.</p>
                                         </div>
                                     </div>
@@ -662,14 +684,14 @@ export function Step4Preview() {
                             </div>
 
                             {/* Matched Keywords */}
-                            <div className="space-y-2">
-                                <span className="text-[11px] font-medium text-emerald-500 flex items-center gap-1">
+                            <div className="space-y-2.5">
+                                <span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1.5">
                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                     Matched in Resume
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
                                     {(tailoredScore?.breakdown?.required_skills?.matched || ['TypeScript', 'React', 'Next.js', 'PostgreSQL', 'APIs', 'Docker', 'AWS']).map((k) => (
-                                        <span key={k} className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500">
+                                        <span key={k} className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-emerald-500">
                                             {k}
                                         </span>
                                     ))}
@@ -678,23 +700,23 @@ export function Step4Preview() {
 
                             {/* Missing / Preferred Terms */}
                             {tailoredScore?.breakdown?.required_skills?.missing && tailoredScore.breakdown.required_skills.missing.length > 0 ? (
-                                <div className="space-y-2 pt-2 border-t border-border/40">
-                                    <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                                <div className="space-y-2 pt-3 border-t border-border/40 dark:border-white/5">
+                                    <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
                                         <span>Missing / Target JD Terms</span>
                                     </span>
                                     <div className="flex flex-wrap gap-1.5">
                                         {tailoredScore.breakdown.required_skills.missing.map((k) => (
-                                            <span key={k} className="rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">
+                                            <span key={k} className="rounded-full border border-border/60 dark:border-white/10 bg-muted/40 dark:bg-white/5 px-2.5 py-0.5 text-[11px] font-mono text-muted-foreground">
                                                 {k}
                                             </span>
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground">
+                                    <p className="text-[10px] text-muted-foreground leading-relaxed">
                                         Only include terms you have genuine professional experience with.
                                     </p>
                                 </div>
                             ) : (
-                                <div className="pt-2 border-t border-border/40 text-[11px] text-emerald-500 flex items-center gap-1.5">
+                                <div className="pt-3 border-t border-border/40 dark:border-white/5 text-[11px] text-emerald-500 flex items-center gap-1.5 font-medium">
                                     <Check className="h-3.5 w-3.5" />
                                     <span>All primary required skills are represented in your resume.</span>
                                 </div>
@@ -702,13 +724,13 @@ export function Step4Preview() {
 
                             {/* Preferred Keywords */}
                             {tailoredScore?.breakdown?.preferred_skills && (
-                                <div className="space-y-2 pt-2 border-t border-border/40">
-                                    <span className="text-[11px] font-medium text-muted-foreground">
+                                <div className="space-y-2 pt-3 border-t border-border/40 dark:border-white/5">
+                                    <span className="text-[11px] font-semibold text-muted-foreground">
                                         Preferred Qualifications Coverage
                                     </span>
                                     <div className="flex flex-wrap gap-1.5">
                                         {(tailoredScore.breakdown.preferred_skills.matched || []).map((k) => (
-                                            <span key={k} className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] text-primary font-medium">
+                                            <span key={k} className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-0.5 text-[11px] font-mono text-primary font-semibold">
                                                 {k}
                                             </span>
                                         ))}
@@ -740,9 +762,9 @@ export function Step4Preview() {
                                     return (
                                         <div
                                             key={item.index}
-                                            className="rounded-xl border border-border/60 bg-muted/20 p-3.5 space-y-2.5 text-xs shadow-xs"
+                                            className="rounded-2xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-4 space-y-3 text-xs shadow-xs"
                                         >
-                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground pb-1.5 border-b border-border/40">
+                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground pb-2 border-b border-border/40 dark:border-white/5">
                                                 <span className="font-semibold text-foreground truncate max-w-[200px]">
                                                     {item.role} • {item.company}
                                                 </span>
@@ -751,7 +773,7 @@ export function Step4Preview() {
                                                         type="button"
                                                         onClick={() => handleCopyBullet(activeText, item.index)}
                                                         aria-label="Copy bullet point text"
-                                                        className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+                                                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
                                                         title="Copy bullet"
                                                     >
                                                         {copiedIndex === item.index ? (
@@ -764,7 +786,7 @@ export function Step4Preview() {
                                                         type="button"
                                                         onClick={() => setRevertedBullets(prev => ({ ...prev, [item.index]: !prev[item.index] }))}
                                                         className={cn(
-                                                            "text-[11px] px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none",
+                                                            "text-[11px] font-mono px-2.5 py-0.5 rounded-full font-semibold transition-colors cursor-pointer flex items-center gap-1 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none",
                                                             isReverted
                                                                 ? "bg-amber-500/10 text-amber-500 border border-amber-500/25 hover:bg-amber-500/20"
                                                                 : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 hover:bg-emerald-500/20"
@@ -788,20 +810,20 @@ export function Step4Preview() {
                                             {/* Before vs After */}
                                             <div className="space-y-2">
                                                 {item.original !== item.tailored && (
-                                                    <div className="p-2.5 rounded-lg bg-muted/40 border border-border/40 text-[11px] text-muted-foreground space-y-1">
-                                                        <span className="text-[10px] font-mono text-muted-foreground/80 uppercase block">Original Draft</span>
+                                                    <div className="p-3 rounded-xl bg-muted/40 dark:bg-white/[0.02] border border-border/40 dark:border-white/5 text-[11px] text-muted-foreground space-y-1">
+                                                        <span className="text-[10px] font-mono text-muted-foreground/80 uppercase tracking-wider block">Original Draft</span>
                                                         <p className="line-through leading-relaxed opacity-75">{item.original}</p>
                                                     </div>
                                                 )}
-                                                <div className="p-2.5 rounded-lg bg-primary/[0.05] border border-primary/20 text-[11px] text-foreground space-y-1">
-                                                    <span className="text-[10px] font-mono text-primary font-medium uppercase block">
+                                                <div className="p-3 rounded-xl bg-primary/[0.06] border border-primary/20 text-[11px] text-foreground space-y-1">
+                                                    <span className="text-[10px] font-mono text-primary font-semibold uppercase tracking-wider block">
                                                         {isReverted ? 'Original Kept' : 'Tailored Alignment'}
                                                     </span>
                                                     <p className="leading-relaxed font-medium">{activeText}</p>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md w-fit border border-emerald-500/20">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full w-fit border border-emerald-500/20">
                                                 <Sparkles className="h-3 w-3" />
                                                 <span>Enhanced action verb & metric focus</span>
                                             </div>

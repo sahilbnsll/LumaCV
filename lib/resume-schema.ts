@@ -197,14 +197,14 @@ export const CustomSectionSchema = z.object({
 
 export const ResumeDataSchema = z.object({
   personalInfo: PersonalInfoSchema,
-  summary: z.string().min(10, 'Summary should be at least 10 characters'),
+  summary: z.string().optional().default(''),
   techStackSummary: z.string().optional(),
   sectionOrder: z.array(ResumeSectionKeySchema).default([...DEFAULT_SECTION_ORDER]),
-  skills: z.array(SkillSchema).min(1, 'At least one skill category is required'),
+  skills: z.array(SkillSchema).default([]),
   keyMetrics: z.array(MetricSchema).default([]),
-  experience: z.array(ExperienceSchema).min(1, 'At least one experience entry is required'),
+  experience: z.array(ExperienceSchema).default([]),
   internships: z.array(ExperienceSchema).default([]),
-  education: z.array(EducationSchema).min(1, 'At least one education entry is required'),
+  education: z.array(EducationSchema).default([]),
   projects: z.array(ProjectSchema).default([]),
   certifications: z.array(CertificationSchema).default([]),
   achievements: z.array(AchievementSchema).default([]),
@@ -241,32 +241,76 @@ export const AnalyzeJDResponseSchema = z.object({
   seniority_level: z.string().optional(),
 });
 
-export const ThemeTypeSchema = z.enum([
-  'none',
-  'navy',
-  'cobalt',
-  'emerald',
-  'burgundy',
-  'teal',
-  'slate',
-  'black',
-]);
-export type ThemeType = z.infer<typeof ThemeTypeSchema>;
+export const ThemeTypeSchema = z.string().optional().default('none').transform((val) => {
+  const t = (val || 'none').toLowerCase();
+  if (t === 'obsidian') return 'black';
+  if (t === 'ocean') return 'cobalt';
+  const allowed = ['none', 'navy', 'cobalt', 'emerald', 'burgundy', 'teal', 'slate', 'black'];
+  return allowed.includes(t) ? t : 'none';
+});
+export type ThemeType = 'none' | 'navy' | 'cobalt' | 'emerald' | 'burgundy' | 'teal' | 'slate' | 'black';
 
 export const TemplateTypeSchema = z.enum([
-  'classic',
   'modern',
+  'classic',
   'engineering',
   'compact',
   'two_column',
   'ats_safe',
-  // legacy aliases mapped to the 6 core Typst templates
-  'ats',
+  // ATS-optimized
+  'impact',
+  'switch',
+  'grad',
+  'leadership',
+  'casework',
+  'metrics',
+  'skillsfirst',
+  'credential',
+  'international',
+  'projectled',
+  'narrative',
+  'strict',
+  // Modern & Tech
+  'terminal',
+  'matrix',
+  'product',
+  'startup',
+  'mono',
+  'cadence',
+  // Executive & Advisory
   'executive',
+  'consultant',
+  'analyst',
+  'meridian',
+  'ledger',
+  'harbor',
+  'statement',
+  'forma',
+  'focus',
+  'generated_executive',
+  // Editorial & Creative
+  'boutique',
+  'editorial',
+  'portfolio',
+  'atelier',
+  'swiss',
+  'nordic',
+  'neo',
+  'monochrome',
+  'slate',
+  'timeline',
+  'swiss_alt',
+  'timeline_alt',
+  // Academic & Research
+  'academic',
+  'research_modern',
+  // Legacy aliases
+  'ats',
   'minimal',
   'creative',
   'tech',
 ]);
+export type TemplateType = z.infer<typeof TemplateTypeSchema>;
 
 export const GenerateResumeRequestSchema = z.object({
   resumeData: ResumeDataSchema,
@@ -315,7 +359,5 @@ export type GenerateResumeRequest = z.infer<typeof GenerateResumeRequestSchema>;
 export type GenerateResumeResponse = z.infer<typeof GenerateResumeResponseSchema>;
 
 export type CompileResumeRequest = z.infer<typeof CompileResumeRequestSchema>;
-
-export type TemplateType = z.infer<typeof TemplateTypeSchema>;
 
 

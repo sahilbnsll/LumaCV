@@ -7,19 +7,21 @@ import {
     Search,
     FileText,
     Plus,
-    Layout,
+    LayoutTemplate,
     Sparkles,
     Settings,
-    CreditCard,
+    Heart,
     HelpCircle,
     Moon,
     Sun,
     X,
-    Key,
+    KeyRound,
+    MessageSquarePlus,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAppStore } from '@/lib/store';
 import { motionTokens } from '@/lib/design-tokens';
+import { ALL_TEMPLATES } from '@/lib/templates-data';
 
 export function CommandMenu() {
     const [open, setOpen] = useState(false);
@@ -81,7 +83,7 @@ export function CommandMenu() {
             id: 'billing',
             label: 'Community Access & Support',
             category: 'Account',
-            icon: CreditCard,
+            icon: Heart,
             action: () => router.push('/billing'),
         },
         {
@@ -95,69 +97,19 @@ export function CommandMenu() {
             id: 'ai-keys',
             label: 'Configure AI Provider Keys (BYOK)',
             category: 'Account',
-            icon: Key,
+            icon: KeyRound,
             action: () => router.push('/profile#api-keys'),
         },
-        {
-            id: 'template-modern',
-            label: 'Switch Template: Modern (Clean Sans)',
-            category: 'Templates',
-            icon: Layout,
+        ...ALL_TEMPLATES.map((tmpl) => ({
+            id: `template-${tmpl.id}`,
+            label: `Switch Template: ${tmpl.name} (${tmpl.badge})`,
+            category: `Templates (${tmpl.categoryLabel})`,
+            icon: LayoutTemplate,
             action: () => {
-                setTemplate('modern');
+                setTemplate(tmpl.id as any);
                 router.push('/builder');
             },
-        },
-        {
-            id: 'template-classic',
-            label: 'Switch Template: Classic (Ivy League Serif)',
-            category: 'Templates',
-            icon: Layout,
-            action: () => {
-                setTemplate('classic');
-                router.push('/builder');
-            },
-        },
-        {
-            id: 'template-engineering',
-            label: 'Switch Template: Engineering (High-Density)',
-            category: 'Templates',
-            icon: Layout,
-            action: () => {
-                setTemplate('engineering');
-                router.push('/builder');
-            },
-        },
-        {
-            id: 'template-compact',
-            label: 'Switch Template: Compact (Space-Optimized)',
-            category: 'Templates',
-            icon: Layout,
-            action: () => {
-                setTemplate('compact');
-                router.push('/builder');
-            },
-        },
-        {
-            id: 'template-two-column',
-            label: 'Switch Template: Two-Column (Asymmetric Sidebar)',
-            category: 'Templates',
-            icon: Layout,
-            action: () => {
-                setTemplate('two_column');
-                router.push('/builder');
-            },
-        },
-        {
-            id: 'template-ats-safe',
-            label: 'Switch Template: ATS Safe (Linear Text)',
-            category: 'Templates',
-            icon: Layout,
-            action: () => {
-                setTemplate('ats_safe');
-                router.push('/builder');
-            },
-        },
+        })),
         {
             id: 'toggle-theme',
             label: `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`,
@@ -171,6 +123,15 @@ export function CommandMenu() {
             category: 'Help',
             icon: HelpCircle,
             action: () => router.push('/contact'),
+        },
+        {
+            id: 'feedback',
+            label: 'Give Feedback & Suggestions',
+            category: 'Help',
+            icon: MessageSquarePlus,
+            action: () => {
+                window.dispatchEvent(new CustomEvent('open-feedback-widget'));
+            },
         },
     ];
 

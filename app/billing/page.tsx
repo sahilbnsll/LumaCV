@@ -37,8 +37,8 @@ export default function BillingPage() {
                 <div className="border-b border-border/50 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-2">
-                            <Sparkles className="h-3 w-3" />
-                            <span>100% Free Launch Access</span>
+                            <Check className="h-3 w-3" />
+                            <span>Free Community Access</span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
                             Transparent Access & Community Support
@@ -50,7 +50,7 @@ export default function BillingPage() {
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-lg border border-border/60">
                         <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="font-medium">All Executive Features Unlocked</span>
+                        <span className="font-medium">All Features Available</span>
                     </div>
                 </div>
 
@@ -70,13 +70,12 @@ export default function BillingPage() {
                                 Unlimited Tailoring & Vector PDF Exports
                             </h2>
                             <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-                                You currently have unrestricted access to all 6 executive templates, fact-checking verification, and sub-50ms vector rendering. Automated subscription gateways will be integrated in a later release.
+                                You currently have unrestricted access to all 48 Typst templates, fact-checking verification, and native vector rendering.
                             </p>
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
                             <Button asChild size="sm" className="h-9 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-xs">
                                 <Link href="/builder">
-                                    <Sparkles className="h-3.5 w-3.5" />
                                     <span>Create New Resume</span>
                                 </Link>
                             </Button>
@@ -86,15 +85,15 @@ export default function BillingPage() {
                     <div className="mt-6 pt-5 border-t border-border/40 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
                         <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                            <span>All 6 Executive Templates</span>
+                            <span>48 Typst Templates</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                            <span>100% Fact-Checked Tailoring</span>
+                            <span>Fact-Checked Tailoring</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                            <span>Sub-50ms Typst Compilation</span>
+                            <span>Typst Vector Compilation</span>
                         </div>
                     </div>
                 </div>
@@ -112,7 +111,7 @@ export default function BillingPage() {
                         </h3>
 
                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                            LumaCV is engineered independently by Sahil Bansal without venture capital or intrusive paywalls. If this tool helped you prepare for interviews or saved hours of formatting, help offset serverless hosting and AI inference costs:
+                            LumaCV is engineered independently by <a href="https://sahilbansal.net/" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary underline underline-offset-2 font-medium">Sahil Bansal</a> without venture capital or intrusive paywalls. If this tool helped you prepare for interviews or saved hours of formatting, help offset serverless hosting and AI inference costs:
                         </p>
 
                         {/* Payment / UPI Handle Box */}

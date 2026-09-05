@@ -149,7 +149,7 @@ function midTighten(template: TemplateType): LayoutAdjust {
 
 export function resolveLayout(data: ResumeData, template: TemplateType): LayoutAdjust {
     const volume = estimateResumeVolume(data);
-    const { tight, overflow } = THRESHOLDS[template];
+    const { tight, overflow } = THRESHOLDS[template] || THRESHOLDS.modern;
 
     if (volume > overflow) {
         return { mode: 'multi_page_ok' };

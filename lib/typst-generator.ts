@@ -1,4 +1,5 @@
 import { ResumeData, TemplateType } from './resume-schema';
+import { ALL_TEMPLATES } from './templates-data';
 
 export interface TypstPersonalContact {
   phone: string;
@@ -16,7 +17,7 @@ export interface TypstResumeData {
     contact: TypstPersonalContact;
   };
   summary: string;
-  skills: Array<{ category: string; items: string }>;
+  skills: Array<{ category: string; items: string; skills: string[] }>;
   experience: Array<{
     role: string;
     company: string;
@@ -62,22 +63,25 @@ export interface TypstResumeData {
 }
 
 /**
- * Normalizes template names to one of the 6 core Typst templates.
+ * Normalizes template names across all 48 supported templates,
+ * resolving aliases safely while defaulting to 'modern'.
  */
-export function normalizeTemplateName(template?: string): 'classic' | 'modern' | 'engineering' | 'compact' | 'two_column' | 'ats_safe' {
-  const t = (template || 'modern').toLowerCase();
-  if (t === 'classic' || t === 'academic') return 'classic';
-  if (t === 'engineering' || t === 'startup') return 'engineering';
-  if (t === 'compact' || t === 'dense') return 'compact';
-  if (t === 'two_column' || t === 'two-column') return 'two_column';
-  if (t === 'ats_safe' || t === 'ats-safe' || t === 'ats') return 'ats_safe';
+export function normalizeTemplateName(template?: string): string {
+  if (!template) return 'modern';
+  const t = template.toLowerCase();
+  const found = ALL_TEMPLATES.find((x) => x.id === t);
+  if (found) return found.id;
+  if (t === 'ats') return 'ats_safe';
+  if (t === 'minimal') return 'compact';
+  if (t === 'creative') return 'boutique';
+  if (t === 'tech') return 'engineering';
   return 'modern';
 }
 
 /**
  * Converts LumaCV ResumeData schema into clean, flat Typst resume data.
  * All keys are guaranteed present with sensible empty fallbacks so templates never throw KeyError.
- * No concept of variants: pure, direct data.
+ * Supplies both `items` string and `skills` array for complete backward and forward compatibility.
  */
 export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
   const p = data.personalInfo || { name: 'Your Name' };
@@ -93,10 +97,19 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
 
   const headline = p.title?.trim() || p.tagline?.trim() || '';
 
-  const skills = (data.skills || []).map((s) => ({
-    category: s.category || 'Skills',
-    items: s.items || '',
-  }));
+  const skills = (data.skills || []).map((s) => {
+    const rawItems = s.items || '';
+    const skillsArray = rawItems
+      .split(/[,•|·]/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+    return {
+      category: s.category || 'Skills',
+      items: rawItems,
+      skills: skillsArray.length > 0 ? skillsArray : [s.category || 'Skills'],
+    };
+  });
 
   const experience = (data.experience || []).map((exp) => ({
     role: exp.title || 'Role',
@@ -173,7 +186,7 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
 }
 
 /**
- * Returns a complete, standalone Typst document as a string.
+ * Returns a complete, standalone Typst document as a string across any of the 48 templates.
  */
 export function generateTypst(
   data: ResumeData,
@@ -183,50 +196,31 @@ export function generateTypst(
   const typstData = resumeDataToTypstData(data);
   const jsonString = JSON.stringify(typstData, null, 2);
 
-  const tmpl = normalizeTemplateName(template);
-  const renderFn =
-    tmpl === 'classic'
-      ? 'render-classic'
-      : tmpl === 'engineering'
-      ? 'render-engineering'
-      : tmpl === 'compact'
-      ? 'render-compact'
-      : tmpl === 'two_column'
-      ? 'render-two-column'
-      : tmpl === 'ats_safe'
-      ? 'render-ats-safe'
-      : 'render-modern';
-
-  const templateFile =
-    tmpl === 'classic'
-      ? 'classic.typ'
-      : tmpl === 'engineering'
-      ? 'engineering.typ'
-      : tmpl === 'compact'
-      ? 'compact.typ'
-      : tmpl === 'two_column'
-      ? 'two_column.typ'
-      : tmpl === 'ats_safe'
-      ? 'ats_safe.typ'
-      : 'modern.typ';
+  const tmplSlug = normalizeTemplateName(template);
+  const tmplObj = ALL_TEMPLATES.find((t) => t.id === tmplSlug) || ALL_TEMPLATES.find((t) => t.id === 'modern')!;
 
   const defaultTheme =
-    tmpl === 'two_column' ? 'two-column' : tmpl === 'ats_safe' ? 'ats-safe' : tmpl;
+    tmplSlug === 'two_column' ? 'two-column' : tmplSlug === 'ats_safe' ? 'ats-safe' : tmplSlug;
   const themeArg = theme && theme !== 'none' ? `"${theme}"` : `"${defaultTheme}"`;
 
+  // Escape backtick triples inside the JSON (extremely rare in practice, but safe to handle).
+  const safeJson = jsonString.replace(/`{3,}/g, '` ` `');
 
   return `// =============================================================================
 // LumaCV Generated Resume (Typst)
-// Template: ${tmpl}
+// Template: ${tmplObj.name} (${tmplObj.id})
 // =============================================================================
 
-#import "/templates/${templateFile}": ${renderFn}
+#import "/templates/${tmplObj.sourceFile}": render
 
-#let data = json(bytes(\`\`\`json
-${jsonString}
-\`\`\`.text))
+#let data = {
+  let raw = \`\`\`
+${safeJson}
+\`\`\`
+  json(bytes(raw.text))
+}
 
-#${renderFn}(data, theme: ${themeArg})
+#render(data, theme: ${themeArg})
 `;
 }
 

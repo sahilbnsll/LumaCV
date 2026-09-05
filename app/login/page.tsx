@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { AuthForm } from '@/components/auth-form';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import { LumaLogo } from '@/components/luma-logo';
 
 export const metadata: Metadata = {
     title: 'Sign In — LumaCV',
@@ -22,13 +23,13 @@ export default function LoginPage() {
                 <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card/90 p-8 sm:p-10 shadow-xl backdrop-blur-xl transition-all">
                     <div className="flex items-center justify-between mb-6 pb-5 border-b border-border/60">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
-                                <Sparkles className="h-5 w-5" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60 text-foreground border border-border/60 shadow-xs">
+                                <LumaLogo size={22} />
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold font-display tracking-tight text-foreground">Sign In</h1>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                    Welcome back to your resume studio
+                                    Welcome back to your resume workspace
                                 </p>
                             </div>
                         </div>

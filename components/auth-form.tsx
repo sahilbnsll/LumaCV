@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,9 @@ import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     const { supabase } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams?.get('redirect') || '/dashboard';
+
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -28,7 +31,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
         setLoading(true);
         try {
             if (mode === 'signup') {
-                const emailRedirectTo = `${window.location.origin}/auth/confirm?next=/dashboard`;
+                const emailRedirectTo = `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectUrl)}`;
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -41,13 +44,13 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                 });
                 if (error) throw error;
                 toast.success('Account created! Welcome to LumaCV.');
-                router.push('/dashboard');
+                router.push(redirectUrl);
                 router.refresh();
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 toast.success('Logged in successfully.');
-                router.push('/dashboard');
+                router.push(redirectUrl);
                 router.refresh();
             }
         } catch (error) {

@@ -8,19 +8,22 @@ import {
     Sparkles,
     CheckCircle2,
     FileCheck2,
-    UploadCloud
+    FileUp,
+    ShieldCheck,
+    Cpu,
+    Check,
+    RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/components/auth-provider';
 import { extractTextFromPdf } from '@/lib/pdf-parser';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
 import { getCustomKeyHeaders } from '@/lib/ai-keys';
-
-
-
+import { DocumentScanner3D } from '@/components/document-scanner-3d';
 
 const SAMPLE_JD = `Role: Senior Full Stack Engineer
 Company: Stripe
@@ -45,14 +48,18 @@ Requirements:
 • Excellent communication skills and a user-centric mindset.`;
 
 export function Step1JD() {
+    const { user } = useAuth();
     const { jd, setJD, setFile, setExtractedText, setStep, setResumeDataFromParse, resumeData } = useAppStore();
     const [parseStage, setParseStage] = useState<'idle' | 'extracting' | 'mapping' | 'success' | 'error'>('idle');
     const [statusMessage, setStatusMessage] = useState('');
     const [fileName, setFileName] = useState<string | null>(null);
     const [fileSize, setFileSize] = useState<string | null>(null);
 
-
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
+        if (!user) {
+            toast.error('Please sign in to upload and parse your resume');
+            return;
+        }
         const file = acceptedFiles[0];
         if (!file) return;
         if (file.type !== 'application/pdf') {
@@ -77,7 +84,7 @@ export function Step1JD() {
             }
 
             setParseStage('mapping');
-            setStatusMessage('Mapping your experience and credentials...');
+            setStatusMessage('Analyzing your resume...');
 
             const response = await fetch('/api/v1/resume/parse', {
                 method: 'POST',
@@ -88,7 +95,6 @@ export function Step1JD() {
                 body: JSON.stringify({ extractedText: text }),
             });
 
-
             const payload = await response.json().catch(() => ({}));
             if (!response.ok) {
                 const detail = typeof payload?.details === 'string' ? payload.details : typeof payload?.error === 'string' ? payload.error : 'Parse failed';
@@ -97,15 +103,14 @@ export function Step1JD() {
 
             setResumeDataFromParse(payload);
             setParseStage('success');
-            setStatusMessage('Resume parsed successfully');
-            toast.success('Resume parsed into structured format!');
-            trackEvent('resume_uploaded', { fileName: file.name, sizeKb: Math.round(file.size / 1024) });
+            toast.success('Resume uploaded successfully');
+            trackEvent('resume_uploaded', { fileName: file.name, fileSizeKb: (file.size / 1024).toFixed(0) });
+
         } catch (error) {
-            console.error(error);
-            const message = error instanceof Error ? error.message : 'Unknown error';
+            console.error('Parse error:', error);
             setParseStage('error');
-            setStatusMessage(`Parsing note: ${message}. You can still review details manually.`);
-            toast.error('Could not auto-parse all fields. You can verify them on the next step.');
+            const message = error instanceof Error ? error.message : 'Failed to parse resume';
+            toast.error(message);
         }
     }, [setFile, setExtractedText, setResumeDataFromParse]);
 
@@ -113,10 +118,14 @@ export function Step1JD() {
         onDrop,
         accept: { 'application/pdf': ['.pdf'] },
         maxFiles: 1,
-        multiple: false
+        disabled: parseStage === 'extracting' || parseStage === 'mapping',
     });
 
     const handleNext = () => {
+        if (!user) {
+            toast.error('Please sign in to proceed to details review');
+            return;
+        }
         if (!jd.trim()) {
             toast.error('Please paste a target job description or click "Try Sample JD"');
             return;
@@ -128,7 +137,6 @@ export function Step1JD() {
         setStep(2);
     };
 
-
     const handleUseSampleJD = () => {
         setJD(SAMPLE_JD);
         toast.info('Sample JD (Stripe Senior Full Stack Engineer) loaded!');
@@ -137,79 +145,103 @@ export function Step1JD() {
     const wordCount = jd.trim() ? jd.trim().split(/\s+/).length : 0;
 
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="space-y-6 max-w-6xl mx-auto py-2">
+            <div className="text-center space-y-2.5 pb-2">
+                <h1 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-foreground tracking-tight">
+                    Upload Resume & Target Role
+                </h1>
+
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                    Paste the job description, then upload your resume PDF so we can tailor it to the role.
+                </p>
+            </div>
+
+            {/* Split Input Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 {/* 1. Left: Job Description Input */}
-                <div className="rounded-xl border border-border/70 bg-card p-5 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-base font-semibold font-display tracking-tight text-foreground flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-primary" />
-                                Target Job Description
-                            </h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Paste the role requirements you want to tailor for.
-                            </p>
+                <div className="glass-card p-5 sm:p-6 space-y-4 flex flex-col justify-between transition-all hover:border-primary/30">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="space-y-0.5">
+                                <h2 className="text-sm sm:text-base font-semibold font-display tracking-tight text-foreground flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-primary" />
+                                    <span>Target Job Description</span>
+                                </h2>
+                                <p className="text-xs text-muted-foreground">
+                                    Used to align keywords and tailor your resume to the role.
+                                </p>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleUseSampleJD}
+                                className="h-8 text-xs rounded-xl border-border/70 dark:border-white/10 hover:border-primary/40 hover:bg-muted/40 gap-1.5 cursor-pointer shrink-0 transition-all active:scale-95"
+                            >
+                                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                                <span>Try Sample JD</span>
+                            </Button>
                         </div>
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleUseSampleJD}
-                            className="h-8 text-xs border-border/70 hover:bg-muted/50 gap-1.5 cursor-pointer"
-                        >
-                            <Sparkles className="h-3.5 w-3.5 text-primary" />
-                            <span>Try Sample JD</span>
-                        </Button>
+                        <div className="space-y-2">
+                            <label htmlFor="jd" className="sr-only">Target job description text</label>
+                            <Textarea
+                                id="jd"
+                                aria-label="Target job description"
+                                placeholder="Paste the complete job description here, including responsibilities, requirements, and tech stack..."
+                                value={jd}
+                                onChange={(e) => setJD(e.target.value)}
+                                className="min-h-[360px] resize-none text-xs leading-relaxed bg-muted/20 dark:bg-black/30 border-border/60 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-primary font-mono rounded-xl p-3.5 transition-all"
+                            />
+
+                            <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
+                                <span className="font-mono">{wordCount} words detected</span>
+                                <span className={wordCount > 80 ? "text-emerald-500 font-medium" : "text-muted-foreground"}>
+                                    {wordCount > 80 ? '✓ Optimal density for AI calibration' : 'Paste 50+ words for best matching'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="jd" className="sr-only">Target job description text</label>
-                        <Textarea
-                            id="jd"
-                            aria-label="Target job description"
-                            placeholder="Paste the complete job description here, including responsibilities, qualifications, and required tech stack..."
-                            value={jd}
-                            onChange={(e) => setJD(e.target.value)}
-                            className="min-h-[380px] resize-none text-xs leading-relaxed bg-muted/20 border-border/60 focus-visible:ring-1 focus-visible:ring-primary font-mono rounded-lg"
-                        />
-
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
-                            <span>{wordCount} words</span>
-                            <span>{wordCount > 100 ? '✓ Good length for analysis' : 'Paste at least 50+ words for best matching'}</span>
-                        </div>
+                    <div className="pt-3 border-t border-border/40 dark:border-white/5 flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                            <span>Zero Telemetry</span>
+                        </span>
                     </div>
                 </div>
 
-                {/* 2. Right: Resume Upload */}
-                <div className="rounded-xl border border-border/70 bg-card p-5 space-y-4 flex flex-col justify-between shadow-sm">
-                    <div>
+                {/* 2. Right: Resume Upload & Scanner */}
+                <div className="glass-card p-5 sm:p-6 space-y-4 flex flex-col justify-between transition-all hover:border-primary/30">
+                    <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-base font-semibold font-display tracking-tight text-foreground flex items-center gap-2">
+                            <div className="space-y-0.5">
+                                <h2 className="text-sm sm:text-base font-semibold font-display tracking-tight text-foreground flex items-center gap-2">
                                     <FileCheck2 className="h-4 w-4 text-primary" />
-                                    Your Current Resume
+                                    <span>Your Current Resume</span>
                                 </h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    Upload your PDF. Parsing runs with strict factual preservation.
+                                <p className="text-xs text-muted-foreground">
+                                    Client-side PDF extraction with verifiable data mapping.
                                 </p>
                             </div>
+
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted dark:bg-white/5 text-muted-foreground border border-border/50 dark:border-white/10">
+                                PDF Format
+                            </span>
                         </div>
-
-
 
                         {/* Dropzone Card */}
                         <div
                             {...getRootProps()}
-                            className={`mt-4 relative rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer min-h-[340px] flex flex-col items-center justify-center p-6 text-center ${
+                            className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer min-h-[360px] flex flex-col items-center justify-center p-6 text-center select-none ${
                                 isDragActive
-                                    ? 'border-primary bg-primary/5 scale-[1.01]'
+                                    ? 'border-primary bg-primary/10 scale-[1.01]'
                                     : parseStage === 'extracting' || parseStage === 'mapping'
-                                        ? 'border-primary/40 bg-primary/[0.02]'
+                                        ? 'border-primary/50 bg-primary/[0.03]'
                                         : parseStage === 'success' || resumeData
-                                            ? 'border-emerald-500/30 bg-emerald-500/[0.02]'
-                                            : 'border-border/60 hover:border-primary/50 hover:bg-muted/20'
+                                            ? 'border-emerald-500/40 bg-emerald-500/[0.03]'
+                                            : 'border-border/70 dark:border-white/10 hover:border-primary/50 hover:bg-muted/30 dark:hover:bg-white/[0.02]'
                             }`}
                         >
                             <input {...getInputProps()} />
@@ -218,85 +250,77 @@ export function Step1JD() {
                                 {parseStage === 'extracting' || parseStage === 'mapping' ? (
                                     <motion.div
                                         key="parsing"
-                                        initial={{ opacity: 0, scale: 0.96 }}
+                                        initial={{ opacity: 0, scale: 0.94 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="space-y-4 w-full max-w-xs mx-auto"
+                                        exit={{ opacity: 0, scale: 0.94 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="w-full flex items-center justify-center py-1"
                                     >
-                                        {/* Animated document skeleton with scanning beam */}
-                                        <div className="relative h-28 w-24 mx-auto rounded-lg border border-primary/30 bg-muted/40 p-2.5 overflow-hidden shadow-inner flex flex-col justify-between">
-                                            <div className="space-y-1.5">
-                                                <div className="h-2 w-3/4 bg-foreground/25 rounded" />
-                                                <div className="h-1.5 w-full bg-foreground/15 rounded" />
-                                                <div className="h-1.5 w-5/6 bg-foreground/15 rounded" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <div className="h-1.5 w-full bg-foreground/15 rounded" />
-                                                <div className="h-1.5 w-2/3 bg-foreground/15 rounded" />
-                                            </div>
-                                            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
-                                        </div>
-
-                                        <div>
-                                            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                                                <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
-                                                <span>{parseStage === 'extracting' ? 'Reading your resume' : 'Mapping your experience'}</span>
-                                            </div>
-                                            <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                                                {statusMessage}
-                                            </p>
-                                        </div>
+                                        <DocumentScanner3D
+                                            stage={parseStage}
+                                            statusMessage={statusMessage}
+                                        />
                                     </motion.div>
                                 ) : parseStage === 'success' || resumeData ? (
-
                                     <motion.div
                                         key="success"
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="space-y-3"
+                                        className="space-y-4 w-full max-w-sm mx-auto"
                                     >
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mx-auto">
-                                            <CheckCircle2 className="h-6 w-6" />
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 mx-auto shadow-inner">
+                                            <CheckCircle2 className="h-7 w-7" />
                                         </div>
-                                        <div>
-                                            <h3 className="font-semibold text-sm text-foreground">
-                                                {fileName || 'Resume Loaded'}
+
+                                        <div className="space-y-1">
+                                            <h3 className="font-display font-semibold text-sm text-foreground">
+                                                {fileName || 'Resume Ingested'}
                                             </h3>
                                             {fileSize && (
-                                                <span className="text-[11px] text-muted-foreground">{fileSize} • PDF Document</span>
+                                                <span className="text-[11px] font-mono text-muted-foreground">{fileSize} • Vector PDF</span>
                                             )}
                                         </div>
-                                        <div className="rounded-lg border border-border/40 bg-muted/30 p-2.5 text-xs text-left space-y-1 max-w-xs mx-auto">
-                                            <div className="text-[11px] text-muted-foreground">Extracted candidate details:</div>
-                                            <div className="font-medium text-foreground truncate">
+
+                                        {/* Extracted Details Pill Box */}
+                                        <div className="rounded-xl border border-border/70 dark:border-white/10 bg-background/80 dark:bg-black/30 p-3.5 text-xs text-left space-y-1.5 backdrop-blur-xs">
+                                            <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Ingested Candidate:</div>
+                                            <div className="font-display font-bold text-foreground text-sm truncate">
                                                 {resumeData?.personalInfo.name || 'Candidate Name'}
                                             </div>
-
-                                            <div className="text-[11px] text-muted-foreground">
-                                                {resumeData?.experience.length || 0} roles • {resumeData?.skills.length || 0} skill categories
+                                            <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                                                <span className="text-primary font-medium">{resumeData?.experience.length || 0} roles</span>
+                                                <span>•</span>
+                                                <span>{resumeData?.skills.length || 0} skill categories</span>
                                             </div>
                                         </div>
-                                        <p className="text-[11px] text-muted-foreground hover:text-foreground">
-                                            Click or drop to replace with a different PDF
-                                        </p>
+
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium pt-1"
+                                        >
+                                            <RefreshCw className="h-3 w-3" />
+                                            <span>Replace with different PDF</span>
+                                        </button>
                                     </motion.div>
                                 ) : (
-                                    <motion.div key="idle" className="space-y-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 mx-auto">
-                                            <UploadCloud className="h-6 w-6" />
+                                    <motion.div key="idle" className="space-y-4 max-w-xs mx-auto">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mx-auto transition-transform hover:scale-110">
+                                            <FileUp className="h-7 w-7" strokeWidth={1.75} />
                                         </div>
-                                        <div>
-                                            <h3 className="font-semibold text-sm text-foreground">
+
+                                        <div className="space-y-1.5">
+                                            <h3 className="font-display font-semibold text-sm sm:text-base text-foreground">
                                                 Drop your PDF resume here
                                             </h3>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                or click to browse your local files
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                or click to browse local files on your machine.
                                             </p>
                                         </div>
-                                        <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/80 bg-muted/40 px-2.5 py-1 rounded-full border border-border/50">
+
+                                        <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 dark:bg-white/[0.04] px-3 py-1 rounded-full border border-border/60 dark:border-white/10 font-mono">
                                             <span>PDF only</span>
                                             <span>•</span>
-                                            <span>Text will be extracted on device</span>
+                                            <span>Private by default</span>
                                         </div>
                                     </motion.div>
                                 )}
@@ -304,29 +328,34 @@ export function Step1JD() {
                         </div>
                     </div>
 
-                    <div className="text-[11px] text-muted-foreground/70 flex items-center justify-between pt-2">
-                        <span>No resume? You can enter details manually on Step 2.</span>
+                    <div className="pt-3 border-t border-border/40 dark:border-white/5 flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span>No PDF resume yet?</span>
+                        <button
+                            type="button"
+                            onClick={() => setStep(2)}
+                            className="text-primary hover:underline font-medium cursor-pointer"
+                        >
+                            Enter details manually on Step 2 &rarr;
+                        </button>
                     </div>
                 </div>
             </div>
 
             {/* Bottom Nav Bar */}
-            <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                <div className="text-xs text-muted-foreground">
-                    Step 1 of 4: Setup & Inputs
+            <div className="flex items-center justify-between pt-6 border-t border-border/60 dark:border-white/10">
+                <div className="text-xs font-mono text-muted-foreground">
+                    Step 01 of 04
                 </div>
 
                 <Button
                     onClick={handleNext}
                     size="sm"
-                    className="h-9 px-5 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm"
+                    className="h-10 px-6 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                 >
-                    Continue to Details Review
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <span>Continue to Details Review</span>
+                    <ArrowRight className="h-4 w-4" />
                 </Button>
             </div>
         </div>
     );
 }
-
-

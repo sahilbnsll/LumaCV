@@ -45,7 +45,7 @@ export function BuilderWorkflowBar() {
     };
 
     return (
-        <div className="sticky top-14 z-30 bg-background/90 backdrop-blur-xl border-b border-border/50 py-2.5 px-2 -mx-2 transition-all">
+        <div className="sticky top-14 z-30 glass-nav py-2.5 px-4 transition-all">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 max-w-7xl mx-auto">
                 {/* Stepper (Left) */}
                 <div className="flex-1">
@@ -59,7 +59,7 @@ export function BuilderWorkflowBar() {
                         <Button
                             size="sm"
                             onClick={handleStep1Next}
-                            className="h-8 px-3.5 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm"
+                            className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-xl shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                         >
                             <span>Continue to Details</span>
                             <ArrowRight className="h-3.5 w-3.5" />
@@ -72,7 +72,7 @@ export function BuilderWorkflowBar() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setStep(1)}
-                                className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1"
+                                className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-xl cursor-pointer"
                             >
                                 <ArrowLeft className="h-3.5 w-3.5" />
                                 <span className="hidden sm:inline">Back</span>
@@ -80,7 +80,7 @@ export function BuilderWorkflowBar() {
                             <Button
                                 size="sm"
                                 onClick={handleStep2Next}
-                                className="h-8 px-4 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm"
+                                className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-xl shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                             >
                                 <span>Continue to AI Tailor</span>
                                 <ArrowRight className="h-3.5 w-3.5" />
@@ -89,27 +89,29 @@ export function BuilderWorkflowBar() {
                     )}
 
                     {step === 3 && (
-                        <div className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1 rounded-lg border border-primary/20 animate-pulse">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span>AI Tailoring in progress...</span>
+                        <div className="flex items-center gap-2 text-xs font-mono font-medium text-primary bg-primary/10 dark:bg-primary/15 px-3 py-1 rounded-full border border-primary/25 shadow-xs">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                            </span>
+                            <span>Tailoring Pipeline Active</span>
                         </div>
                     )}
 
                     {step === 4 && (
                         <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 font-medium hidden sm:inline-flex items-center gap-1.5">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                <span>Review & Export Ready</span>
+                            <span className="text-[11px] text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-medium hidden sm:inline-flex items-center gap-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span>Studio Export Ready</span>
                             </span>
                         </div>
                     )}
-
 
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleReset}
-                        className="text-muted-foreground/60 hover:text-destructive text-xs h-8 px-2"
+                        className="text-muted-foreground/60 hover:text-destructive text-xs h-8 px-2.5 rounded-xl hover:bg-destructive/10 transition-colors cursor-pointer"
                         title="Reset session draft"
                     >
                         <RotateCcw className="h-3.5 w-3.5" />

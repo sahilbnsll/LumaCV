@@ -90,21 +90,23 @@ function CollapsibleCard({
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-        <Card>
+        <Card className="rounded-2xl border-border/70 dark:border-white/10 bg-card/90 dark:bg-[#0e1014]/90 shadow-sm backdrop-blur-md overflow-hidden transition-all duration-200 hover:border-border dark:hover:border-white/20">
             <CardHeader
-                className="flex cursor-pointer select-none flex-row items-center justify-between"
+                className="flex cursor-pointer select-none flex-row items-center justify-between p-5 py-4 hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors"
                 onClick={(event) => {
                     if ((event.target as HTMLElement).closest('.action-btn-no-toggle')) return;
                     setOpen((prev) => !prev);
                 }}
             >
-                <CardTitle className="flex items-center gap-2">
-                    {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                    {title}
+                <CardTitle className="flex items-center gap-2.5 text-sm sm:text-base font-display font-semibold tracking-tight text-foreground">
+                    <div className="h-6 w-6 rounded-lg bg-muted/60 dark:bg-white/5 border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground transition-transform duration-200">
+                        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </div>
+                    <span>{title}</span>
                 </CardTitle>
                 {actionButton ? <div className="action-btn-no-toggle">{actionButton}</div> : null}
             </CardHeader>
-            {open ? <CardContent className="space-y-6">{children}</CardContent> : null}
+            {open ? <CardContent className="p-5 pt-0 space-y-6">{children}</CardContent> : null}
         </Card>
     );
 }
@@ -134,31 +136,45 @@ function DynamicSectionList({
             title={title}
             defaultOpen={defaultOpen}
             actionButton={
-                <Button type="button" variant="outline" size="sm" onClick={() => append(emptyItem)}>
-                    <Plus className="mr-2 h-4 w-4" /> Add
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append(emptyItem)}
+                    className="h-7 px-2.5 text-xs rounded-lg border-border/70 dark:border-white/10 hover:border-primary/40 gap-1.5 cursor-pointer active:scale-95"
+                >
+                    <Plus className="h-3.5 w-3.5 text-primary" />
+                    <span>Add</span>
                 </Button>
             }
         >
-            <div className="space-y-6">
+            <div className="space-y-4 pt-2">
                 {fields.map((field, index) => (
-                    <div key={field.id} className="relative space-y-4 rounded-lg border bg-gray-50/50 p-4 dark:bg-gray-900/50">
+                    <div key={field.id} className="relative space-y-4 rounded-xl border border-border/60 dark:border-white/10 bg-muted/25 dark:bg-white/[0.02] p-4 sm:p-5 transition-all">
                         <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-2 top-2 text-red-500 hover:text-red-700"
+                            className="absolute right-2.5 top-2.5 h-7 w-7 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer transition-colors"
                             onClick={() => remove(index)}
+                            title="Remove item"
                         >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                         </Button>
-                        <div className="pr-8">{renderItem(index)}</div>
+                        <div className="pr-6">{renderItem(index)}</div>
                     </div>
                 ))}
                 {fields.length === 0 ? (
-                    <div className="flex flex-col items-center rounded border border-dashed py-4 text-center text-sm text-muted-foreground">
-                        <p>No entries yet.</p>
-                        <Button type="button" variant="link" onClick={() => append(emptyItem)}>
-                            Add one now
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/70 dark:border-white/10 p-6 text-center text-xs text-muted-foreground bg-muted/10">
+                        <p>No entries added yet.</p>
+                        <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            onClick={() => append(emptyItem)}
+                            className="text-primary font-medium text-xs mt-1 cursor-pointer"
+                        >
+                            + Add an entry
                         </Button>
                     </div>
                 ) : null}

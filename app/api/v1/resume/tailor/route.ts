@@ -9,6 +9,7 @@ import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
 import { validateAndCleanTailoredResume } from '@/lib/fact-validator';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
+import { requireUser } from '@/lib/auth';
 
 export const maxDuration = 60;
 
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
     const usingCustomKeys = hasCustomKeys(userKeys);
 
     if (!usingCustomKeys) {
+        const auth = await requireUser();
+        if (auth.response) return auth.response;
+
         const ip = req.ip ?? "127.0.0.1";
         const { success } = await ratelimit.limit(ip);
 

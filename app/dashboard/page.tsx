@@ -16,13 +16,17 @@ import {
     FileText,
     Download,
     Trash2,
-    Edit3,
+    PenLine,
     Sparkles,
-    Calendar,
+    Clock,
     Briefcase,
     CheckCircle2,
     ArrowUpRight,
-    Check
+    Check,
+    Lock,
+    Target,
+    ShieldCheck,
+    Heart
 } from 'lucide-react';
 import { TemplateType } from '@/lib/resume-schema';
 import { toast } from 'sonner';
@@ -41,57 +45,63 @@ export default function DashboardPage() {
     const [sortBy, setSortBy] = useState<'updated' | 'score' | 'title'>('updated');
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-    // Fetch resumes from API (or local storage fallback)
+    // Fetch resumes from API (or local storage fallback strictly scoped to user)
     useEffect(() => {
         let isMounted = true;
         async function fetchResumes() {
+            if (!user) {
+                if (isMounted) {
+                    setResumes([]);
+                    setLoading(false);
+                }
+                return;
+            }
+
             setLoading(true);
             try {
-                if (user) {
-                    const res = await fetch('/api/v1/resumes');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (isMounted && Array.isArray(data.resumes) && data.resumes.length > 0) {
-                            const mapped: SavedResume[] = data.resumes.map((row: unknown) => {
-                                const r = row as Record<string, unknown>;
-                                const resumeData = r.resume_data as (SavedResume['resumeData'] & { _snapshot?: Partial<SavedResume> }) | undefined;
-                                const snapshot = resumeData?._snapshot;
-                                return {
-                                    id: String(r.id || ''),
-                                    userId: r.user_id ? String(r.user_id) : undefined,
-                                    title: String(r.title || 'Untitled Resume'),
-                                    targetJobTitle: r.target_job_title ? String(r.target_job_title) : undefined,
-                                    targetJobCompany: r.target_job_company ? String(r.target_job_company) : undefined,
-                                    templateId: String(r.template_id || 'modern'),
-                                    resumeData: resumeData!,
-                                    jd: snapshot?.jd || (r.jd ? String(r.jd) : undefined),
-                                    jdAnalysis: snapshot?.jdAnalysis,
-                                    generatedResume: snapshot?.generatedResume,
-                                    originalScore: snapshot?.originalScore,
-                                    tailoredScore: snapshot?.tailoredScore,
-                                    typstCode: r.typst_code ? String(r.typst_code) : undefined,
-                                    atsScore: typeof r.ats_score === 'number' ? r.ats_score : undefined,
-                                    lastStep: snapshot?.lastStep || 4,
-                                    createdAt: String(r.created_at || r.updated_at || new Date().toISOString()),
-                                    updatedAt: String(r.updated_at || r.created_at || new Date().toISOString()),
-                                };
-                            });
+                const res = await fetch('/api/v1/resumes');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (isMounted && Array.isArray(data.resumes) && data.resumes.length > 0) {
+                        const mapped: SavedResume[] = data.resumes.map((row: unknown) => {
+                            const r = row as Record<string, unknown>;
+                            const resumeData = r.resume_data as (SavedResume['resumeData'] & { _snapshot?: Partial<SavedResume> }) | undefined;
+                            const snapshot = resumeData?._snapshot;
+                            return {
+                                id: String(r.id || ''),
+                                userId: r.user_id ? String(r.user_id) : undefined,
+                                title: String(r.title || 'Professional Resume'),
+                                targetJobTitle: r.target_job_title ? String(r.target_job_title) : undefined,
+                                targetJobCompany: r.target_job_company ? String(r.target_job_company) : undefined,
+                                templateId: String(r.template_id || 'modern'),
+                                resumeData: resumeData!,
+                                jd: snapshot?.jd || (r.jd ? String(r.jd) : undefined),
+                                jdAnalysis: snapshot?.jdAnalysis,
+                                generatedResume: snapshot?.generatedResume,
+                                originalScore: snapshot?.originalScore,
+                                tailoredScore: snapshot?.tailoredScore,
+                                typstCode: r.typst_code ? String(r.typst_code) : undefined,
+                                atsScore: typeof r.ats_score === 'number' ? r.ats_score : undefined,
+                                lastStep: snapshot?.lastStep || 4,
+                                createdAt: String(r.created_at || r.updated_at || new Date().toISOString()),
+                                updatedAt: String(r.updated_at || r.created_at || new Date().toISOString()),
+                            };
+                        });
 
-                            setResumes(mapped);
-                            setLoading(false);
-                            return;
-                        }
+                        setResumes(mapped);
+                        setLoading(false);
+                        return;
                     }
                 }
-                // Fallback to local storage
+                // Fallback to local storage STRICTLY for this authenticated user
                 if (isMounted) {
-                    const locals = getLocalResumes();
+                    const locals = getLocalResumes(user.id);
                     setResumes(locals);
                 }
             } catch (err) {
                 console.error(err);
                 if (isMounted) {
-                    setResumes(getLocalResumes());
+                    setResumes(getLocalResumes(user.id));
                 }
             } finally {
                 if (isMounted) setLoading(false);
@@ -156,7 +166,7 @@ export default function DashboardPage() {
     const handleDeleteResume = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            deleteLocalResume(id);
+            deleteLocalResume(id, user?.id);
             if (user) {
                 await fetch(`/api/v1/resumes/${id}`, { method: 'DELETE' }).catch(() => {});
             }
@@ -221,6 +231,74 @@ export default function DashboardPage() {
             });
     }, [resumes, searchQuery, filterTemplate, sortBy]);
 
+    // Loading session gate
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
+                <AppHeader />
+                <main className="flex-1 mx-auto max-w-6xl px-4 sm:px-6 py-24 w-full flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <p className="text-xs text-muted-foreground">Authenticating session...</p>
+                    </div>
+                </main>
+                <AppFooter />
+            </div>
+        );
+    }
+
+    // Unauthenticated user lock gate - strictly prevent access to resume history
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
+                <AppHeader />
+                <main className="flex-1 mx-auto max-w-2xl px-4 sm:px-6 py-16 sm:py-24 w-full flex items-center justify-center">
+                    <div className="w-full rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md p-8 sm:p-10 text-center shadow-xl shadow-black/5 dark:shadow-black/20">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary mb-5">
+                            <Lock className="h-7 w-7" />
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            Authentication Required
+                        </h1>
+                        <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
+                            Resume history and saved applications are private to each user account. Sign in to view, manage, and download your documents.
+                        </p>
+
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Button asChild size="default" className="w-full sm:w-auto h-10 px-6 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium">
+                                <Link href="/login?redirect=/dashboard">
+                                    Sign In to View Resumes
+                                    <ArrowUpRight className="h-4 w-4" />
+                                </Link>
+                            </Button>
+                            <Button asChild variant="outline" size="default" className="w-full sm:w-auto h-10 px-6 border-border/80 text-sm font-medium hover:bg-muted/30">
+                                <Link href="/">
+                                    Back to Home
+                                </Link>
+                            </Button>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-border/40 grid grid-cols-3 gap-2 text-center text-[11px] text-muted-foreground">
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="font-medium text-foreground">100% Free</span>
+                                <span>No subscription paywalls</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="font-medium text-foreground">Private & Safe</span>
+                                <span>Isolated user data</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="font-medium text-foreground">Vector Typst</span>
+                                <span>Sub-50ms PDF engine</span>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <AppFooter />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
             <AppHeader />
@@ -251,14 +329,20 @@ export default function DashboardPage() {
                 {/* Workspace Metrics Cards */}
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs">
-                        <span className="text-[11px] font-medium text-muted-foreground">Total Resumes</span>
-                        <div className="mt-1 text-xl font-bold font-display text-foreground tracking-tight">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Total Resumes</span>
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={1.75} />
+                        </div>
+                        <div className="mt-1.5 text-xl font-bold font-display text-foreground tracking-tight">
                             <AnimatedCounter value={resumes.length} />
                         </div>
                     </div>
                     <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs">
-                        <span className="text-[11px] font-medium text-muted-foreground">Average Match Score</span>
-                        <div className="mt-1 text-xl font-bold font-display text-emerald-500 tracking-tight">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Average Match Score</span>
+                            <Target className="h-3.5 w-3.5 text-emerald-500/80" strokeWidth={1.75} />
+                        </div>
+                        <div className="mt-1.5 text-xl font-bold font-display text-emerald-500 tracking-tight">
                             <AnimatedCounter
                                 value={resumes.length > 0 ? Math.round(resumes.reduce((acc, r) => acc + (r.atsScore || 80), 0) / resumes.length) : 0}
                                 suffix="%"
@@ -267,17 +351,23 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs">
-                        <span className="text-[11px] font-medium text-muted-foreground">Fact Integrity</span>
-                        <div className="mt-1 text-xl font-bold font-display text-foreground tracking-tight flex items-center gap-1.5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Fact Integrity</span>
+                            <ShieldCheck className="h-3.5 w-3.5 text-primary/80" strokeWidth={1.75} />
+                        </div>
+                        <div className="mt-1.5 text-xl font-bold font-display text-foreground tracking-tight flex items-center gap-1.5">
                             <span>100%</span>
                             <span className="text-[10px] text-emerald-500 font-semibold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">Locked</span>
                         </div>
                     </div>
                     <div className="rounded-xl border border-border/70 bg-card p-3.5 shadow-xs flex flex-col justify-between">
-                        <span className="text-[11px] font-medium text-muted-foreground">Active Plan</span>
-                        <div className="mt-1 flex items-center justify-between">
-                            <span className="text-base font-bold font-display text-foreground tracking-tight">Free Starter</span>
-                            <Link href="/billing" className="text-[11px] text-primary hover:underline font-medium">Upgrade</Link>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-muted-foreground">Account Access</span>
+                            <Heart className="h-3.5 w-3.5 text-rose-500/80" strokeWidth={1.75} />
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between">
+                            <span className="text-base font-bold font-display text-foreground tracking-tight">Community</span>
+                            <span className="text-[10px] text-primary font-semibold bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">Free & Open</span>
                         </div>
                     </div>
                 </div>
@@ -373,7 +463,7 @@ export default function DashboardPage() {
                                             {/* Card Title & Job Info */}
                                             <div className="mt-3.5">
                                                 <h3 className="font-semibold text-sm tracking-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors flex items-center justify-between">
-                                                    <span>{resume.title || 'Untitled Resume'}</span>
+                                                    <span>{resume.title || 'Professional Resume'}</span>
                                                     <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-primary shrink-0" />
                                                 </h3>
 
@@ -404,7 +494,7 @@ export default function DashboardPage() {
                                         {/* Card Footer: Timestamp + Specific Actions */}
                                         <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-xs">
                                             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70" title={`Updated: ${resume.updatedAt}`}>
-                                                <Calendar className="h-3 w-3" />
+                                                <Clock className="h-3 w-3 text-muted-foreground/60" strokeWidth={1.75} />
                                                 <span>{formatResumeDate(resume.updatedAt)}</span>
                                             </div>
 
@@ -416,7 +506,7 @@ export default function DashboardPage() {
                                                     className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                                     title="Download ATS PDF"
                                                 >
-                                                    <Download className="h-3.5 w-3.5" />
+                                                    <Download className="h-3.5 w-3.5" strokeWidth={1.75} />
                                                 </Button>
 
                                                 <Button
@@ -425,7 +515,7 @@ export default function DashboardPage() {
                                                     onClick={() => handleOpenResume(resume)}
                                                     className="h-7 px-2 text-xs font-medium text-primary hover:bg-primary/10 gap-1"
                                                 >
-                                                    <Edit3 className="h-3 w-3" />
+                                                    <PenLine className="h-3 w-3" strokeWidth={1.75} />
                                                     <span>Open</span>
                                                 </Button>
 

@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { useAuth } from '@/components/auth-provider';
 import { Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { LumaLogo } from '@/components/luma-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,8 +60,8 @@ export default function ResetPasswordPage() {
             <main className="flex-1 px-4 py-16 sm:py-20 flex items-center justify-center">
                 <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card/90 p-8 sm:p-10 shadow-xl backdrop-blur-xl transition-all">
                     <div className="flex items-center gap-3 mb-6 pb-5 border-b border-border/60">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
-                            <Lock className="h-5 w-5" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60 text-foreground border border-border/60 shadow-xs">
+                            <LumaLogo size={22} />
                         </div>
                         <div>
                             <h1 className="text-xl font-bold font-display tracking-tight text-foreground">Set New Password</h1>

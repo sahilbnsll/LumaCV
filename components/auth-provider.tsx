@@ -60,8 +60,22 @@ export function AuthProvider({
         loading,
         supabase,
         signOut: async () => {
-            if (!supabase) return;
-            await supabase.auth.signOut();
+            try {
+                if (supabase) {
+                    await supabase.auth.signOut();
+                }
+            } catch (e) {
+                console.error("Supabase signOut error:", e);
+            }
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('lumacv_saved_resumes');
+                localStorage.removeItem('lumacv_resume_storage');
+                localStorage.removeItem('lumacv_active_projects');
+                localStorage.removeItem('lumacv_current_project_id');
+                sessionStorage.clear();
+            }
+            setUser(null);
+            setSession(null);
         },
     };
 

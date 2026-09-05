@@ -3,6 +3,8 @@ import { CompileResumeRequestSchema } from '@/lib/resume-schema';
 import { hashTextServer } from '@/lib/content-hash';
 import { compileTypst } from '@/lib/compiler-service';
 import { ratelimit } from '@/lib/rate-limit';
+import { recordResumeCompiled } from '@/lib/stats-service';
+import { requireUser } from '@/lib/auth';
 
 export const maxDuration = 60;
 
@@ -14,8 +16,6 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-
-
         const body = await req.json();
         const validatedInput = CompileResumeRequestSchema.safeParse(body);
 
@@ -27,6 +27,13 @@ export async function POST(req: NextRequest) {
         }
 
         const { resumeData, template, theme, typstCode } = validatedInput.data;
+
+        // Allow public demo page preview without login; require authentication for custom builder compilations
+        const isPublicDemo = resumeData?.personalInfo?.name === 'Alex Morgan';
+        if (!isPublicDemo) {
+            const auth = await requireUser();
+            if (auth.response) return auth.response;
+        }
         const codeForHash = typstCode || JSON.stringify(resumeData || '') + (template || '') + (theme || '');
         const compileHash = await hashTextServer(codeForHash);
 
@@ -37,6 +44,8 @@ export async function POST(req: NextRequest) {
             typstCode,
         });
 
+        // Track live compilation counter asynchronously
+        recordResumeCompiled().catch(() => {});
 
         return new NextResponse(result.pdfBuffer, {
             headers: {

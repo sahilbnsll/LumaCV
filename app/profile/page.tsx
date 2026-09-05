@@ -15,8 +15,14 @@ import {
     LogOut,
     ArrowLeft,
     KeyRound,
-    Lock
+    Lock,
+    MessageSquareQuote,
+    Star,
+    Send,
+    Sparkles
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { FeedbackCard } from '@/components/ui/feedback-card';
 import {
     UserApiKeys,
     getUserApiKeys,
@@ -36,11 +42,63 @@ export default function ProfilePage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [updatingPassword, setUpdatingPassword] = useState(false);
     const [updatingProfile, setUpdatingProfile] = useState(false);
+    const [feedbackName, setFeedbackName] = useState(user?.user_metadata?.full_name || '');
+    const [feedbackCompany, setFeedbackCompany] = useState('');
+    const [feedbackEmail, setFeedbackEmail] = useState(user?.email || '');
+    const [feedbackRating, setFeedbackRating] = useState(5);
+    const [feedbackType, setFeedbackType] = useState<'review' | 'feature' | 'bug' | 'general'>('review');
+    const [feedbackMessage, setFeedbackMessage] = useState('');
+    const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+    const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            if (!name && user.user_metadata?.full_name) setName(user.user_metadata.full_name);
+            if (!feedbackName && user.user_metadata?.full_name) setFeedbackName(user.user_metadata.full_name);
+            if (!feedbackEmail && user.email) setFeedbackEmail(user.email);
+        }
+    }, [user, name, feedbackName, feedbackEmail]);
+
     const [userApiKeys, setUserApiKeys] = useState<UserApiKeys>({});
 
     useEffect(() => {
         setUserApiKeys(getUserApiKeys());
     }, []);
+
+    const handleFeedbackSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!feedbackMessage.trim()) {
+            toast.error("Please enter your feedback message.");
+            return;
+        }
+
+        setFeedbackSubmitting(true);
+        try {
+            const res = await fetch('/api/v1/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: feedbackName || (user?.user_metadata?.full_name ?? 'Anonymous User'),
+                    email: feedbackEmail || (user?.email ?? ''),
+                    company: feedbackCompany,
+                    rating: feedbackRating,
+                    type: feedbackType,
+                    message: feedbackMessage,
+                }),
+            });
+
+            if (!res.ok) throw new Error('Feedback submission failed');
+
+            setFeedbackSubmitted(true);
+            toast.success("Thank you! Your feedback has been recorded.");
+            setFeedbackMessage('');
+            setFeedbackCompany('');
+        } catch {
+            toast.error("Failed to submit feedback. Please try again.");
+        } finally {
+            setFeedbackSubmitting(false);
+        }
+    };
 
 
     const handleUpdateName = async (e: React.FormEvent) => {
@@ -470,8 +528,167 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
+                    {/* 5. Community Feedback & Suggestions */}
+                    <div id="feedback" className="rounded-xl border border-border/70 bg-card p-6 space-y-5 shadow-sm scroll-mt-20">
+                        <div className="flex items-center gap-3 pb-3 border-b border-border/40">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+                                <MessageSquareQuote className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm font-semibold font-display text-foreground">Feedback & Suggestions</h2>
+                                <p className="text-[11px] text-muted-foreground">Share your ideas, report bugs, or leave a review for the open-source community</p>
+                            </div>
+                        </div>
 
-                    {/* 5. Sign Out */}
+                        {/* Quick Interactive Emoji Reaction */}
+                        <div className="flex justify-center pb-1">
+                            <FeedbackCard questionText="Quick Impression:" className="w-full max-w-sm bg-muted/20 border-border/60" />
+                        </div>
+
+                        {feedbackSubmitted ? (
+                            <div className="p-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-center space-y-3">
+                                <CheckCircle2 className="h-7 w-7 text-emerald-500 mx-auto" />
+                                <h3 className="font-display font-semibold text-sm text-foreground">Feedback Logged!</h3>
+                                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                                    Thank you! Your submission has been saved directly to our roadmap queue.
+                                </p>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setFeedbackSubmitted(false)}
+                                    className="h-7 text-xs font-medium cursor-pointer"
+                                >
+                                    Submit Another Note
+                                </Button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-xs">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs">Your Name</Label>
+                                        <Input
+                                            type="text"
+                                            value={feedbackName}
+                                            onChange={(e) => setFeedbackName(e.target.value)}
+                                            placeholder="e.g. Alex Chen"
+                                            className="h-9 text-xs bg-muted/20 rounded-lg border-border/70"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs">Company / Role</Label>
+                                        <Input
+                                            type="text"
+                                            value={feedbackCompany}
+                                            onChange={(e) => setFeedbackCompany(e.target.value)}
+                                            placeholder="e.g. Acme Corp / Engineer"
+                                            className="h-9 text-xs bg-muted/20 rounded-lg border-border/70"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs">Email</Label>
+                                        <Input
+                                            type="email"
+                                            value={feedbackEmail}
+                                            onChange={(e) => setFeedbackEmail(e.target.value)}
+                                            placeholder="For replies (optional)"
+                                            className="h-9 text-xs bg-muted/20 rounded-lg border-border/70"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs">Category</Label>
+                                        <div className="grid grid-cols-4 gap-1 p-1 h-9 items-center rounded-lg border border-border/70 bg-muted/20">
+                                            {[
+                                                { id: 'review', label: 'Review' },
+                                                { id: 'feature', label: 'Feature' },
+                                                { id: 'bug', label: 'Bug' },
+                                                { id: 'general', label: 'General' },
+                                            ].map((cat) => (
+                                                <button
+                                                    key={cat.id}
+                                                    type="button"
+                                                    onClick={() => setFeedbackType(cat.id as 'review' | 'feature' | 'bug' | 'general')}
+                                                    className={cn(
+                                                        "h-7 rounded-md text-[11px] font-medium transition-all text-center flex items-center justify-center cursor-pointer",
+                                                        feedbackType === cat.id
+                                                            ? "bg-background text-foreground font-semibold shadow-xs border border-border/60"
+                                                            : "text-muted-foreground hover:text-foreground"
+                                                    )}
+                                                >
+                                                    {cat.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs">Rating</Label>
+                                        <div className="flex items-center justify-between px-3 h-9 rounded-lg border border-border/70 bg-muted/20">
+                                            <div className="flex items-center gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button
+                                                        key={star}
+                                                        type="button"
+                                                        onClick={() => setFeedbackRating(star)}
+                                                        className="p-0.5 text-muted-foreground hover:text-amber-400 transition-transform hover:scale-115 active:scale-95 cursor-pointer"
+                                                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                                                    >
+                                                        <Star
+                                                            className={cn(
+                                                                "h-3.5 w-3.5 transition-colors",
+                                                                star <= feedbackRating
+                                                                    ? "text-amber-400 fill-amber-400"
+                                                                    : "text-muted-foreground/30 dark:text-neutral-700"
+                                                            )}
+                                                        />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono text-[10px] font-semibold">
+                                                {feedbackRating} / 5 Stars
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs">Your Feedback or Details</Label>
+                                        <span className="text-[10px] text-muted-foreground">Markdown supported</span>
+                                    </div>
+                                    <textarea
+                                        rows={3}
+                                        value={feedbackMessage}
+                                        onChange={(e) => setFeedbackMessage(e.target.value)}
+                                        placeholder="Tell us what you like, report bugs, or recommend features/templates..."
+                                        required
+                                        className="w-full min-h-[90px] rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:bg-background focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-y leading-relaxed"
+                                    />
+                                </div>
+
+                                <div className="pt-1 flex items-center justify-between border-t border-border/40">
+                                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                        <Sparkles className="h-3 w-3 text-primary" />
+                                        <span>Directly reviewed by maintainers</span>
+                                    </span>
+                                    <Button
+                                        type="submit"
+                                        size="sm"
+                                        disabled={feedbackSubmitting}
+                                        className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-lg shadow-xs cursor-pointer"
+                                    >
+                                        <Send className="h-3 w-3" />
+                                        <span>{feedbackSubmitting ? 'Sending...' : 'Submit Feedback'}</span>
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+
+                    {/* 6. Sign Out */}
                     <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.03] p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h3 className="text-sm font-semibold font-display text-foreground">Session Control</h3>

@@ -266,10 +266,18 @@
 // Skills rendering — three styles
 // ------------------------------------------------------------
 
+#let get-skill-label-fill(t) = {
+  if "skill-label" in t { t.skill-label }
+  else if "accent" in t { t.accent }
+  else if "ink" in t { t.ink }
+  else { rgb("#1f2937") }
+}
+
 #let render-skills-grid(t, skills) = {
+  let label-fill = get-skill-label-fill(t)
   layout(size => {
     let label-w(group) = measure(
-      text(weight: "bold", fill: t.skill-label, group.category)
+      text(weight: "bold", fill: label-fill, group.category)
     ).width
     let widest = calc.max(..skills.map(label-w))
     let col-w = calc.min(widest + 4pt, size.width * 0.26)
@@ -279,7 +287,7 @@
       row-gutter: gap.bullet,
       column-gutter: 0.6em,
       ..skills.map(group => (
-        text(weight: "bold", fill: t.skill-label, group.category + " "),
+        text(weight: "bold", fill: label-fill, group.category + " "),
         parse-bold(group.items),
       )).flatten(),
     )
@@ -287,18 +295,20 @@
 }
 
 #let render-skills-inline(t, skills) = {
+  let label-fill = get-skill-label-fill(t)
   skills.enumerate().map(((i, group)) => {
     block(above: if i == 0 { 0pt } else { gap.bullet }, below: 0pt, width: 100%, {
-      text(weight: "bold", fill: t.skill-label, group.category + ": ")
+      text(weight: "bold", fill: label-fill, group.category + ": ")
       parse-bold(group.items)
     })
   }).join()
 }
 
 #let render-skills-stacked(t, skills) = {
+  let label-fill = get-skill-label-fill(t)
   skills.enumerate().map(((i, group)) => {
     block(above: if i == 0 { 0pt } else { 0.68em }, below: 0pt, width: 100%, {
-      text(weight: "bold", size: 8pt, fill: t.skill-label, group.category)
+      text(weight: "bold", size: 8pt, fill: label-fill, group.category)
       linebreak()
       parse-bold(group.items)
     })
@@ -309,6 +319,7 @@
 #let render-skills-adaptive(t, skills, max-categories-for-grid: 3) = {
   if skills == () or skills.len() == 0 { return none }
   
+  let label-fill = get-skill-label-fill(t)
   let is-flat = if type(skills.first()) == str { true } else if type(skills.first()) == dictionary and "category" in skills.first() { false } else { true }
   
   if is-flat {
@@ -320,7 +331,7 @@
     for (i, group) in skills.enumerate() {
       if i > 0 { v(0.28em) }
       let items-text = if type(group.items) == array { group.items.join(", ") } else { str(group.items) }
-      [#text(weight: "bold", fill: t.skill-label)[#group.category:] #text(size: typo.body-size)[#items-text]]
+      [#text(weight: "bold", fill: label-fill)[#group.category:] #text(size: typo.body-size)[#items-text]]
     }
   }
 }

@@ -7,6 +7,7 @@ import path from 'path';
 import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
+import { requireUser } from '@/lib/auth';
 
 export const maxDuration = 60;
 
@@ -14,8 +15,11 @@ export async function POST(req: NextRequest) {
     const userKeys = extractUserApiKeys(req);
     const usingCustomKeys = hasCustomKeys(userKeys);
 
-    // Bypass or grant higher limits if candidate supplies their own AI key
+    // Enforce authentication unless user supplies their own BYOK keys
     if (!usingCustomKeys) {
+        const auth = await requireUser();
+        if (auth.response) return auth.response;
+
         const ip = req.ip ?? "127.0.0.1";
         const { success } = await ratelimit.limit(ip);
         if (!success) {

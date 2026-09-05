@@ -58,34 +58,52 @@ export function formatResumeDate(dateString?: string | null): string {
     });
 }
 
-export function getLocalResumes(): SavedResume[] {
+export function getLocalResumes(userId?: string): SavedResume[] {
     if (typeof window === 'undefined') return [];
+    if (!userId) return []; // Unauthenticated users cannot access saved resumes
     try {
         const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
-        return parsed.map((item: unknown) => {
-            const it = item as SavedResume;
-            return {
-                ...it,
-                createdAt: it.createdAt || it.updatedAt || new Date().toISOString(),
-                updatedAt: it.updatedAt || it.createdAt || new Date().toISOString(),
-            };
-        });
+        return parsed
+            .filter((item: unknown) => {
+                const it = item as SavedResume;
+                return it.userId === userId;
+            })
+            .map((item: unknown) => {
+                const it = item as SavedResume;
+                return {
+                    ...it,
+                    createdAt: it.createdAt || it.updatedAt || new Date().toISOString(),
+                    updatedAt: it.updatedAt || it.createdAt || new Date().toISOString(),
+                };
+            });
 
     } catch {
         return [];
     }
 }
 
-export function saveLocalResume(resume: SavedResume): void {
+export function saveLocalResume(resume: SavedResume, userId?: string): void {
     if (typeof window === 'undefined') return;
+    const effectiveUserId = userId || resume.userId;
+    if (!effectiveUserId) return; // Do not persist unauthenticated resumes to history
     try {
-        const list = getLocalResumes();
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        let list: SavedResume[] = [];
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) list = parsed;
+            } catch {
+                list = [];
+            }
+        }
         const now = new Date().toISOString();
         const fullItem: SavedResume = {
             ...resume,
+            userId: effectiveUserId,
             createdAt: resume.createdAt || now,
             updatedAt: now,
         };
@@ -101,17 +119,34 @@ export function saveLocalResume(resume: SavedResume): void {
     }
 }
 
-export function deleteLocalResume(id: string): void {
+export function deleteLocalResume(id: string, userId?: string): void {
     if (typeof window === 'undefined') return;
     try {
-        const list = getLocalResumes().filter(r => r.id !== id);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!raw) return;
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return;
+        const filtered = list.filter((r: SavedResume) => {
+            if (userId && r.userId !== userId) return true;
+            return r.id !== id;
+        });
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
     } catch (e) {
         console.error('Failed to delete from localStorage:', e);
     }
 }
 
-export function getLocalResumeById(id: string): SavedResume | null {
-    const list = getLocalResumes();
+export function clearLocalResumes(): void {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch (e) {
+        console.error('Failed to clear local resumes:', e);
+    }
+}
+
+export function getLocalResumeById(id: string, userId?: string): SavedResume | null {
+    if (!userId) return null;
+    const list = getLocalResumes(userId);
     return list.find(r => r.id === id) || null;
 }

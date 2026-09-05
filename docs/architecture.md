@@ -9,7 +9,7 @@ This document details the engineering design, component interactions, and data f
 LumaCV is built as a modern, high-throughput resume builder designed around four core pillars:
 1. **Client-Side Extraction**: PDF parsing runs entirely in the browser using `pdfjs-dist`, avoiding heavy canvas/native binary dependencies on the server.
 2. **Dual-Provider High-Quota AI Engine**: Direct integration with Google Gemini and Groq Cloud, implementing automatic model-to-model and provider-to-provider failovers.
-3. **Native Typst Typesetting**: 100% native typesetting using the Typst compiler (< 50ms compile time), completely replacing legacy LaTeX toolchains and external compilation farms.
+3. **Native Typst Typesetting**: 100% native typesetting using the Typst compiler (< 50ms compile time), completely replacing legacy typesetting toolchains and external compilation farms.
 4. **Resilient Persistence**: Client-side Zustand store with hydration guards combined with Supabase for user authentication and CV cloud storage.
 
 ---
@@ -72,7 +72,7 @@ LLMs can occasionally return inconsistent schema variations (e.g. string dates v
 
 ### 3.4 Typst Typesetting System (`lib/typst-generator.ts` & `typst/`)
 LumaCV uses **Typst**, a next-generation markup-based typesetting system written in Rust:
-- **Zero LaTeX Dependencies**: No `pdflatex`, `xelatex`, TeX Live distributions, or third-party web services needed.
+- **Zero Heavy Compiler Dependencies**: Self-contained native binary without complex external distributions or third-party web services needed.
 - **Sub-50ms Compilation**: Compiles full multi-page resumes in 20–45ms.
 - **Embedded Templates**:
   - `modern.typ`: Contemporary sans-serif layout with subtle category badges and contact strip.

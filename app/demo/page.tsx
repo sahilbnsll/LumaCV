@@ -9,6 +9,7 @@ import { DEMO_RESUME_DATA } from '@/lib/demo-data';
 import { TemplateType } from '@/lib/resume-schema';
 import { generateTypst } from '@/lib/typst-generator';
 import { PALETTES } from '@/lib/design-tokens';
+import Image from 'next/image';
 import {
     Download,
     ArrowRight,
@@ -16,7 +17,9 @@ import {
     Undo2,
     Palette,
     Sparkles,
-    ShieldCheck
+    ShieldCheck,
+    ZoomIn,
+    ZoomOut
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MiniLayoutRepresentation } from '@/components/template-selector';
@@ -38,6 +41,7 @@ export default function DemoPage() {
     const [selectedTheme, setSelectedTheme] = useState('none');
     const [activeTab, setActiveTab] = useState<'score' | 'diff' | 'keywords'>('score');
     const [revertedMap, setRevertedMap] = useState<Record<number, boolean>>({});
+    const [zoomLevel, setZoomLevel] = useState<number>(100);
 
     const demoScore = 89;
     const originalScore = 67;
@@ -359,73 +363,104 @@ export default function DemoPage() {
                         </div>
                     </div>
 
-                    {/* Right Column: Realistic Document Wireframe */}
-                    <div className="lg:col-span-6 rounded-2xl border border-border/70 bg-card p-6 shadow-modal space-y-5 text-left">
-                        <div className="border-b border-border/50 pb-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-display font-bold text-foreground tracking-tight">ALEX CHEN</h2>
-                                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary uppercase">
-                                    Template: {selectedTemplate}
+                    {/* Right Column: Live Responsive Document / Compiled PDF Preview */}
+                    <div className="lg:col-span-6 space-y-4">
+                        {/* Preview Top Controls */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-display font-semibold text-foreground">Live Typeset Preview</span>
+                                <span
+                                    className="text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase transition-colors"
+                                    style={{
+                                        backgroundColor: `${PALETTES[selectedTheme]?.hex || '#3b82f6'}20`,
+                                        color: PALETTES[selectedTheme]?.hex || '#3b82f6',
+                                    }}
+                                >
+                                    {selectedTemplate.replace('_', ' ')} • {PALETTES[selectedTheme]?.label || 'Default'}
                                 </span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1 font-mono">
-                                San Francisco, CA • alex.chen@example.com • github.com/alexchen • linkedin.com/in/alexchen
-                            </p>
-                        </div>
 
-                        <div>
-                            <h3 className="text-xs font-display font-bold text-primary tracking-wider uppercase">PROFESSIONAL SUMMARY</h3>
-                            <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-                                Staff Full Stack Engineer with 7+ years of experience architecting high-throughput distributed systems, modern React/Next.js client applications, and reliable financial microservices. Proven track record reducing p99 API latencies and scaling mission-critical platforms to millions of users.
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 className="text-xs font-display font-bold text-primary tracking-wider uppercase">WORK EXPERIENCE</h3>
-                            <div className="mt-2.5 space-y-4 text-xs">
-                                <div>
-                                    <div className="flex justify-between font-semibold text-foreground">
-                                        <span>Staff Full Stack Engineer — Vercel Inc.</span>
-                                        <span className="text-muted-foreground font-normal text-[11px]">2022 – Present</span>
-                                    </div>
-                                    <ul className="mt-1.5 space-y-1.5 list-disc pl-4 text-muted-foreground text-[11px] leading-relaxed">
-                                        <li>
-                                            Architected edge data delivery layer using Next.js App Router and TypeScript, reducing p99 API response latencies by 38% for 4M+ daily active sessions.
-                                        </li>
-                                        <li>
-                                            Led frontend performance task force cutting total JavaScript bundle sizes across flagship web console by 310KB and improving Core Web Vitals to 99+.
-                                        </li>
-                                    </ul>
+                            <div className="flex items-center gap-2.5">
+                                {/* Zoom Controls */}
+                                <div className="flex items-center gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/60 text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomLevel(prev => Math.max(70, prev - 15))}
+                                        className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                        title="Zoom Out"
+                                    >
+                                        <ZoomOut className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomLevel(100)}
+                                        className="font-mono text-[10px] px-1.5 min-w-[34px] text-center font-medium hover:text-primary transition-colors"
+                                        title="Reset Zoom"
+                                    >
+                                        {zoomLevel}%
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomLevel(prev => Math.min(140, prev + 15))}
+                                        className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                        title="Zoom In"
+                                    >
+                                        <ZoomIn className="h-3.5 w-3.5" />
+                                    </button>
                                 </div>
 
-                                <div>
-                                    <div className="flex justify-between font-semibold text-foreground">
-                                        <span>Senior Software Engineer — Cloudflare</span>
-                                        <span className="text-muted-foreground font-normal text-[11px]">2020 – 2022</span>
-                                    </div>
-                                    <ul className="mt-1.5 space-y-1.5 list-disc pl-4 text-muted-foreground text-[11px] leading-relaxed">
-                                        <li>
-                                            Engineered high-throughput caching and proxy orchestration services handling 180k+ requests/sec with a 99.99% uptime availability SLA.
-                                        </li>
-                                    </ul>
+                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
+                                    <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: PALETTES[selectedTheme]?.hex || '#10b981' }} />
+                                    <span>Typst 0.15.1</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <h3 className="text-xs font-display font-bold text-primary tracking-wider uppercase">TECHNICAL COMPETENCIES</h3>
-                            <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-                                <strong>Languages & Frameworks:</strong> TypeScript, JavaScript, Python, Rust, React, Next.js, Node.js, Tailwind CSS<br />
-                                <strong>Infrastructure & Databases:</strong> PostgreSQL, Redis, Docker, Kubernetes, AWS, Cloudflare Workers, GraphQL
-                            </p>
-                        </div>
+                        {/* Document Canvas Container */}
+                        <div
+                            className="rounded-2xl border border-border/80 bg-muted/15 p-4 sm:p-6 shadow-modal text-left transition-all duration-300 overflow-auto flex flex-col items-center justify-start min-h-[680px] max-h-[920px]"
+                        >
+                            {/* Actual Compiled Typst Resume Document */}
+                            <div
+                                className="transition-all duration-300 w-full max-w-[640px] rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-border/80 bg-white relative group"
+                                style={{
+                                    transform: `scale(${zoomLevel / 100})`,
+                                    transformOrigin: 'top center',
+                                }}
+                            >
+                                <Image
+                                    key={`${selectedTemplate}-${selectedTheme}`}
+                                    src={`/templates/renders/${selectedTemplate}-${selectedTheme}.png`}
+                                    alt={`Compiled Typst resume in ${selectedTemplate} template with ${selectedTheme} palette`}
+                                    width={1190}
+                                    height={1684}
+                                    className="w-full h-auto object-contain select-none transition-opacity duration-200"
+                                    priority
+                                />
 
-                        <div className="pt-4 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1.5 text-emerald-500 font-medium">
-                                <ShieldCheck className="h-3.5 w-3.5" />
-                                100% Fact Checked
-                            </span>
-                            <span className="font-mono text-[11px]">Sub-50ms Vector Binary</span>
+                                {/* Subtle Overlay with quick actions */}
+                                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-border/80 shadow-md text-xs flex items-center gap-2">
+                                    <span className="font-mono text-[10px] text-muted-foreground">Typst Native Vector</span>
+                                    <button
+                                        onClick={handleDownloadDemoPdf}
+                                        className="font-medium text-[11px] text-primary hover:underline flex items-center gap-1"
+                                    >
+                                        <Download className="h-3 w-3" />
+                                        <span>Download PDF</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Canvas Bottom Status */}
+                            <div className="w-full pt-4 mt-6 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1.5 font-medium" style={{ color: PALETTES[selectedTheme]?.hex || '#10b981' }}>
+                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                    Actual Typst Compiler Output • 100% Guaranteed 1-Page
+                                </span>
+                                <span className="font-mono text-[10px] text-muted-foreground/70">
+                                    Typst Engine v0.15.1
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

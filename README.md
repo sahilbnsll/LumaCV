@@ -1,99 +1,54 @@
-# LumaCV — Open-Access AI Career Optimization & Resume Platform
+<p align="center">
+  <img src="public/logo.svg" width="64" height="64" alt="LumaCV Logo" />
+</p>
 
-LumaCV is a fast, authentic career utility that tailors your existing resume directly to any target job description. It preserves 100% of your real-world facts with zero hallucinations, scores alignment across four deterministic ATS vectors, and compiles pixel-perfect PDFs in milliseconds using a native vector typesetting engine.
+<h1 align="center">LumaCV</h1>
 
----
+<p align="center">
+  <strong>An open-source resume engineering studio powered by Typst, Next.js, and privacy-first AI tailoring.</strong>
+</p>
 
-## Key Capabilities
-
-- **100% Fact-Checked Tailoring**: Re-aligns bullet points and elevates relevant metrics while strictly preserving your factual employment history. Zero invented employers, dates, skills, or achievements.
-- **Sub-50ms Vector Compilation**: Powered by **Typst** — compiles crisp vector resumes in **< 50ms** locally and in serverless environments without heavy LaTeX runtimes.
-- **6 Executive-Grade Templates**:
-  - **Modern**: Clean sans-serif layout with contact icons and subtle accent rules (flagship tech style).
-  - **Classic**: Harvard/Ivy-League style serif layout with elegant horizontal dividers.
-  - **Engineering**: High-density dual-tone layout optimized for infrastructure and software engineers.
-  - **Compact**: Space-optimized single-page layout for candidates with 5+ roles.
-  - **Two-Column**: Asymmetric layout with skills and contact sidebar.
-  - **ATS-Safe**: 100% linear text extraction format designed for strict enterprise applicant tracking systems.
-- **8 Curated Color Palettes**: Default (Slate), Navy, Cobalt, Emerald, Burgundy, Teal, Graphite Slate, and High-Contrast Black.
-- **Deterministic 4-Vector ATS Scoring**: Weighted diagnostic scoring across Required Skills (40%), Responsibilities (25%), Preferred Skills (20%), and Terminology (15%).
-- **Interactive Bullet Diff Studio**: Side-by-side comparison of original vs. tailored bullets with 1-click Accept / Revert controls.
-- **Universal Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast keyboard-first navigation, instant template switching, theme toggles, and shortcut discovery.
-- **Version History & Snapshot Rollback**: Slide-over history drawer tracking original vs. tailored versions with instant restoration.
-- **First-Time User Onboarding Guide**: Visual 3-step walkthrough explaining the ground-truth data flow.
-- **Cloud & Local Persistence**: Stores structured resume data (JSONB) in Supabase with automatic local session fallback.
+<p align="center">
+  <a href="#quickstart">Quickstart</a> •
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#templates">Templates</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="LICENSE">License</a> •
+  <a href="http://localhost:3000/docs">Interactive Docs</a>
+</p>
 
 ---
 
-## Pricing & Community Contribution
+## Overview
 
-LumaCV is currently **100% free with all features unlocked** ($0 forever during open launch). Automated payment gateways and subscription tiers will be integrated in a later release.
+**LumaCV** is a modern, open-source resume creation and optimization platform. It combines the typography and speed of the **Typst** typesetting engine with strict, anti-hallucination AI tailoring models to produce high-impact, ATS-optimized resumes.
 
-If LumaCV helped you optimize your resume or land an interview call, consider supporting our independent server and inference costs:
-- **UPI & Payment ID**: `sahil.bansal@superyes`
-- **Support & Inquiries**: `connect@sahilbansal.net`
+Unlike traditional web-based builders that rely on lossy HTML-to-PDF canvas wrappers, LumaCV compiles directly to native vector PDFs using Typst. Users retain full ownership of their data with Bring-Your-Own-Key (BYOK) AI provider integration and complete source code exports (`.typ`).
 
 ---
 
-## Tech Stack
+## Features
 
-| Layer | Technology |
-| :--- | :--- |
-| **Framework** | Next.js 14 (App Router), React 18, TypeScript |
-
-| **Styling** | Tailwind CSS, Radix UI primitives, Lucide Icons |
-| **Animation** | Framer Motion (page transitions, spring counters, drawers, spotlights) |
-| **State** | Zustand with `persist` middleware |
-| **Typesetting Engine** | **Typst** (`bin/typst.exe` on Windows, native binary on Linux/macOS) |
-| **AI Providers** | Multi-Provider Engine (Google Gemini, OpenAI, Anthropic Claude, Groq Cloud) |
-| **BYOK Architecture** | Client-side key encryption, custom model selection, zero server credential storage |
-| **PDF Extraction** | `pdfjs-dist` (client-side text parsing) |
-| **Auth & Database** | Supabase (PostgreSQL, Row Level Security, Auth) |
+- **Typst Vector Typesetting**: Native Typst compilation delivers precise typographic hierarchy, micro-spacing, and crisp vector output in milliseconds.
+- **Fact-Preserving AI Tailoring**: Tailor experience bullets and summaries to target job descriptions while strictly preserving ground-truth employment history, dates, and authentic metrics.
+- **48 Curated Templates**: Spanning ATS-Safe, Modern Tech, Executive, Editorial, and Academic layouts across 8 calibrated color palettes.
+- **Bring Your Own Key (BYOK)**: Connect Google Gemini, OpenAI, Anthropic Claude, or Groq Cloud keys directly in client storage. Keys are never logged or stored on the server.
+- **Deterministic ATS Scoring**: Real-time diagnostic evaluation across Required Skills, Responsibilities, Preferred Qualifications, and Terminology.
+- **Interactive Bullet Diff Studio**: Side-by-side comparison of original vs. tailored experience points with individual accept/revert controls.
+- **Dual Export Options**: Download print-ready vector PDFs or complete Typst markup (`.typ`) for local command-line compilation.
+- **Session & Cloud Sync**: Gated workspace security with Supabase authentication and automatic local session recovery.
 
 ---
 
-## AI Architecture & Model Selection (BYOK)
-
-LumaCV features a multi-provider AI engine designed for flexible performance and complete privacy:
-
-- **Free Tier (Zero Setup)**: Automatically powered by optimized platform models (`gemini-2.5-flash` and `qwen/qwen3.6-27b`) with zero user configuration required. Free tier users are bounded to developer-tuned models for consistent latency and factual accuracy.
-- **Bring Your Own Key (BYOK)**: Users can supply their personal API keys in **Settings (`/profile`)**:
-  - **Google Gemini**: Choose between `gemini-2.5-flash`, `gemini-2.5-pro`, or `gemini-flash-latest`.
-  - **OpenAI**: Choose between `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, or `o3-mini`.
-  - **Anthropic Claude**: Choose between `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, or `claude-3-opus-20240229`.
-  - **Groq Cloud**: Choose between `qwen/qwen3.6-27b`, `llama-3.3-70b-versatile`, or `llama-3.1-8b-instant`.
-- **Zero Server Storage**: Your keys never touch a database or server logs. They reside in your browser's encrypted local storage and are passed solely as per-request TLS headers.
-
----
-
-## Agent Skills & Design Standards
-
-LumaCV is integrated with the open agent skills ecosystem ([skills.sh](https://skills.sh)), ensuring that all UI/UX components adhere to anti-slop design principles, strict accessibility audits, and motion choreography:
-
-- **[`taste-skill` / `design-taste-frontend`](https://github.com/Leonxlnx/taste-skill)**: Anti-slop frontend engineering skill enforcing intentional aesthetic inference, editorial typography, tailored color palettes, and avoiding generic AI templates.
-- **[`web-design-guidelines`](https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines)**: Automated compliance auditor for Vercel Web Interface Guidelines, touch targets, WCAG contrast ratios, and responsive behaviors.
-- **[`antigravity-design-expert`](https://github.com/sickn33/agentic-awesome-skills/tree/main/skills/antigravity-design-expert)**: Spatial UI engineering, subtle glassmorphism, 3D CSS transforms, and GSAP/motion choreography.
-- **[`ui-ux-pro-max`](.agents/skills/ui-ux-pro-max/)**: Comprehensive design system intelligence with curated palettes, font pairings, and interaction guidelines.
-
-Skills are tracked in `skills-lock.json` and can be synced across agents:
-```bash
-npx skills add Leonxlnx/taste-skill --agent antigravity -y --copy
-npx skills add vercel-labs/agent-skills --skill web-design-guidelines --agent antigravity -y --copy
-npx skills add sickn33/agentic-awesome-skills --skill antigravity-design-expert --agent antigravity -y --copy
-```
-
----
-
-## Getting Started
+## Quickstart
 
 ### Prerequisites
+- [Node.js](https://nodejs.org/) v18.17+ or v20+
+- [Typst CLI](https://github.com/typst/typst) (optional locally if using the included `bin/` runtime)
+- A free [Supabase](https://supabase.com) project for authentication and resume persistence
 
-- Node.js 18.17+ or 20+
-- A free API key from [Google AI Studio](https://aistudio.google.com/app/apikey) or [Groq Cloud](https://console.groq.com/keys)
-- (Optional) A free [Supabase](https://supabase.com) project for user authentication and CV saving
-
-### 1. Clone & Install Dependencies
-
+### 1. Clone and Install
 ```bash
 git clone https://github.com/sahilbnsll/LumaCV.git
 cd LumaCV
@@ -101,60 +56,29 @@ npm install
 ```
 
 ### 2. Configure Environment Variables
-
 Copy `.env.example` to `.env.local`:
-
 ```bash
 cp .env.example .env.local
 ```
 
-Configure your API keys in `.env.local`:
-
+Fill in your Supabase project credentials:
 ```env
-# AI Providers (At least one required)
-GEMINI_API_KEY=your_gemini_api_key_here
-GROQ_API_KEY=your_groq_api_key_here
-
-# App URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Supabase (Optional for local testing, required for user auth)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional: Default platform AI key (users can also bring their own in UI)
+GEMINI_API_KEY=your-gemini-key
 ```
 
-### 3. Setup Database (Optional)
+### 3. Initialize Database Schema
+Run the schema script located in [`supabase/schema.sql`](supabase/schema.sql) in your Supabase SQL Editor to set up tables, foreign keys, and Row Level Security (RLS) policies.
 
-If using Supabase, execute [supabase/schema.sql](supabase/schema.sql) in the **Supabase SQL Editor** to create the tables (`profiles`, `user_resumes`, `resumes`) and RLS policies.
-
-### 4. Run Development Server
-
+### 4. Start Development Server
 ```bash
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## Testing & Quality Audits
-
-Run the automated suites to verify type-safety, route availability, and visual regression:
-
-```bash
-# Type check across all 28 routes
-npx tsc --noEmit
-
-# Test all 13 application HTTP routes
-node scripts/verify-routes.mjs
-
-# Run automated 48-template visual regression matrix
-npx tsx scripts/test-visual-regression.mjs
-
-# Production bundle compilation
-npm run build
-```
+Navigate to [http://localhost:3000](http://localhost:3000) to open LumaCV.
 
 ---
 
@@ -162,71 +86,74 @@ npm run build
 
 ```
 LumaCV/
-├── .agents/skills/             # Open agent design, audit, and motion skills
-├── app/                        # Next.js App Router (28 static & dynamic routes)
-│   ├── api/v1/                 # REST API endpoints
-│   │   ├── jd/analyze/         # Job description analysis
-│   │   ├── resume/compile/     # Native Typst compilation
-│   │   ├── resume/export-typ/  # Direct markup source download
-│   │   ├── resume/parse/       # PDF text to structured JSON
-│   │   ├── resume/render/      # Async render & signed URL management
-│   │   ├── resume/score/       # ATS keyword match scoring
-│   │   ├── resume/tailor/      # Resume tailoring
-│   │   └── resumes/            # Project persistence endpoints
-│   ├── billing/                # Pricing, free launch access & contribution info
-│   ├── builder/                # 4-step wizard UI & review workspace
-│   ├── contact/                # Help & support center
-│   ├── dashboard/              # Saved resumes workspace & metrics
-│   ├── demo/                   # Public interactive preview
-│   ├── login/ & signup/        # Authentication pages
-│   ├── privacy/ & terms/       # SaaS legal & privacy policies
-│   └── profile/                # Account settings & typesetting defaults
-├── components/                 # Reusable UI & design system components
-│   ├── animated-counter.tsx    # Spring physics counter
-│   ├── app-header.tsx          # Navigation shell with command trigger
-│   ├── command-menu.tsx        # Universal Cmd+K command palette
-│   ├── onboarding-modal.tsx    # First-time user guide
-│   ├── spotlight-card.tsx      # Cursor-following radial light card
-│   ├── template-selector.tsx   # Visual wireframe template picker
-│   └── version-history-drawer.tsx # Snapshot timeline & rollback
-├── docs/                       # Architectural diagrams & setup guides
-├── lib/                        # Core utilities & services
-│   ├── compiler-service.ts     # Typst compilation manager
-│   ├── fact-validator.ts       # Anti-hallucination validation
-│   ├── llm-client.ts           # Dual-provider AI streaming client
-│   ├── typst-generator.ts      # Structured JSON to Typst code generator
-│   └── user-resumes-store.ts   # Project persistence state
-├── scripts/                    # Verification & audit automation
-│   ├── test-visual-regression.mjs # 48-matrix layout audit
-│   └── verify-routes.mjs       # Route health checker
-├── skills-lock.json            # Agent skills lockfile
-└── typst/                      # Typst typesetting templates & library
-    ├── lib/
-    │   ├── theme.typ           # Color palettes & typography tokens
-    │   ├── utils.typ           # Markdown bold parsing & link formatters
-    │   └── icons.typ           # Embedded SVG icons
-    └── templates/              # 6 production Typst resume templates
-        ├── modern.typ
-        ├── classic.typ
-        ├── engineering.typ
-        ├── compact.typ
-        ├── two_column.typ
-        └── ats_safe.typ
+├── app/                  # Next.js App Router (pages, layouts, API routes)
+│   ├── (auth)/           # Authentication (login, signup, password resets)
+│   ├── api/v1/           # Protected API endpoints (compile, export, parse, tailor)
+│   ├── builder/          # 4-step resume workspace
+│   ├── dashboard/        # Saved resumes management
+│   ├── demo/             # Public interactive sample CV
+│   ├── docs/             # Technical documentation hub (/docs)
+│   ├── templates/        # 48-template interactive gallery
+│   └── profile/          # BYOK key settings and user preferences
+├── components/           # UI components & design system primitives
+│   ├── ui/               # Radix UI + shadcn/ui components
+│   ├── luma-logo.tsx     # Canonical SVG brand mark
+│   └── app-header.tsx    # Header with command bar and user session menu
+├── lib/                  # Business logic and services
+│   ├── compiler-service.ts   # Typst process executor and WASM integration
+│   ├── resume-store.ts       # Client-side Zustand persistence store
+│   └── supabase/             # Supabase client and server instances
+├── typst/                # Typst templates, layout functions, and fonts
+└── prompts/              # Privacy-preserving LLM extraction and tailoring prompts
 ```
 
 ---
 
-## Deployment
+## 48 Typst Architectural Templates
 
-LumaCV is optimized to deploy effortlessly on [Vercel](https://vercel.com):
-- Native vector binary compiles inside the serverless runtime.
-- Long-running AI generation routes are configured with `maxDuration = 60`.
-- All static routes and template previews compile with 0 external build farm dependencies.
+LumaCV includes 48 professionally designed Typst templates organized into five distinct archetypes:
+
+1. **ATS-Optimized (13)**: `Impact`, `Switch`, `Grad`, `Leadership`, `Casework`, `Metrics`, `Skillsfirst`, `Credential`, `International`, `Projectled`, `Narrative`, `Strict`, `ATS-Safe`.
+2. **Modern & Tech (10)**: `Modern`, `Engineering`, `Compact`, `Two-Column`, `Terminal`, `Matrix`, `Product`, `Startup`, `Mono`, `Cadence`.
+3. **Executive & Advisory (10)**: `Classic`, `Executive`, `Consultant`, `Analyst`, `Meridian`, `Ledger`, `Harbor`, `Statement`, `Forma`, `Focus`.
+4. **Editorial & Creative (10)**: `Boutique`, `Editorial`, `Portfolio`, `Atelier`, `Swiss`, `Nordic`, `Neo`, `Monochrome`, `Slate`, `Timeline`.
+5. **Academic & Research (5)**: `Academic`, `Research Modern`, and specialized scholarly formats.
+
+Explore and live-preview all templates in the [Interactive Gallery](http://localhost:3000/templates).
 
 ---
 
-## License & Creator
+## Verification & Quality Checks
 
-Created by [Sahil Bansal](https://sahilbansal.vercel.app/).  
-Inquiries: [`connect@sahilbansal.net`](mailto:connect@sahilbansal.net)  
-Open source under the [MIT License](LICENSE).
+Run the automated suites to ensure TypeScript compilation, route health, and visual consistency:
+
+```bash
+# TypeScript compilation check
+npx tsc --noEmit
+
+# Production build test
+npm run build
+```
+
+---
+
+## Documentation
+
+Full architectural guides, environment variable specifications, workflow breakdowns, and API references are available in the dedicated documentation center:
+- Live in-app: [http://localhost:3000/docs](http://localhost:3000/docs)
+- In repository: [`docs/`](docs/) and [`app/docs/page.tsx`](app/docs/page.tsx)
+
+---
+
+## Contributing
+
+We welcome community contributions! Please review our [Contributing Guide](CONTRIBUTING.md) for details on code standards, local testing, and pull request workflows.
+
+---
+
+## License & Author
+
+Created by [Sahil Bansal](https://sahilbansal.net/).  
+Inquiries & Contact: [`connect@sahilbansal.net`](mailto:connect@sahilbansal.net)  
+
+Distributed under the [MIT License](LICENSE).

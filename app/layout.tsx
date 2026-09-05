@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/components/auth-provider';
+import { FeedbackWidget } from '@/components/feedback-widget';
 import './globals.css';
 
 const displayFont = Plus_Jakarta_Sans({
@@ -28,12 +29,21 @@ const monoFont = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LumaCV — AI Career Optimization & Resume Platform',
-  description: '100% fact-checked resume tailoring directly aligned to target job descriptions with sub-50ms vector PDF compilation.',
+  title: 'LumaCV',
+  description: 'Free, open-source resume builder with sub-50ms Typst PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
+  applicationName: 'LumaCV',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#131417',
+  themeColor: '#09090b',
   colorScheme: 'dark light',
 };
 
@@ -58,6 +68,7 @@ export default function RootLayout({
         <AuthProvider url={supabaseUrl} anonKey={supabaseAnonKey}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
             {children}
+            <FeedbackWidget />
             <Toaster position="top-center" closeButton richColors />
           </ThemeProvider>
           <Analytics />
