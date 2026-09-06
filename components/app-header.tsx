@@ -9,7 +9,15 @@ import { useAuth } from '@/components/auth-provider';
 import { ChevronRight } from 'lucide-react';
 import { CommandMenu } from '@/components/command-menu';
 import { LumaLogo } from '@/components/luma-logo';
-import { SterlingGateKineticNavigation } from '@/components/ui/sterling-gate-kinetic-navigation';
+import dynamic from 'next/dynamic';
+
+const SterlingGateKineticNavigation = dynamic(
+    () => import('@/components/ui/sterling-gate-kinetic-navigation').then((m) => m.SterlingGateKineticNavigation),
+    {
+        ssr: false,
+        loading: () => <div className="h-9 w-9 rounded-xl border border-border/70 bg-card/60 animate-pulse" />,
+    }
+);
 
 export function AppHeader() {
     const pathname = usePathname();

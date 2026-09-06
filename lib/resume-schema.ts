@@ -317,6 +317,7 @@ export const GenerateResumeRequestSchema = z.object({
   jdKeywords: AnalyzeJDResponseSchema,
   template: TemplateTypeSchema.optional().default('modern'),
   theme: ThemeTypeSchema.optional().default('none'),
+  tailorMode: z.enum(['optimize', 'tailor']).optional().default('optimize'),
 });
 
 export const GenerateResumeResponseSchema = z.object({
@@ -328,6 +329,37 @@ export const GenerateResumeResponseSchema = z.object({
     issuesCount: z.number(),
     preservedMetricsCount: z.number(),
     verifiedEmployersCount: z.number(),
+  }).optional(),
+  auditTrail: z.object({
+    mode: z.enum(['optimize', 'tailor']),
+    sectionsModified: z.array(z.string()),
+    skillsAdded: z.array(z.object({
+      skill: z.string(),
+      category: z.string(),
+      source: z.string(),
+      reason: z.string(),
+    })),
+    bulletChanges: z.array(z.object({
+      role: z.string(),
+      company: z.string(),
+      original: z.string(),
+      tailored: z.string(),
+      changeType: z.string(),
+      reason: z.string(),
+      evidenceSafety: z.string(),
+    })),
+    jdAlignmentMap: z.array(z.object({
+      requirement: z.string(),
+      category: z.string(),
+      status: z.enum(['matched', 'partially_matched', 'missing']),
+      resumeEvidence: z.string(),
+    })),
+    safetyIndicator: z.object({
+      claimsSupported: z.boolean(),
+      unsupportedClaimsBlocked: z.number(),
+      verifiedEmployersPreserved: z.boolean(),
+      verifiedDatesPreserved: z.boolean(),
+    }),
   }).optional(),
 });
 

@@ -1,4 +1,5 @@
 async function checkRoutes() {
+    const baseUrl = (process.argv[2] || process.env.TEST_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
     const routes = [
         '/',
         '/login',
@@ -15,11 +16,11 @@ async function checkRoutes() {
         '/contact'
     ];
 
-    console.log('--- Verifying All Application Routes on http://localhost:3000 ---');
+    console.log(`--- Verifying All Application Routes on ${baseUrl} ---`);
     let allOk = true;
     for (const route of routes) {
         try {
-            const res = await fetch(`http://localhost:3000${route}`);
+            const res = await fetch(`${baseUrl}${route}`);
             console.log(`GET ${route.padEnd(20)} -> ${res.status} ${res.statusText}`);
             if (res.status !== 200) allOk = false;
         } catch (err) {
@@ -29,9 +30,9 @@ async function checkRoutes() {
     }
 
     if (allOk) {
-        console.log('\n>>> SUCCESS: All 13 core application routes are healthy (200 OK)!');
+        console.log(`\n>>> SUCCESS: All 13 core application routes are healthy (200 OK) on ${baseUrl}!`);
     } else {
-        console.error('\n>>> FAILURE: Some routes did not return 200 OK.');
+        console.error(`\n>>> FAILURE: Some routes did not return 200 OK on ${baseUrl}.`);
         process.exit(1);
     }
 }

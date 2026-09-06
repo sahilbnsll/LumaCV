@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { getAppUrl } from '@/lib/app-url';
 
 export default function ForgotPasswordPage() {
     const { supabase } = useAuth();
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
 
         setLoading(true);
         try {
-            const redirectTo = `${window.location.origin}/reset-password`;
+            const redirectTo = getAppUrl('/reset-password');
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
                 redirectTo,
             });

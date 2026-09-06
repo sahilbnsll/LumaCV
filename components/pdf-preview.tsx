@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
     RotateCcw, 
@@ -36,7 +36,10 @@ type CompileMeta = {
 const previewCache = new Map<string, { url: string; meta: CompileMeta }>();
 
 export function PdfPreview() {
-    const { resumeData, generatedResume, template, theme } = useAppStore();
+    const resumeData = useAppStore((s) => s.resumeData);
+    const generatedResume = useAppStore((s) => s.generatedResume);
+    const template = useAppStore((s) => s.template);
+    const theme = useAppStore((s) => s.theme);
     const typstCode = generatedResume?.typst || '';
 
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -48,7 +51,7 @@ export function PdfPreview() {
 
     const debounceRef = useRef<number | null>(null);
 
-    const candidateName = resumeData?.personalInfo?.name || 'Resume';
+    const candidateName = useMemo(() => resumeData?.personalInfo?.name || 'Resume', [resumeData?.personalInfo?.name]);
 
     const compilePdf = useCallback(async (force = false) => {
         // 1. Resolve active Typst source

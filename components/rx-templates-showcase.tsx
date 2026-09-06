@@ -17,9 +17,9 @@ type TemplateMarqueeItem = {
     template: ResumeTemplate;
 };
 
-function TemplateItem({ template }: { template: ResumeTemplate }) {
+const TemplateItem = React.memo(function TemplateItem({ template }: { template: ResumeTemplate }) {
     const router = useRouter();
-    const { setTemplate } = useAppStore();
+    const setTemplate = useAppStore((s) => s.setTemplate);
 
     const handleSelect = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -82,7 +82,7 @@ function TemplateItem({ template }: { template: ResumeTemplate }) {
             </div>
         </motion.div>
     );
-}
+});
 
 type MarqueeRowProps = {
     items: TemplateMarqueeItem[];

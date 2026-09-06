@@ -2,17 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { sendFeedbackEmail } from '@/lib/email-service';
 
 const FEEDBACK_FILE = path.join(process.cwd(), 'data', 'feedback.json');
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { name, email, company, rating, type, message } = body;
+        const { name, email, company, rating, type, message, page } = body;
 
         if (!message || typeof message !== 'string' || !message.trim()) {
             return NextResponse.json({ error: 'Feedback message is required.' }, { status: 400 });
         }
+
+        const userAgent = req.headers.get('user-agent') || 'Unknown';
+        const referer = page || req.headers.get('referer') || '/';
+        const timestamp = new Date().toISOString();
 
         const newFeedback = {
             id: `fb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -22,7 +27,9 @@ export async function POST(req: NextRequest) {
             rating: typeof rating === 'number' ? Math.max(1, Math.min(5, rating)) : 5,
             type: type || 'general',
             message: message.trim(),
-            createdAt: new Date().toISOString(),
+            page: referer,
+            userAgent,
+            createdAt: timestamp,
         };
 
         // 1. Try Supabase if configured
@@ -41,7 +48,7 @@ export async function POST(req: NextRequest) {
                     created_at: newFeedback.createdAt,
                 });
             } catch (dbErr) {
-                console.warn('Could not insert to Supabase feedback table:', dbErr);
+                console.warn('[feedback] Could not insert to Supabase feedback table:', dbErr);
             }
         }
 
@@ -65,10 +72,27 @@ export async function POST(req: NextRequest) {
             // Ignore file write errors on serverless read-only filesystems
         }
 
-        console.log(`[FEEDBACK] Received feedback from ${newFeedback.name} (${newFeedback.type}): ${newFeedback.message}`);
+        // 3. Dispatch Email Directly to Administrator
+        const emailResult = await sendFeedbackEmail({
+            name: newFeedback.name,
+            email: newFeedback.email,
+            company: newFeedback.company,
+            rating: newFeedback.rating,
+            type: newFeedback.type,
+            message: newFeedback.message,
+            page: newFeedback.page,
+            userAgent: newFeedback.userAgent,
+            timestamp: newFeedback.createdAt,
+        }).catch((emailErr) => {
+            console.error('[feedback] Failed email delivery:', emailErr);
+            return { success: false, delivered: false, error: String(emailErr) };
+        });
+
+        console.log(`[FEEDBACK] Logged feedback from ${newFeedback.name} (${newFeedback.type}): ${newFeedback.message}`);
 
         return NextResponse.json({
             success: true,
+            delivered: emailResult.delivered,
             message: 'Thank you! Your feedback has been received.',
         });
     } catch (err: unknown) {

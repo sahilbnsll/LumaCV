@@ -83,17 +83,16 @@ const PIPELINE_STAGES: Stage[] = [
 
 export function Step3Processing() {
     const router = useRouter();
-    const {
-        setStep,
-        jd,
-        resumeData,
-        setAnalysis,
-        setGeneratedResume,
-        setOriginalScore,
-        setTailoredScore,
-        template,
-        theme
-    } = useAppStore();
+    const setStep = useAppStore((s) => s.setStep);
+    const jd = useAppStore((s) => s.jd);
+    const resumeData = useAppStore((s) => s.resumeData);
+    const setAnalysis = useAppStore((s) => s.setAnalysis);
+    const setGeneratedResume = useAppStore((s) => s.setGeneratedResume);
+    const setOriginalScore = useAppStore((s) => s.setOriginalScore);
+    const setTailoredScore = useAppStore((s) => s.setTailoredScore);
+    const template = useAppStore((s) => s.template);
+    const theme = useAppStore((s) => s.theme);
+    const tailorMode = useAppStore((s) => s.tailorMode);
 
     const [currentStageIndex, setCurrentStageIndex] = useState(0);
     const [completedStages, setCompletedStages] = useState<string[]>([]);
@@ -163,7 +162,7 @@ export function Step3Processing() {
                         'Content-Type': 'application/json',
                         ...getCustomKeyHeaders()
                     },
-                    body: JSON.stringify({ resumeData, jdKeywords: analysisData, template, theme }),
+                    body: JSON.stringify({ resumeData, jdKeywords: analysisData, template, theme, tailorMode }),
                 });
 
                 if (!generateRes.ok) throw new Error('Failed to tailor experience bullets');
@@ -180,7 +179,7 @@ export function Step3Processing() {
                 // Stage 5: Preparing your resume document
                 setCurrentStageIndex(4);
                 const docCode = generatedData.typstCode || '';
-                setGeneratedResume(generatedData.tailoredResume, docCode, generatedData.confidenceScore);
+                setGeneratedResume(generatedData.tailoredResume, docCode, generatedData.confidenceScore, generatedData.auditTrail);
 
                 // Final score compute
                 try {
@@ -225,7 +224,7 @@ export function Step3Processing() {
         return () => {
             isCancelled = true;
         };
-    }, [jd, resumeData, template, theme, retryTrigger, router, setAnalysis, setGeneratedResume, setOriginalScore, setTailoredScore, setStep]);
+    }, [jd, resumeData, template, theme, tailorMode, retryTrigger, router, setAnalysis, setGeneratedResume, setOriginalScore, setTailoredScore, setStep]);
 
     const activeStage = PIPELINE_STAGES[currentStageIndex];
 
@@ -235,13 +234,6 @@ export function Step3Processing() {
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[350px] bg-gradient-to-b from-primary/20 via-cyan-500/15 to-transparent rounded-full blur-3xl pointer-events-none" />
 
             <div className="text-center space-y-3 pb-6 relative z-10">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 dark:bg-primary/15 border border-primary/25 text-primary text-xs font-mono font-medium shadow-xs">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                    </span>
-                    <span>STEP 03 • AI TAILORING</span>
-                </div>
 
                 <h1 className="font-display font-bold text-3xl sm:text-4xl text-foreground tracking-tight">
                     Tailoring Your Resume

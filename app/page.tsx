@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import HomeHeroLandingScrollAnimation from '@/components/ui/home-hero-landing-scroll-animation';
 import { Features } from '@/components/blocks/features-8';
+import { WhyLumaCV } from '@/components/why-lumacv';
 import {
     Dialog,
     DialogContent,
@@ -136,8 +137,8 @@ export default function LandingPage() {
 
     // Live tracked system statistics (auto-synced with DB & compilation engine)
     const [stats, setStats] = useState({
-        resumesCompiled: 38,
-        bulletsTailored: 66,
+        resumesCompiled: 0,
+        bulletsTailored: 0,
         activeTemplates: 48,
         factCheckAccuracy: 100,
     });
@@ -259,6 +260,11 @@ export default function LandingPage() {
                 {/* 3. FEATURES BENTO GRID                                                    */}
                 {/* ========================================================================= */}
                 <Features />
+
+                {/* ========================================================================= */}
+                {/* 3.5 WHY LUMACV (ARCHITECTURAL ADVANTAGES & ATS INTEGRITY)                 */}
+                {/* ========================================================================= */}
+                <WhyLumaCV />
 
                 {/* ========================================================================= */}
                 {/* 4. TEMPLATES SHOWCASE (RX-RESUME DUAL-ROW TILTED CONTINUOUS MARQUEE)      */}

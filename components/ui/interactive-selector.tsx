@@ -100,7 +100,8 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
     showHeader = false,
     className,
 }) => {
-    const { template: storeTemplate, setTemplate } = useAppStore();
+    const storeTemplate = useAppStore((s) => s.template);
+    const setTemplate = useAppStore((s) => s.setTemplate);
     const currentActiveTemplate = selectedId || storeTemplate || 'engineering';
 
     // Find initial index matching current store template or default to 0
@@ -110,7 +111,6 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
     );
 
     const [activeIndex, setActiveIndex] = useState<number>(initialIndex);
-    const [animatedOptions, setAnimatedOptions] = useState<number[]>([]);
 
     // Sync external selectedId if it changes
     useEffect(() => {
@@ -119,20 +119,6 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
             setActiveIndex(found);
         }
     }, [currentActiveTemplate, activeIndex]);
-
-    // Staggered initial entrance without causing lag or frame drops
-    useEffect(() => {
-        const timers: NodeJS.Timeout[] = [];
-        TYPST_ARCHETYPES.forEach((_, i) => {
-            const timer = setTimeout(() => {
-                setAnimatedOptions((prev) => [...prev, i]);
-            }, 80 * i);
-            timers.push(timer);
-        });
-        return () => {
-            timers.forEach((t) => clearTimeout(t));
-        };
-    }, []);
 
     const handleOptionClick = useCallback((index: number) => {
         setActiveIndex(index);
@@ -166,16 +152,136 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                 </div>
             )}
 
-            {/* Expandable Options Container */}
+            {/* Mobile View: Clean Touch-Friendly Snap Scroll Carousel (< sm) */}
+            <div className="sm:hidden w-full space-y-2.5">
+                <div
+                    role="tablist"
+                    aria-label="Typst Archetype Selector"
+                    className="w-full flex items-stretch gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-none p-1.5 rounded-2xl bg-muted/30 dark:bg-[#111317]/80 border border-border/80"
+                >
+                    {TYPST_ARCHETYPES.map((option, index) => {
+                        const isActive = activeIndex === index;
+                        const isSelectedInStore = storeTemplate === option.id;
+
+                        return (
+                            <div
+                                key={option.id}
+                                role="tab"
+                                aria-selected={isActive}
+                                tabIndex={0}
+                                onClick={() => handleOptionClick(index)}
+                                className={cn(
+                                    "relative w-[230px] shrink-0 snap-center h-[260px] flex flex-col justify-end overflow-hidden rounded-xl cursor-pointer transition-all duration-300 border select-none",
+                                    isActive
+                                        ? "ring-2 ring-primary border-primary shadow-lg scale-[1.01]"
+                                        : "border-border/60 opacity-85 hover:opacity-100"
+                                )}
+                            >
+                                {/* High-Resolution Resume Thumbnail */}
+                                <div className="absolute inset-0 w-full h-full overflow-hidden bg-background">
+                                    <Image
+                                        src={option.image}
+                                        alt={`${option.title} preview`}
+                                        fill
+                                        priority={index < 2}
+                                        sizes="240px"
+                                        className={cn(
+                                            "object-cover object-top transition-transform duration-500 pointer-events-none",
+                                            isActive ? "scale-100 opacity-95" : "scale-105 opacity-65 grayscale-[20%]"
+                                        )}
+                                    />
+                                </div>
+
+                                {/* Gradient Shadow Overlay */}
+                                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+                                {/* Top Badges */}
+                                <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10 pointer-events-none">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-background/90 dark:bg-[#181a20]/90 text-foreground backdrop-blur-md border border-border/60 shadow-xs">
+                                        <span className={cn("h-1.5 w-1.5 rounded-full", option.accentDot)} />
+                                        <span className="font-mono">{option.tag}</span>
+                                    </span>
+
+                                    {isSelectedInStore && (
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary text-primary-foreground shadow-xs">
+                                            <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                            <span>Active</span>
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Bottom Metadata & Action */}
+                                <div className="relative z-10 p-3 w-full flex items-end justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <div
+                                            className={cn(
+                                                "w-8 h-8 flex items-center justify-center rounded-lg backdrop-blur-md border shrink-0",
+                                                isActive
+                                                    ? "bg-background/90 dark:bg-[#1a1d24]/90 border-border"
+                                                    : "bg-black/50 border-white/15"
+                                            )}
+                                        >
+                                            {option.icon}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-display font-bold text-sm text-white truncate drop-shadow-sm">
+                                                {option.title}
+                                            </h3>
+                                            <p className="text-[10px] text-white/80 line-clamp-1 mt-0.5">
+                                                {option.archetype}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOptionClick(index);
+                                        }}
+                                        className={cn(
+                                            "shrink-0 h-7 px-2.5 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1",
+                                            isActive
+                                                ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                                                : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+                                        )}
+                                    >
+                                        <span>{isActive ? 'Selected' : 'Use'}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Mobile Pagination Dot Indicators */}
+                <div className="flex items-center justify-center gap-1.5 pt-1">
+                    {TYPST_ARCHETYPES.map((_, i) => (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => handleOptionClick(i)}
+                            aria-label={`Select template ${i + 1}`}
+                            className={cn(
+                                "h-1.5 rounded-full transition-all duration-300",
+                                activeIndex === i
+                                    ? "w-5 bg-primary"
+                                    : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                            )}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Desktop View: Interactive Expanding Accordion (sm+) */}
             <div
                 role="tablist"
                 aria-label="Typst Archetype Selector"
-                className="w-full h-full min-h-[240px] max-h-[290px] flex items-stretch gap-1.5 sm:gap-2 overflow-hidden rounded-2xl p-1.5 sm:p-2 bg-muted/40 dark:bg-[#111317]/80 border border-border/80 shadow-inner"
+                className="hidden sm:flex w-full h-full min-h-[240px] max-h-[290px] items-stretch gap-1.5 sm:gap-2 overflow-hidden rounded-2xl p-1.5 sm:p-2 bg-muted/40 dark:bg-[#111317]/80 border border-border/80 shadow-inner"
             >
                 {TYPST_ARCHETYPES.map((option, index) => {
                     const isActive = activeIndex === index;
                     const isSelectedInStore = storeTemplate === option.id;
-                    const isEntered = animatedOptions.includes(index);
 
                     return (
                         <div
@@ -197,8 +303,8 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                                     : "flex-[1.1] sm:flex-[1] hover:flex-[1.4] sm:hover:flex-[1.3] border border-border/40 opacity-80 hover:opacity-100 z-1"
                             )}
                             style={{
-                                transform: isEntered ? 'translate3d(0, 0, 0)' : 'translate3d(-20px, 0, 0)',
-                                opacity: isEntered ? 1 : 0,
+                                transform: 'translate3d(0, 0, 0)',
+                                opacity: 1,
                                 transitionProperty: 'flex, opacity, transform',
                                 transitionDuration: '550ms',
                                 transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',

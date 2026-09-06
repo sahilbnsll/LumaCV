@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function TemplateCard({ template }: { template: ResumeTemplate }) {
+export const TemplateCard = React.memo(function TemplateCard({ template }: { template: ResumeTemplate }) {
     const router = useRouter();
-    const { setTemplate } = useAppStore();
+    const setTemplate = useAppStore((s) => s.setTemplate);
     const [imgError, setImgError] = useState(false);
 
     const handleSelect = (e: React.MouseEvent) => {
@@ -88,7 +88,7 @@ export function TemplateCard({ template }: { template: ResumeTemplate }) {
             </div>
         </div>
     );
-}
+});
 
 export function Templates3DMarquee() {
     // Distribute 48 templates into 4 balanced columns

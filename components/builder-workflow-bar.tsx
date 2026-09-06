@@ -12,10 +12,12 @@ import {
 import { toast } from 'sonner';
 
 export function BuilderWorkflowBar() {
-    const { step, setStep, jd, resumeData } = useAppStore();
+    const step = useAppStore((s) => s.step);
+    const setStep = useAppStore((s) => s.setStep);
 
     const handleStep1Next = () => {
-        if (!jd.trim()) {
+        const currentJd = useAppStore.getState().jd;
+        if (!currentJd.trim()) {
             toast.error('Please paste a target job description or click "Try Sample JD"');
             return;
         }
@@ -23,11 +25,12 @@ export function BuilderWorkflowBar() {
     };
 
     const handleStep2Next = () => {
-        if (!resumeData) {
+        const currentResumeData = useAppStore.getState().resumeData;
+        if (!currentResumeData) {
             toast.error('Add resume details first — upload a PDF on step 1 or fill the form and save.');
             return;
         }
-        const parsed = ResumeDataSchema.safeParse(resumeData);
+        const parsed = ResumeDataSchema.safeParse(currentResumeData);
         if (!parsed.success) {
             toast.error('Some required fields are missing. Please verify errors in the form.');
             return;
@@ -84,16 +87,6 @@ export function BuilderWorkflowBar() {
                                 <span>Continue to AI Tailor</span>
                                 <ArrowRight className="h-3.5 w-3.5" />
                             </Button>
-                        </div>
-                    )}
-
-                    {step === 3 && (
-                        <div className="flex items-center gap-2 text-xs font-mono font-medium text-primary bg-primary/10 dark:bg-primary/15 px-3 py-1 rounded-full border border-primary/25 shadow-xs">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                            </span>
-                            <span>Tailoring Pipeline Active</span>
                         </div>
                     )}
 

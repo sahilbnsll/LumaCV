@@ -151,3 +151,61 @@ create policy "Allow read on compiled resumes"
 insert into storage.buckets (id, name, public)
 values ('resumes', 'resumes', false)
 on conflict (id) do nothing;
+
+-- ==============================================================================
+-- 6. Platform Telemetry & Live Global Metrics
+-- ==============================================================================
+create table if not exists public.platform_stats (
+  key text primary key,
+  value bigint not null default 0,
+  updated_at timestamptz default now() not null
+);
+
+alter table public.platform_stats enable row level security;
+
+drop policy if exists "Allow public read on platform stats" on public.platform_stats;
+create policy "Allow public read on platform stats"
+  on public.platform_stats for select
+  using (true);
+
+-- Atomic increment helper function
+create or replace function public.increment_platform_stat(stat_key text, amount bigint default 1)
+returns bigint
+language plpgsql
+security definer
+as $$
+declare
+  new_value bigint;
+begin
+  insert into public.platform_stats (key, value, updated_at)
+  values (stat_key, amount, now())
+  on conflict (key) do update
+    set value = public.platform_stats.value + excluded.value,
+        updated_at = now()
+  returning value into new_value;
+  return new_value;
+end;
+$$;
+
+
+-- ==============================================================================
+-- 7. User Feedback Table
+-- ==============================================================================
+create table if not exists public.feedback (
+  id uuid primary key default gen_random_uuid(),
+  name text,
+  email text,
+  company text,
+  rating integer default 5,
+  type text default 'general',
+  message text not null,
+  created_at timestamptz default now() not null
+);
+
+alter table public.feedback enable row level security;
+
+drop policy if exists "Allow insert on feedback" on public.feedback;
+create policy "Allow insert on feedback"
+  on public.feedback for insert
+  with check (true);
+

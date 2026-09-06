@@ -146,7 +146,7 @@ pm2 startup
 ### Step 4: Nginx Reverse Proxy & SSL
 ```nginx
 server {
-    server_name lumacv.com www.lumacv.com;
+    server_name lumacv.sahilbansal.net;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -162,7 +162,7 @@ server {
 ```
 Obtain SSL via Let's Encrypt:
 ```bash
-sudo certbot --nginx -d lumacv.com -d www.lumacv.com
+sudo certbot --nginx -d lumacv.sahilbansal.net
 ```
 
 ---

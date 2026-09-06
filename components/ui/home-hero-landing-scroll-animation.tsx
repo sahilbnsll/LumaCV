@@ -1,63 +1,105 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
 import { ArrowRight, FileText, Github, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Real LumaCV Typst Resume Renders showcasing the 5 architectural layout archetypes
+const LUMACV_HERO_TEMPLATES = [
+  {
+    src: "/templates/renders/modern-cobalt.png",
+    name: "Modern Cobalt",
+    badge: "Clean Typography",
+    tag: "Tech & Engineering",
+    accentDot: "bg-blue-500",
+  },
+  {
+    src: "/templates/renders/engineering-emerald.png",
+    name: "Engineering Mono",
+    badge: "Monospace Layout",
+    tag: "DevOps & Cloud",
+    accentDot: "bg-emerald-500",
+  },
+  {
+    src: "/templates/renders/classic-navy.png",
+    name: "Harvard Classic",
+    badge: "Serif Typeset",
+    tag: "Executive & Finance",
+    accentDot: "bg-indigo-500",
+  },
+  {
+    src: "/templates/renders/two_column-teal.png",
+    name: "Two-Column Split",
+    badge: "Structured Layout",
+    tag: "Product & Architecture",
+    accentDot: "bg-teal-500",
+  },
+  {
+    src: "/templates/renders/ats_safe-black.png",
+    name: "ATS-Safe Linear",
+    badge: "Machine-Readable",
+    tag: "Enterprise Recruiting",
+    accentDot: "bg-zinc-500",
+  },
+];
+
+type HeroTemplateItem = (typeof LUMACV_HERO_TEMPLATES)[0];
+
+interface InlineTemplateBoxProps {
+  template: HeroTemplateItem;
+  scale: MotionValue<number>;
+  opacity: MotionValue<number>;
+  y: MotionValue<number>;
+  onClick: () => void;
+}
+
+// Reusable inline template card component rendered strictly in-flow (zero layout thrashing, zero pixel jitter)
+const InlineTemplateBox = React.memo(function InlineTemplateBox({
+  template,
+  scale,
+  opacity,
+  y,
+  onClick,
+}: InlineTemplateBoxProps) {
+  return (
+    <motion.span
+      style={{ scale, opacity, y }}
+      onClick={onClick}
+      className="inline-flex align-middle mx-1 sm:mx-1.5 md:mx-2 h-7 w-11 sm:h-9 sm:w-14 md:h-11 md:w-18 lg:h-12 lg:w-20 rounded-md sm:rounded-lg overflow-hidden border border-border/80 dark:border-white/20 shadow-xs sm:shadow-md bg-card/90 backdrop-blur-xs relative group cursor-pointer select-none transition-all duration-200 hover:scale-110 hover:shadow-lg hover:border-primary/60 will-change-transform z-20"
+      title={`Explore ${template.name} (${template.badge})`}
+    >
+      <img
+        src={template.src}
+        alt={template.name}
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+      />
+      {/* Interactive hover tooltip badge */}
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-background/90 backdrop-blur-md py-0.5 px-1 text-[8px] sm:text-[9px] font-mono text-center text-foreground font-semibold truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {template.name.split(" ")[0]}
+      </span>
+      {/* Subtle border glow effect */}
+      <span className="pointer-events-none absolute inset-0 rounded-md sm:rounded-lg ring-1 ring-inset ring-white/10 group-hover:ring-primary/40 transition-colors" />
+    </motion.span>
+  );
+});
+
 export const HomeHeroLandingScrollAnimation: React.FC = () => {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeBgIndex, setActiveBgIndex] = useState(0);
 
-  // Real LumaCV Typst Resume Renders showcasing the 5 architectural layout archetypes
-  const lumacvHeroTemplates = [
-    {
-      src: "/templates/renders/modern-cobalt.png",
-      name: "Modern Cobalt",
-      badge: "Clean Typography",
-      tag: "Tech & Engineering",
-      accentDot: "bg-blue-500",
-    },
-    {
-      src: "/templates/renders/engineering-emerald.png",
-      name: "Engineering Mono",
-      badge: "Monospace Layout",
-      tag: "DevOps & Cloud",
-      accentDot: "bg-emerald-500",
-    },
-    {
-      src: "/templates/renders/classic-navy.png",
-      name: "Harvard Classic",
-      badge: "Serif Typeset",
-      tag: "Executive & Finance",
-      accentDot: "bg-indigo-500",
-    },
-    {
-      src: "/templates/renders/two_column-teal.png",
-      name: "Two-Column Split",
-      badge: "Structured Layout",
-      tag: "Product & Architecture",
-      accentDot: "bg-teal-500",
-    },
-    {
-      src: "/templates/renders/ats_safe-black.png",
-      name: "ATS-Safe Linear",
-      badge: "Machine-Readable",
-      tag: "Enterprise Recruiting",
-      accentDot: "bg-zinc-500",
-    },
-  ];
-
-  // Continuous smooth transition between resume renders (auto-resets gracefully on user click)
+  // Continuous smooth transition between resume renders
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveBgIndex((prev) => (prev + 1) % lumacvHeroTemplates.length);
+      setActiveBgIndex((prev) => (prev + 1) % LUMACV_HERO_TEMPLATES.length);
     }, 7000);
     return () => clearInterval(timer);
-  }, [lumacvHeroTemplates.length, activeBgIndex]);
+  }, []);
 
   // Pure Framer-Motion scroll tracking with GPU-accelerated spring physics
   const { scrollYProgress } = useScroll({
@@ -91,80 +133,43 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
   // 3. Kinetic Headline Master Container animations (Crossfades in at 0.10, fully visible 0.22 -> 0.86, exits 0.86 -> 0.96)
   const kineticOpacity = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [0, 1, 1, 0]);
   const kineticY = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [20, 0, 0, -20]);
-    const kineticScale = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [0.97, 1, 1, 0.97]);
+  const kineticScale = useTransform(smoothProgress, [0.10, 0.22, 0.86, 0.96], [0.97, 1, 1, 0.97]);
   const kineticPointerEvents = useTransform<number, React.CSSProperties['pointerEvents']>(smoothProgress, (p) => (p >= 0.14 && p <= 0.92 ? "auto" : "none"));
 
   // 4. Staggered phrase & inline template card illumination across scroll (0.20 -> 0.82)
-  // Segment 1: "Deterministic Typst compilation" + Modern Cobalt
   const seg1TextOpacity = useTransform(smoothProgress, [0.20, 0.32], [0.40, 1]);
   const seg1CardOpacity = useTransform(smoothProgress, [0.20, 0.32], [0.35, 1]);
   const seg1CardScale = useTransform(smoothProgress, [0.20, 0.32], [0.85, 1]);
   const seg1CardY = useTransform(smoothProgress, [0.20, 0.32], [6, 0]);
 
-  // Segment 2: "builds the foundation" + Harvard Classic
   const seg2TextOpacity = useTransform(smoothProgress, [0.32, 0.44], [0.40, 1]);
   const seg2CardOpacity = useTransform(smoothProgress, [0.32, 0.44], [0.35, 1]);
   const seg2CardScale = useTransform(smoothProgress, [0.32, 0.44], [0.85, 1]);
   const seg2CardY = useTransform(smoothProgress, [0.32, 0.44], [6, 0]);
 
-  // Segment 3: "where verified ATS precision" + ATS-Safe Linear
   const seg3TextOpacity = useTransform(smoothProgress, [0.44, 0.56], [0.40, 1]);
   const seg3CardOpacity = useTransform(smoothProgress, [0.44, 0.56], [0.35, 1]);
   const seg3CardScale = useTransform(smoothProgress, [0.44, 0.56], [0.85, 1]);
   const seg3CardY = useTransform(smoothProgress, [0.44, 0.56], [6, 0]);
 
-  // Segment 4: "and zero-hallucination AI" + Engineering Mono
   const seg4TextOpacity = useTransform(smoothProgress, [0.56, 0.68], [0.40, 1]);
   const seg4CardOpacity = useTransform(smoothProgress, [0.56, 0.68], [0.35, 1]);
   const seg4CardScale = useTransform(smoothProgress, [0.56, 0.68], [0.85, 1]);
   const seg4CardY = useTransform(smoothProgress, [0.56, 0.68], [6, 0]);
 
-  // Segment 5: "engineer interview-winning" + Two-Column Split + "careers."
   const seg5TextOpacity = useTransform(smoothProgress, [0.68, 0.82], [0.40, 1]);
   const seg5CardOpacity = useTransform(smoothProgress, [0.68, 0.82], [0.35, 1]);
   const seg5CardScale = useTransform(smoothProgress, [0.68, 0.82], [0.85, 1]);
   const seg5CardY = useTransform(smoothProgress, [0.68, 0.82], [6, 0]);
 
-  const scrollToTemplates = () => {
+  const scrollToTemplates = useCallback(() => {
     const target = document.getElementById("templates");
     if (target) {
       target.scrollIntoView({ behavior: "smooth" });
     } else {
       router.push("/templates");
     }
-  };
-
-  // Reusable inline template card component rendered strictly in-flow (zero layout thrashing, zero pixel jitter)
-  const InlineTemplateBox = ({
-    template,
-    scale,
-    opacity,
-    y,
-  }: {
-    template: (typeof lumacvHeroTemplates)[0];
-    scale: MotionValue<number>;
-    opacity: MotionValue<number>;
-    y: MotionValue<number>;
-  }) => (
-    <motion.span
-      style={{ scale, opacity, y }}
-      onClick={scrollToTemplates}
-      className="inline-flex align-middle mx-1 sm:mx-1.5 md:mx-2 h-7 w-11 sm:h-9 sm:w-14 md:h-11 md:w-18 lg:h-12 lg:w-20 rounded-md sm:rounded-lg overflow-hidden border border-border/80 dark:border-white/20 shadow-sm sm:shadow-md bg-card/90 backdrop-blur-xs relative group cursor-pointer select-none transition-all duration-200 hover:scale-110 hover:shadow-lg hover:border-primary/60 will-change-transform z-20"
-      title={`Explore ${template.name} (${template.badge})`}
-    >
-      <img
-        src={template.src}
-        alt={template.name}
-        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-      />
-      {/* Interactive hover tooltip badge */}
-      <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-background/90 backdrop-blur-md py-0.5 px-1 text-[8px] sm:text-[9px] font-mono text-center text-foreground font-semibold truncate opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        {template.name.split(" ")[0]}
-      </span>
-      {/* Subtle border glow effect */}
-      <span className="pointer-events-none absolute inset-0 rounded-md sm:rounded-lg ring-1 ring-inset ring-white/10 group-hover:ring-primary/40 transition-colors" />
-    </motion.span>
-  );
+  }, [router]);
 
   return (
     <div
@@ -180,7 +185,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={lumacvHeroTemplates[activeBgIndex].name}
+              key={LUMACV_HERO_TEMPLATES[activeBgIndex].name}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -192,8 +197,8 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
               }}
             >
               <img
-                src={lumacvHeroTemplates[activeBgIndex].src}
-                alt={`${lumacvHeroTemplates[activeBgIndex].name} Typst Resume Template`}
+                src={LUMACV_HERO_TEMPLATES[activeBgIndex].src}
+                alt={`${LUMACV_HERO_TEMPLATES[activeBgIndex].name} Typst Resume Template`}
                 className="w-full h-full object-cover object-left-top opacity-[0.20] dark:opacity-[0.14] pointer-events-none select-none"
                 style={{
                   objectPosition: "0% 0%",
@@ -210,12 +215,12 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
 
           {/* Floating Meta Tag Pill (Top Left - directly anchored over candidate name area) */}
           <div className="absolute top-5 sm:top-7 left-5 sm:left-7 z-2 hidden sm:inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-card/85 backdrop-blur-md px-4 py-1.5 text-xs text-foreground shadow-sm transition-all duration-500">
-            <span className={cn("h-2 w-2 rounded-full animate-pulse", lumacvHeroTemplates[activeBgIndex].accentDot)} />
-            <span className="font-display font-semibold">{lumacvHeroTemplates[activeBgIndex].name}</span>
+            <span className={cn("h-2 w-2 rounded-full animate-pulse", LUMACV_HERO_TEMPLATES[activeBgIndex].accentDot)} />
+            <span className="font-display font-semibold">{LUMACV_HERO_TEMPLATES[activeBgIndex].name}</span>
             <span className="text-muted-foreground/50">•</span>
-            <span className="font-mono text-[11px] text-primary">{lumacvHeroTemplates[activeBgIndex].badge}</span>
+            <span className="font-mono text-[11px] text-primary">{LUMACV_HERO_TEMPLATES[activeBgIndex].badge}</span>
             <span className="text-muted-foreground/50">•</span>
-            <span className="text-muted-foreground text-[11px]">{lumacvHeroTemplates[activeBgIndex].tag}</span>
+            <span className="text-muted-foreground text-[11px]">{LUMACV_HERO_TEMPLATES[activeBgIndex].tag}</span>
           </div>
         </motion.div>
 
@@ -297,7 +302,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
           }}
           className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 sm:gap-3 w-[92%] max-w-2xl will-change-transform z-20"
         >
-          {lumacvHeroTemplates.map((tmpl, index) => {
+          {LUMACV_HERO_TEMPLATES.map((tmpl, index) => {
             const isActive = activeBgIndex === index;
             return (
               <button
@@ -354,10 +359,11 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
                 Deterministic Typst compilation
               </motion.span>
               <InlineTemplateBox
-                template={lumacvHeroTemplates[0]}
+                template={LUMACV_HERO_TEMPLATES[0]}
                 scale={seg1CardScale}
                 opacity={seg1CardOpacity}
                 y={seg1CardY}
+                onClick={scrollToTemplates}
               />
 
               {/* Segment 2 */}
@@ -368,10 +374,11 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
                 builds the foundation
               </motion.span>
               <InlineTemplateBox
-                template={lumacvHeroTemplates[2]}
+                template={LUMACV_HERO_TEMPLATES[2]}
                 scale={seg2CardScale}
                 opacity={seg2CardOpacity}
                 y={seg2CardY}
+                onClick={scrollToTemplates}
               />
 
               {/* Segment 3 */}
@@ -382,10 +389,11 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
                 where verified ATS precision
               </motion.span>
               <InlineTemplateBox
-                template={lumacvHeroTemplates[4]}
+                template={LUMACV_HERO_TEMPLATES[4]}
                 scale={seg3CardScale}
                 opacity={seg3CardOpacity}
                 y={seg3CardY}
+                onClick={scrollToTemplates}
               />
 
               {/* Segment 4 */}
@@ -396,10 +404,11 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
                 and zero-hallucination AI
               </motion.span>
               <InlineTemplateBox
-                template={lumacvHeroTemplates[1]}
+                template={LUMACV_HERO_TEMPLATES[1]}
                 scale={seg4CardScale}
                 opacity={seg4CardOpacity}
                 y={seg4CardY}
+                onClick={scrollToTemplates}
               />
 
               {/* Segment 5 */}
@@ -410,10 +419,11 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
                 engineer interview-winning
               </motion.span>
               <InlineTemplateBox
-                template={lumacvHeroTemplates[3]}
+                template={LUMACV_HERO_TEMPLATES[3]}
                 scale={seg5CardScale}
                 opacity={seg5CardOpacity}
                 y={seg5CardY}
+                onClick={scrollToTemplates}
               />
               <motion.span
                 style={{ opacity: seg5TextOpacity }}

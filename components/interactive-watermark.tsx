@@ -25,32 +25,57 @@ export function InteractiveWatermark({
         isHovered: false,
     });
 
+    const rafRef = useRef<number | null>(null);
+
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!containerRef.current) return;
-        const sectionRect = containerRef.current.getBoundingClientRect();
-        const sectionPercentX = ((e.clientX - sectionRect.left) / sectionRect.width) * 100;
-        const sectionPercentY = ((e.clientY - sectionRect.top) / sectionRect.height) * 100;
+        const clientX = e.clientX;
+        const clientY = e.clientY;
 
-        let svgX = 500;
-        let svgY = 90;
+        if (rafRef.current !== null) return;
 
-        if (svgRef.current) {
-            const svgRect = svgRef.current.getBoundingClientRect();
-            svgX = ((e.clientX - svgRect.left) / svgRect.width) * 1000;
-            svgY = ((e.clientY - svgRect.top) / svgRect.height) * 180;
-        }
+        rafRef.current = window.requestAnimationFrame(() => {
+            rafRef.current = null;
+            if (!containerRef.current) return;
+            const sectionRect = containerRef.current.getBoundingClientRect();
+            const sectionPercentX = ((clientX - sectionRect.left) / sectionRect.width) * 100;
+            const sectionPercentY = ((clientY - sectionRect.top) / sectionRect.height) * 100;
 
-        setCursor({
-            svgX: Math.max(-150, Math.min(1150, svgX)),
-            svgY: Math.max(-100, Math.min(280, svgY)),
-            sectionPercentX,
-            sectionPercentY,
-            isHovered: true,
+            let svgX = 500;
+            let svgY = 90;
+
+            if (svgRef.current) {
+                const svgRect = svgRef.current.getBoundingClientRect();
+                svgX = ((clientX - svgRect.left) / svgRect.width) * 1000;
+                svgY = ((clientY - svgRect.top) / svgRect.height) * 180;
+            }
+
+            setCursor({
+                svgX: Math.max(-150, Math.min(1150, svgX)),
+                svgY: Math.max(-100, Math.min(280, svgY)),
+                sectionPercentX,
+                sectionPercentY,
+                isHovered: true,
+            });
         });
     };
 
     const handleMouseEnter = () => setCursor(prev => ({ ...prev, isHovered: true }));
-    const handleMouseLeave = () => setCursor(prev => ({ ...prev, isHovered: false }));
+    const handleMouseLeave = () => {
+        if (rafRef.current !== null) {
+            window.cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+        }
+        setCursor(prev => ({ ...prev, isHovered: false }));
+    };
+
+    React.useEffect(() => {
+        return () => {
+            if (rafRef.current !== null) {
+                window.cancelAnimationFrame(rafRef.current);
+            }
+        };
+    }, []);
 
     return (
         <section

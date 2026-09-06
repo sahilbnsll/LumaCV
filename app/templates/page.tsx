@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function TemplatesPage() {
     const router = useRouter();
-    const { setTemplate } = useAppStore();
+    const setTemplate = useAppStore((s) => s.setTemplate);
     const [selectedCategory, setSelectedCategory] = useState<TemplateCategoryId>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [previewTemplate, setPreviewTemplate] = useState<ResumeTemplate | null>(null);

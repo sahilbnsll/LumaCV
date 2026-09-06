@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from './auth-provider';
 import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import { getAppUrl } from '@/lib/app-url';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     const { supabase } = useAuth();
@@ -31,7 +32,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
         setLoading(true);
         try {
             if (mode === 'signup') {
-                const emailRedirectTo = `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectUrl)}`;
+                const emailRedirectTo = getAppUrl(`/auth/confirm?next=${encodeURIComponent(redirectUrl)}`);
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,

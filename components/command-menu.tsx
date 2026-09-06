@@ -30,7 +30,7 @@ export function CommandMenu() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const router = useRouter();
     const { theme, setTheme } = useTheme();
-    const { setTemplate } = useAppStore();
+    const setTemplate = useAppStore((s) => s.setTemplate);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Global Cmd+K / Ctrl+K listener

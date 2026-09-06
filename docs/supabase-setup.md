@@ -23,7 +23,25 @@ This guide walks you through setting up Supabase for LumaCV to support Email/Pas
 
 ---
 
-## 3. Run Database Migrations
+## 3. Configure URL Configuration (Localhost & Production)
+
+To ensure that email verification and password reset links work seamlessly on both local development and your production domain:
+
+1. In your Supabase Dashboard, navigate to **Authentication** $\rightarrow$ **URL Configuration**.
+2. Set **Site URL** to:
+   ```
+   https://lumacv.sahilbansal.net
+   ```
+3. Under **Redirect URLs**, click **Add URL** and register BOTH patterns:
+   ```
+   http://localhost:3000/**
+   https://lumacv.sahilbansal.net/**
+   ```
+4. Click **Save**. Now authentication callbacks, magic links, and password resets will work on both `http://localhost:3000` and `https://lumacv.sahilbansal.net`.
+
+---
+
+## 4. Run Database Migrations
 
 Navigate to the **SQL Editor** in your Supabase dashboard, paste the contents of `supabase/schema.sql`, and click **Run**.
 

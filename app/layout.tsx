@@ -5,11 +5,16 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/components/auth-provider';
-import { FeedbackWidget } from '@/components/feedback-widget';
+import dynamic from 'next/dynamic';
+
+const FeedbackWidget = dynamic(
+  () => import('@/components/feedback-widget').then((m) => m.FeedbackWidget),
+  { ssr: false }
+);
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://lumacv.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://lumacv.sahilbansal.net'),
   title: 'LumaCV',
   description: 'Free, open-source resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
   applicationName: 'LumaCV',
@@ -34,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://lumacv.com',
+    url: 'https://lumacv.sahilbansal.net',
     siteName: 'LumaCV',
     title: 'LumaCV — Open-Source AI Resume Builder & Typst Typesetter',
     description: 'Free, open-source resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
@@ -96,7 +101,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'LumaCV',
-    url: 'https://lumacv.com',
+    url: 'https://lumacv.sahilbansal.net',
     description: 'Free, open-source AI resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'All',

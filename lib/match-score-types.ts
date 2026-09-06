@@ -18,4 +18,31 @@ export type MatchBreakdownEntry = {
 export type MatchScoreResponse = {
     score: number;
     breakdown: Record<MatchCategoryKey, MatchBreakdownEntry>;
+    gapAnalysis?: {
+        scoreReason: string;
+        remainingGaps: Array<{
+            category: string;
+            missingItem: string;
+            impact: string;
+            recommendation: string;
+        }>;
+        partiallyMatched: Array<{
+            requirement: string;
+            evidence: string;
+            coverage: number;
+        }>;
+    };
+    diagnostics?: {
+        formattingATS: boolean;
+        singlePageFit: boolean;
+        factSafetyGuaranteed: boolean;
+        keywordDensity: {
+            score: number;
+            rating: 'optimal' | 'moderate' | 'low';
+            summary: string;
+        };
+        strongestSections: string[];
+        weakestSections: Array<{ section: string; reason: string; action: string }>;
+    };
 };
+

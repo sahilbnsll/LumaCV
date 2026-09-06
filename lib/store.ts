@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ResumeData, AnalyzeJDResponse, TemplateType } from './resume-schema';
+import { ResumeData, AnalyzeJDResponse, TemplateType, GenerateResumeResponse } from './resume-schema';
 import type { MatchScoreResponse } from './match-score-types';
 
 interface AppState {
@@ -25,6 +25,7 @@ interface AppState {
         data: ResumeData;
         typst: string;
         confidenceScore?: number;
+        auditTrail?: GenerateResumeResponse['auditTrail'];
     } | null;
 
 
@@ -35,6 +36,7 @@ interface AppState {
     // Options
     template: TemplateType;
     theme: string;
+    tailorMode: 'optimize' | 'tailor';
 
     // Actions
     setStep: (step: number) => void;
@@ -45,12 +47,13 @@ interface AppState {
     /** After /api/parse-resume — bumps form key so Step 2 fields populate. */
     setResumeDataFromParse: (data: ResumeData) => void;
     setAnalysis: (analysis: AnalyzeJDResponse) => void;
-    setGeneratedResume: (data: ResumeData, typst: string, score?: number) => void;
+    setGeneratedResume: (data: ResumeData, typst: string, score?: number, auditTrail?: GenerateResumeResponse['auditTrail']) => void;
 
     setOriginalScore: (score: AppState['originalScore']) => void;
     setTailoredScore: (score: AppState['tailoredScore']) => void;
     setTemplate: (template: TemplateType) => void;
     setTheme: (theme: string) => void;
+    setTailorMode: (mode: 'optimize' | 'tailor') => void;
     reset: () => void;
 }
 
@@ -69,6 +72,7 @@ export const useAppStore = create<AppState>()(
             tailoredScore: null,
             template: 'modern',
             theme: 'none',
+            tailorMode: 'optimize',
 
             setStep: (step) => set({ step }),
             setJD: (jd) => set({ jd }),
@@ -81,8 +85,8 @@ export const useAppStore = create<AppState>()(
                     resumeDataRevision: s.resumeDataRevision + 1,
                 })),
             setAnalysis: (analysis) => set({ jdAnalysis: analysis }),
-            setGeneratedResume: (data, typst, score) => set({
-                generatedResume: { data, typst, confidenceScore: score }
+            setGeneratedResume: (data, typst, score, auditTrail) => set({
+                generatedResume: { data, typst, confidenceScore: score, auditTrail }
             }),
 
 
@@ -90,6 +94,7 @@ export const useAppStore = create<AppState>()(
             setTailoredScore: (score) => set({ tailoredScore: score }),
             setTemplate: (template) => set({ template }),
             setTheme: (theme) => set({ theme }),
+            setTailorMode: (tailorMode) => set({ tailorMode }),
 
             reset: () => set({
                 step: 1,
@@ -104,6 +109,7 @@ export const useAppStore = create<AppState>()(
                 tailoredScore: null,
                 template: 'modern',
                 theme: 'none',
+                tailorMode: 'optimize',
             }),
         }),
         {

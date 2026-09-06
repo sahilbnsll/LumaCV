@@ -5,6 +5,9 @@ const nextConfig = {
   },
   poweredByHeader: false,
   compress: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   experimental: {
     outputFileTracingIncludes: {
       '/api/**/*': ['./bin/**/*', './typst/**/*'],
@@ -19,6 +22,9 @@ const nextConfig = {
       '@radix-ui/react-tabs',
       '@radix-ui/react-progress',
       '@radix-ui/react-radio-group',
+      '@radix-ui/react-slot',
+      'clsx',
+      'tailwind-merge',
       'sonner',
     ],
   },
@@ -32,6 +38,31 @@ const nextConfig = {
     }
 
     return config;
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
   },
   async rewrites() {
     return [

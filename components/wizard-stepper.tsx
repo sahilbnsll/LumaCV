@@ -13,7 +13,8 @@ const steps = [
 ];
 
 export function WizardStepper() {
-    const { step: currentStep, setStep } = useAppStore();
+    const currentStep = useAppStore((s) => s.step);
+    const setStep = useAppStore((s) => s.setStep);
 
     return (
         <nav aria-label="Resume studio workflow steps" className="flex items-center gap-1 sm:gap-2 max-w-full overflow-x-auto no-scrollbar py-1">

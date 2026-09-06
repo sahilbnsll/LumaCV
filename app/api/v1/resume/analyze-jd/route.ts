@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateStream, collectStream, extractJsonObjectFromAssistantText } from '@/lib/llm-client';
-import { getPromptTemplate } from '@/lib/prompt-cache';
+import { analyzeJobDescription } from '@/lib/jd-analysis';
 import { ratelimit } from '@/lib/rate-limit';
-import { jsonrepair } from 'jsonrepair';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
 import { requireUser } from '@/lib/auth';
 import { z } from 'zod';
@@ -41,30 +39,8 @@ export async function POST(req: NextRequest) {
         }
 
         const { jd } = validated.data;
-
-        const promptTemplate = await getPromptTemplate('jd-analyze.txt');
-        const prompt = promptTemplate.replace('{{JD_TEXT}}', jd.substring(0, 12000));
-
-        console.log(`[AnalyzeJD] Starting JD analysis (BYOK: ${usingCustomKeys})...`);
-        const { textStream, model } = await generateStream(prompt, undefined, 'light', {
-            maxTokens: 1500,
-            userKeys,
-        });
-
-        console.log(`[AnalyzeJD] Connected via ${model}, collecting stream...`);
-        const rawText = await collectStream(textStream);
-        console.log(`[AnalyzeJD] Stream complete (${rawText.length} chars)`);
-
-        const jsonText = extractJsonObjectFromAssistantText(rawText);
-        let parsed: unknown;
-        try {
-            parsed = JSON.parse(jsonText);
-        } catch {
-            const repaired = jsonrepair(jsonText);
-            parsed = JSON.parse(repaired);
-        }
-
-        return NextResponse.json(parsed);
+        const result = await analyzeJobDescription(jd, userKeys);
+        return NextResponse.json(result);
 
     } catch (error: unknown) {
         console.error('[AnalyzeJD] Error:', error);

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
+    const origin = request.nextUrl.origin || requestUrl.origin;
     const code = requestUrl.searchParams.get('code');
     const token_hash = requestUrl.searchParams.get('token_hash');
     const type = requestUrl.searchParams.get('type');
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
             console.error('Session exchange error:', error);
-            return NextResponse.redirect(new URL('/login?error=Invalid+or+expired+link.+Please+log+in.', request.url));
+            return NextResponse.redirect(getAppUrl('/login?error=Invalid+or+expired+link.+Please+log+in.', origin));
         }
     } else if (token_hash && type && emailTypes.has(type)) {
         const { error } = await supabase.auth.verifyOtp({
@@ -25,9 +27,9 @@ export async function GET(request: NextRequest) {
         });
         if (error) {
             console.error('Verify OTP error:', error);
-            return NextResponse.redirect(new URL('/login?error=Invalid+or+expired+link.+Please+log+in.', request.url));
+            return NextResponse.redirect(getAppUrl('/login?error=Invalid+or+expired+link.+Please+log+in.', origin));
         }
     }
 
-    return NextResponse.redirect(new URL(safeNext, request.url));
+    return NextResponse.redirect(getAppUrl(safeNext, origin));
 }

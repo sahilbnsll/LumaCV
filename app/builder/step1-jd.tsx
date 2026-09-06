@@ -47,7 +47,13 @@ Requirements:
 
 export function Step1JD() {
     const { user } = useAuth();
-    const { jd, setJD, setFile, setExtractedText, setStep, setResumeDataFromParse, resumeData } = useAppStore();
+    const jd = useAppStore((s) => s.jd);
+    const setJD = useAppStore((s) => s.setJD);
+    const setFile = useAppStore((s) => s.setFile);
+    const setExtractedText = useAppStore((s) => s.setExtractedText);
+    const setStep = useAppStore((s) => s.setStep);
+    const setResumeDataFromParse = useAppStore((s) => s.setResumeDataFromParse);
+    const resumeData = useAppStore((s) => s.resumeData);
     const [parseStage, setParseStage] = useState<'idle' | 'extracting' | 'mapping' | 'success' | 'error'>('idle');
     const [statusMessage, setStatusMessage] = useState('');
     const [fileName, setFileName] = useState<string | null>(null);
@@ -340,17 +346,18 @@ export function Step1JD() {
             </div>
 
             {/* Bottom Nav Bar */}
-            <div className="flex items-center justify-between pt-6 border-t border-border/60 dark:border-white/10">
-                <div className="text-xs font-mono text-muted-foreground">
+            <div className="flex items-center justify-between pt-6 border-t border-border/60 dark:border-white/10 gap-3">
+                <div className="text-xs font-mono text-muted-foreground shrink-0">
                     Step 01 of 04
                 </div>
 
                 <Button
                     onClick={handleNext}
                     size="sm"
-                    className="h-10 px-6 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                    className="h-10 px-4 sm:px-6 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
                 >
-                    <span>Continue to Details Review</span>
+                    <span className="hidden sm:inline">Continue to Details Review</span>
+                    <span className="sm:hidden">Continue</span>
                     <ArrowRight className="h-4 w-4" />
                 </Button>
             </div>
