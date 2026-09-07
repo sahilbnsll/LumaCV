@@ -297,7 +297,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                                 }
                             }}
                             className={cn(
-                                "relative flex flex-col justify-end overflow-hidden rounded-xl cursor-pointer will-change-[flex,transform] transition-[flex] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                                "relative flex flex-col justify-end overflow-hidden rounded-xl cursor-pointer will-change-[flex,transform] transition-[flex] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                                 isActive
                                     ? "flex-[6] sm:flex-[7] ring-1 ring-primary/60 border border-border/80 shadow-xl z-10"
                                     : "flex-[1.1] sm:flex-[1] hover:flex-[1.4] sm:hover:flex-[1.3] border border-border/40 opacity-80 hover:opacity-100 z-1"
@@ -306,7 +306,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                                 transform: 'translate3d(0, 0, 0)',
                                 opacity: 1,
                                 transitionProperty: 'flex, opacity, transform',
-                                transitionDuration: '550ms',
+                                transitionDuration: '300ms',
                                 transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
                             }}
                         >

@@ -97,7 +97,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveBgIndex((prev) => (prev + 1) % LUMACV_HERO_TEMPLATES.length);
-    }, 7000);
+    }, 4500);
     return () => clearInterval(timer);
   }, []);
 
@@ -109,10 +109,10 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
 
   // Silky smooth, jitter-free spring interpolation for 60/120/144Hz displays
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 95,
-    damping: 26,
-    mass: 0.2,
-    restDelta: 0.0005,
+    stiffness: 160,
+    damping: 24,
+    mass: 0.1,
+    restDelta: 0.0001,
   });
 
   // 0. Background Resume Showcase animation (Scroll: 0.00 -> 0.16)
@@ -174,7 +174,7 @@ export const HomeHeroLandingScrollAnimation: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[225vh] bg-background text-foreground"
+      className="relative w-full h-[175vh] bg-background text-foreground"
     >
       {/* Sticky Fullscreen Stage (GPU Composited) */}
       <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden">
