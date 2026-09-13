@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.8.0] - 2026-09-13
+
+### Fixed
+- **Homepage scroll smoothness**: the hero's scroll-linked zoom used spring physics (`useSpring`) to smooth the scrubbing, which by construction settles toward a moving target — it could not be simultaneously lag-free and jitter-free no matter how it was tuned. Replaced with a damped `requestAnimationFrame` lerp (the Lenis/Apple "smooth the read, never hijack scroll" technique): a shadow progress value is nudged 12% of the way toward the real scroll position every frame, continuously trailing it rather than settling. Native scroll, momentum, and `prefers-reduced-motion` behavior are untouched.
+- **Sticky header jank**: the header's `backdrop-filter` blur sat directly above the hero's continuously animating (not scroll-linked) resume-card corridor, forcing a full re-blur of that actively-changing content every frame regardless of whether the page was actually scrolling. Removed the blur entirely in favor of a near-opaque background.
+- **Navigation drawer scroll lag**: the full-screen nav's glass panel and scrim were re-blurring the still-animating hero corridor behind them the entire time the drawer was open, competing with the drawer's own list scroll for frame budget. The corridor's CSS animation now pauses (`animation-play-state: paused`) the instant the drawer opens via a `nav-open` body class, and resumes on close. Also dropped the panel's blur from a heavy `2xl` radius to `md`, and removed a permanently-held `will-change: transform, opacity` on every list item that kept 8–10 GPU layers alive indefinitely after their entrance animation finished.
+- **MIT License link**: footer linked to `blob/main/LICENSE` on a repo whose default branch is `master`, producing a 404. Corrected to `blob/master/LICENSE`.
+
+### Changed
+- **Nav drawer open/close timing**: slowed and re-eased the GSAP timeline (panel slide 0.32s/0.22s → 0.6s/0.5s, using the same Apple-style `[0.16, 1, 0.3, 1]` deceleration curve already defined elsewhere in the app) so it reads as a deliberate glide instead of a snap; removed the "Open Source" header label and "Typst Vector Engine" status line as unnecessary chrome.
+- Added the site footer to the resume editor workspace page (`/editor`), which previously had none.
+
+### Docs
+- `.env.example`: clarified that `QSTASH_URL` is provisioned per-region by Upstash (not a fixed global endpoint) and must be copied from each account's own QStash console; documented the previously-undocumented `FEEDBACK_NOTIFICATION_EMAIL` / `FEEDBACK_RECIPIENT_EMAIL` aliases the feedback-email code already read.
+
+---
+
 ## [2.7.0] - 2026-09-13
 
 ### Fixed
