@@ -118,22 +118,26 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
 
         const tl = gsap.timeline();
 
+        const mainEase = getMainEase();
+
         if (open) {
             document.body.style.overflow = 'hidden';
+            document.body.classList.add('nav-open');
             tl.set(rootRef.current, { display: 'flex' })
-                .fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: 'power2.out' })
-                .fromTo(panelRef.current, { xPercent: 100 }, { xPercent: 0, duration: 0.32, ease: 'power3.out' }, '<')
+                .fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' })
+                .fromTo(panelRef.current, { xPercent: 100 }, { xPercent: 0, duration: 0.6, ease: mainEase }, '<')
                 .fromTo(
                     linkRefs.current,
-                    { opacity: 0, x: 12 },
-                    { opacity: 1, x: 0, duration: 0.24, stagger: 0.015, ease: 'power2.out' },
-                    '<+=0.05'
+                    { opacity: 0, x: 16 },
+                    { opacity: 1, x: 0, duration: 0.4, stagger: 0.035, ease: 'power2.out' },
+                    '<+=0.18'
                 );
         } else {
             document.body.style.overflow = '';
-            tl.to(linkRefs.current, { opacity: 0, x: 8, duration: 0.14, stagger: 0.006, ease: 'power2.in' })
-                .to(panelRef.current, { xPercent: 100, duration: 0.22, ease: 'power3.inOut' }, '<+=0.02')
-                .to(overlayRef.current, { opacity: 0, duration: 0.18, ease: 'power2.out' }, '<')
+            document.body.classList.remove('nav-open');
+            tl.to(linkRefs.current, { opacity: 0, x: 10, duration: 0.22, stagger: 0.018, ease: 'power2.in' })
+                .to(panelRef.current, { xPercent: 100, duration: 0.5, ease: mainEase }, '<+=0.04')
+                .to(overlayRef.current, { opacity: 0, duration: 0.35, ease: 'power2.out' }, '<')
                 .set(rootRef.current, { display: 'none' });
         }
 
@@ -172,7 +176,7 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
             {/* Clean Apple-grade glassmorphic drawer */}
             <div
                 ref={panelRef}
-                className="absolute inset-y-0 right-0 w-full max-w-xl lg:max-w-2xl flex flex-col bg-background/95 backdrop-blur-2xl border-l border-border/70 shadow-2xl overflow-hidden"
+                className="absolute inset-y-0 right-0 w-full max-w-xl lg:max-w-2xl flex flex-col bg-background/95 backdrop-blur-md border-l border-border/70 shadow-2xl overflow-hidden"
                 style={{ willChange: 'transform' }}
             >
                 {/* Header */}
@@ -180,7 +184,6 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
                     <div className="flex items-center gap-2.5">
                         <LumaLogo size={22} />
                         <span className="font-display font-bold text-base text-foreground">LumaCV</span>
-                        <span className="hidden sm:inline text-xs text-muted-foreground">Open Source</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <kbd className="hidden sm:inline text-[10px] font-mono text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
@@ -208,7 +211,6 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
                                 <li
                                     key={item.href}
                                     ref={(el) => { linkRefs.current[i] = el; }}
-                                    style={{ willChange: 'transform, opacity' }}
                                 >
                                     <Link
                                         href={item.href}
@@ -250,38 +252,32 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
                     </ul>
                 </nav>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-8 py-4 border-t border-border/60 text-xs text-muted-foreground shrink-0 bg-background/50">
-                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                            {user ? (
-                                <Link href="/profile" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
-                                    Settings
-                                </Link>
-                            ) : (
-                                <Link href="/login" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
-                                    Sign in
-                                </Link>
-                            )}
-                            <span className="text-border">·</span>
-                            <Link href="/docs" onClick={onClose} className="hover:text-foreground transition-colors">
-                                Docs
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-5 sm:px-8 py-4 border-t border-border/60 text-xs text-muted-foreground shrink-0 bg-background/50">
+                        {user ? (
+                            <Link href="/profile" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
+                                Settings
                             </Link>
-                            <span className="text-border">·</span>
-                            <Link href="/billing" onClick={onClose} className="hover:text-foreground transition-colors">
-                                Billing
+                        ) : (
+                            <Link href="/login" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
+                                Sign in
                             </Link>
-                            <span className="text-border">·</span>
-                            <Link href="/support" onClick={onClose} className="hover:text-foreground transition-colors">
-                                Support
-                            </Link>
-                            <span className="text-border">·</span>
-                            <Link href="/contact" onClick={onClose} className="hover:text-foreground transition-colors">
-                                Contact
-                            </Link>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="font-mono text-[11px]">Typst Vector Engine</span>
-                        </div>
+                        )}
+                        <span className="text-border">·</span>
+                        <Link href="/docs" onClick={onClose} className="hover:text-foreground transition-colors">
+                            Docs
+                        </Link>
+                        <span className="text-border">·</span>
+                        <Link href="/billing" onClick={onClose} className="hover:text-foreground transition-colors">
+                            Billing
+                        </Link>
+                        <span className="text-border">·</span>
+                        <Link href="/support" onClick={onClose} className="hover:text-foreground transition-colors">
+                            Support
+                        </Link>
+                        <span className="text-border">·</span>
+                        <Link href="/contact" onClick={onClose} className="hover:text-foreground transition-colors">
+                            Contact
+                        </Link>
                     </div>
             </div>
         </div>

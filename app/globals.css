@@ -545,6 +545,16 @@
   will-change: transform;
 }
 
+/* The hero's resume-card corridor animates continuously (not scroll-linked),
+   so while it sits behind the full-screen nav's blurred glass panel + scrim,
+   the browser keeps re-sampling that ever-changing content through two
+   backdrop-filter layers every frame — competing with the drawer's own list
+   scroll for frame budget. Freezing it while the drawer is open removes that
+   cost entirely (a static backdrop is far cheaper to blur than a moving one). */
+body.nav-open [data-luma-stream-card] {
+  animation-play-state: paused !important;
+}
+
 /* Accessibility: High-Fidelity Prefers Reduced Motion Respect */
 @media (prefers-reduced-motion: reduce) {
   *,

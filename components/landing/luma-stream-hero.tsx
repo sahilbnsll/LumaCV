@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Layers, ShieldCheck } from "lucide-react";
-import { motion, useScroll, useTransform, useSpring, useReducedMotion, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValue, useReducedMotion, useMotionValueEvent } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ImageStreamHero, StreamImage } from "@/components/ui/image-stream-hero";
 import { cn } from "@/lib/utils";
-import { SPRING_PRESETS } from "@/lib/motion";
 
 const TEMPLATE_STREAM_IMAGES: StreamImage[] = [
   { src: "/templates/modern.png", alt: "Vector Modern Tech Resume" },
@@ -39,7 +38,30 @@ export function LumaStreamHero() {
     offset: ["start start", "end end"],
   });
 
-  const smoothProgress = useSpring(scrollYProgress, SPRING_PRESETS.scroll);
+  // Damped rAF lerp instead of spring physics: a spring settles toward a
+  // moving target (always slightly behind, or overshoots if tuned snappy),
+  // while this continuously chases the real scroll value every frame — the
+  // same "smooth the read, never hijack scroll" technique Lenis/Apple use
+  // for scroll-scrubbed motion. Native scroll, momentum, and a11y are
+  // untouched; only the shadow value driving the transforms is smoothed.
+  const smoothProgress = useMotionValue(0);
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      smoothProgress.set(scrollYProgress.get());
+      return;
+    }
+    let rafId: number;
+    const DAMPING = 0.12;
+    const tick = () => {
+      const current = smoothProgress.get();
+      const target = scrollYProgress.get();
+      const next = current + (target - current) * DAMPING;
+      smoothProgress.set(Math.abs(target - next) < 0.0005 ? target : next);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [scrollYProgress, smoothProgress, prefersReducedMotion]);
 
   // 1. Center hero content fades out and lifts gracefully as scroll zoom starts
   const contentY = useTransform(smoothProgress, [0.05, 0.32], [0, -70]);

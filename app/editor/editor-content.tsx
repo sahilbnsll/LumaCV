@@ -18,6 +18,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { Button } from '@/components/ui/button';
 import { FullScreenNav, KineticMenuButton } from '@/components/full-screen-nav';
+import { EditorialFooter } from '@/components/landing/editorial-footer';
 import {
     Sheet,
     SheetContent,
@@ -547,6 +548,8 @@ function EditorContent() {
                     </section>
                 </div>
             </main>
+
+            <EditorialFooter />
 
             {/* ── TEMPLATES GALLERY DRAWER (Browse all 52 Typst templates) ── */}
             <Sheet open={templateSheetOpen} onOpenChange={setTemplateSheetOpen}>

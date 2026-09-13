@@ -197,6 +197,7 @@ export function ImageStreamHero({
             return (
               <div
                 key={`right-${i}`}
+                data-luma-stream-card="true"
                 className={cn(
                   cardClass,
                   "absolute overflow-hidden bg-card rounded-[inherit] border border-border/50",
@@ -239,6 +240,7 @@ export function ImageStreamHero({
             return (
               <div
                 key={`left-${i}`}
+                data-luma-stream-card="true"
                 className={cn(
                   cardClass,
                   "absolute overflow-hidden bg-card rounded-[inherit] border border-border/50",

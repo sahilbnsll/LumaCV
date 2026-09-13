@@ -31,7 +31,7 @@ export function AppHeader() {
 
     return (
         <>
-        <header className="w-full bg-background/90 backdrop-blur-md border-b border-border/40 sticky top-0 z-50 transition-colors">
+        <header className="w-full bg-background/95 border-b border-border/40 sticky top-0 z-50 transition-colors">
             <div className="w-full max-w-7xl mx-auto flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Left: LumaCV Brand Logo (No navbar) */}
                 <div className="flex items-center">

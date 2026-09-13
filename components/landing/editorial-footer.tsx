@@ -15,7 +15,7 @@ import { LumaLogo } from "@/components/luma-logo";
 import { SUPPORT_CONFIG } from "@/lib/support-config";
 
 const githubUrl = "https://github.com/sahilbnsll/LumaCV";
-const licenseUrl = `${githubUrl}/blob/main/LICENSE`;
+const licenseUrl = `${githubUrl}/blob/master/LICENSE`;
 
 type FooterLink = {
   label: string;
