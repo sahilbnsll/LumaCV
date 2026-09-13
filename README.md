@@ -8,7 +8,7 @@ Open-source resume engineering platform built on Typst, Next.js 14, and transpar
 
 ## Overview
 
-LumaCV is an open-source, deterministic resume creation and optimization platform for engineers, researchers, and technical leaders. It replaces HTML-to-PDF canvas wrappers and LaTeX toolchains with the Typst typesetting engine (under 50ms native compilation).
+LumaCV is an open-source, deterministic resume creation and optimization platform for engineers, researchers, and technical leaders. It replaces HTML-to-PDF canvas wrappers and LaTeX toolchains with the Typst typesetting engine — the layout itself typesets in milliseconds; end-to-end request latency (a few hundred ms) is dominated by spawning the compiler process, not typesetting.
 
 The AI pipeline operates in two modes — general resume optimization and job-description-targeted alignment — and is transparent by design: every change comes with a diff, a rationale, and a competency gap analysis, not a black-box rewrite.
 
@@ -16,14 +16,14 @@ The AI pipeline operates in two modes — general resume optimization and job-de
 
 ## Features
 
-- **Sub-50ms Typst compilation**: native vector typesetting with precise spacing and hierarchy.
+- **Native Typst compilation**: millisecond-scale vector typesetting with precise spacing and hierarchy.
 - **Dual AI tailoring modes**: general optimization (Mode 1) and targeted JD alignment with adjacent-technology bridging (Mode 2) — see [Tailoring Modes](#tailoring-modes).
 - **Transparent audit trail**: before/after bullet diffs, a skills rationale matrix, JD-to-resume evidence mapping, and score gap diagnostics — see [Audit Trail](#audit-trail).
 - **Deterministic ATS scoring**: a normalized 4-pillar formula covering hard skills, responsibilities, keyword density, and formatting compliance.
 - **52 Typst templates**: Classic/ATS-Optimized, Modern & Tech, and Executive & Advisory families — see [`lib/resume-schema.ts`](lib/resume-schema.ts).
 - **Bring Your Own Key (BYOK)**: Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud, plus five system-configured fallback providers so the app works without a BYOK key.
 - **Dual export**: vector PDF or raw Typst source (`.typ`) for offline CLI builds.
-- **Privacy-first**: client-side PDF/DOCX text extraction — the file never leaves the browser, only extracted text is sent server-side for AI features. Optional Supabase authentication. See the [Privacy Policy](https://lumacv.sahilbansal.net/privacy).
+- **Privacy-conscious**: client-side PDF/DOCX text extraction — the file itself never leaves the browser, only extracted text is sent server-side for AI features. Browsing and template exploration don't require an account; compiling, exporting, and AI tailoring do. See the [Privacy Policy](https://lumacv.sahilbansal.net/privacy).
 - Responsive across mobile, tablet, and desktop; self-hostable.
 
 ---
@@ -64,7 +64,7 @@ LumaCV exposes every editorial decision instead of hiding them behind a black-bo
 
 Colorways: `none`, `navy`, `cobalt`, `emerald`, `burgundy`, `teal`, `slate`, `black`.
 
-Browse all variations in the [template gallery](http://localhost:3000/templates).
+Browse all variations in the [template gallery](https://lumacv.sahilbansal.net/templates).
 
 ---
 
@@ -141,9 +141,9 @@ Open [http://localhost:3000](http://localhost:3000).
  extracts JD keywords if the caller didn't already have them]
         |
         v POST /api/v1/resume/compile
-[Typst native engine (bin/typst)]
+[Typst native engine (bin/typst), bundled Inter + JetBrains Mono fonts]
         |
-        v (under 50ms)
+        v
 [Vector PDF preview and download]
 ```
 
@@ -198,6 +198,7 @@ node scripts/test-visual-regression.mjs
 - [Production Deployment Guide](docs/deployment.md) — Vercel, Docker, self-hosted VPS
 - [Supabase Setup & Schema](docs/supabase-setup.md) — authentication, database tables, RLS policies
 - [Troubleshooting Guide](docs/troubleshooting.md) — common deployment and runtime issues
+- [Roadmap](docs/roadmap.md) — unscheduled ideas and future directions
 - [Contributing Guidelines](CONTRIBUTING.md) — branching strategy and PR guidelines
 
 ---

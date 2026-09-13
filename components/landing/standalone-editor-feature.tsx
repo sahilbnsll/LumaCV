@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   GripVertical,
   SlidersHorizontal,
-  HardDrive,
+  FileOutput,
   ArrowRight,
   Eye,
   Pencil,
@@ -483,9 +483,9 @@ export function StandaloneEditorFeature() {
                   <div className="text-[11px] text-muted-foreground">Fine-tune font size, margins, and accents.</div>
                 </div>
                 <div className="p-3 rounded-xl bg-muted/20 border border-border/40">
-                  <HardDrive className="w-4 h-4 text-primary mb-1.5" />
-                  <div className="text-xs font-semibold text-foreground">Browser Local Storage</div>
-                  <div className="text-[11px] text-muted-foreground">Drafts persist securely without an account.</div>
+                  <FileOutput className="w-4 h-4 text-primary mb-1.5" />
+                  <div className="text-xs font-semibold text-foreground">Multi-Format Export</div>
+                  <div className="text-[11px] text-muted-foreground">PDF, DOCX, Markdown, or raw Typst source.</div>
                 </div>
               </div>
             </div>

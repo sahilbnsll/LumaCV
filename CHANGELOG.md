@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.9.0] - 2026-09-13
+
+### Fixed
+- **Production Typst font resolution**: `theme.typ`'s font-sans/font-serif stacks list "Inter" and "JetBrains Mono" as the primary choice, but neither ships in Typst's own embedded fonts (only DejaVu Sans Mono, Libertinus Serif, New Computer Modern), and production (Vercel/Linux) passed no `--font-path` at all. Every sans-serif template — the majority of the 52 — was silently falling through the entire font chain in production and rendering in the wrong fallback font. Bundled Inter + JetBrains Mono as single variable-font files (`typst/fonts/`, SIL OFL licensed) and wired `--font-path` on both platforms; verified a real compile now resolves both fonts with zero warnings.
+- **Liquid-glass dialogs nearly opaque in light mode**: the modal overlay was a flat `bg-black/50`, which crushed the page behind a liquid-glass panel into a uniform dim with nothing left for the glass blur to actually reveal. Lightened and blurred the overlay (`bg-black/15 backdrop-blur-[2px]` in light mode) so the real page shows through, softened, behind the panel.
+- **Header effectively invisible once scrolled**: the shared `AppHeader` (every page except the editor) used a flat `bg-background/95` with a very faint border, which blended almost seamlessly into a dark page once scrolled past the fold. Switched to the project's own `.glass-nav` utility — the same treatment the editor's headers already used — so every page now shares one consistent, clearly-visible header.
+- **Editor header inconsistency**: the editor's two custom headers used a smaller, lighter-weight logo + wordmark (`size=22`, `font-semibold`) than every other page's shared header (`size=26`, `font-bold`, tighter tracking); unified.
+- **Animation jank from layout-triggering CSS**: three progress bars animated `width` (forces reflow every frame) instead of `transform: scaleX` (GPU-composited) — the AI-tailoring pipeline progress bar, the wizard stepper's connector fill, and the ATS score breakdown bars.
+- **Metaballs loader console error**: `<circle> attribute cx: Expected length, "undefined"` — a redundant static `cx` prop raced with the same circle's own Framer Motion animation on mount.
+- **Feedback endpoint had no rate limiting** despite emailing the admin and writing to Supabase/disk on every call — an open spam/cost vector. Added the same IP-based limiter used elsewhere.
+
+### Changed
+- **Merged `/billing` and `/support`** into one canonical `/billing` page — both pages duplicated the same three support-method cards and UPI dialog almost verbatim. `/support` now redirects. Rebuilt with liquid-glass throughout, verified in both themes and at mobile/tablet/desktop widths.
+- **Loading animations**: replaced generic `Loader2` spinners on every primary/full-page loading state with the new `Loader` component's distinctive variants, and removed the literal "document scanner" laser-sweep-and-crosshair visual from the Typst compile HUD in favor of the same component.
+- **Footer wordmark**: added a cursor-following gradient reveal masked to the letter glyphs (ported from the previously-unused `InteractiveWatermark` component's technique — `mask-image` circle reveal, not a rectangle behind the text), and switched the hardcoded version string to a live GitHub releases API fetch.
+- **Removed several overstated trust badges** ("100% Client-Side Privacy," "No ads, paywalls, or tracking," "Drafts persist... without an account") that didn't hold up against the app's actual auth-gated behavior for compiling/exporting/AI features; swapped for accurate copy where a claim needed replacing rather than just deleting it.
+- Added a portfolio link to the footer's social row, and an explicit Dashboard link to the mobile nav's quick-link row (previously reachable only via "My Resumes" or the desktop header).
+- AI Generation Mode selector (Step 2) redesigned with real icon badges and a proper radio-style selection indicator instead of a checkmark that only appeared once selected.
+
+### Security
+- Rate-limited the public `/api/v1/feedback` endpoint (IP-based, same limiter used for AI provider calls).
+
+### Docs
+- Corrected the "sub-50ms Typst compilation" claim in the README and API reference — that figure is Typst's internal typesetting time; real end-to-end request latency is dominated by process-spawn overhead (measured ~280-300ms), not typesetting. `/api/v1/resume/score` genuinely is sub-50ms Edge Runtime (pure deterministic string matching, no process spawn) — that claim was accurate and left as-is.
+- Fixed a stale `localhost:3000` template-gallery link and an incorrect rate-limit figure (doc said 30 req/min, code is 90) in the API reference.
+- Moved `future_plans.md` into `docs/roadmap.md` for a cleaner repo root.
+
+---
+
 ## [2.8.0] - 2026-09-13
 
 ### Fixed

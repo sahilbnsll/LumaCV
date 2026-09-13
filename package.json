@@ -1,6 +1,6 @@
 {
   "name": "lumacv",
-  "version": "0.1.0",
+  "version": "2.9.0",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -30,7 +30,6 @@
     "@radix-ui/react-tabs": "^1.1.0",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
-    "@upstash/qstash": "^2.10.1",
     "@upstash/ratelimit": "^1.0.0",
     "@vercel/analytics": "^2.0.1",
     "ai": "^6.0.146",

@@ -21,6 +21,7 @@ import {
     RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { extractTextFromFile } from '@/lib/document-parser';
 import { getCustomKeyHeaders } from '@/lib/ai-keys';
 import { ResumeData, ResumeDataSchema } from '@/lib/resume-schema';
@@ -242,7 +243,7 @@ export function ResumeEditorEntry({ onComplete, onCancel }: ResumeEditorEntryPro
                         <div className="py-12 px-4 flex flex-col items-center justify-center text-center space-y-6">
                             <div className="relative">
                                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                                    <Loader variant="helix" size={32} className="text-primary" />
                                 </div>
                                 <Sparkles className="w-5 h-5 text-amber-500 absolute -top-1.5 -right-1.5 animate-pulse" />
                             </div>

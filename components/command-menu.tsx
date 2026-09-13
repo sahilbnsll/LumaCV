@@ -136,10 +136,10 @@ export function CommandMenu({ hideTrigger = false }: { hideTrigger?: boolean } =
         },
         {
             id: 'support-center',
-            label: 'Support',
+            label: 'Billing & Support',
             category: 'Help',
             icon: HelpCircle,
-            action: () => router.push('/support'),
+            action: () => router.push('/billing'),
         },
         ...ALL_TEMPLATES.map((tmpl) => ({
             id: `template-${tmpl.id}`,

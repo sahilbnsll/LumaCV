@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowDown, ArrowUpRight, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { SPRING_PRESETS } from "@/lib/motion";
 import { notify } from "@/lib/notify";
 import { exportResume } from "@/lib/resume-export";
@@ -139,6 +139,12 @@ export function ExportFormatShowcase() {
     return () => window.removeEventListener("lumacv:candidate-updated", handler);
   }, []);
 
+  const selectedIndex = FORMATS.findIndex((f) => f.id === selectedFormat.id);
+  const cycleFormat = (direction: 1 | -1) => {
+    const next = (selectedIndex + direction + FORMATS.length) % FORMATS.length;
+    setSelectedFormat(FORMATS[next]);
+  };
+
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
@@ -267,113 +273,91 @@ export function ExportFormatShowcase() {
 
           {/* ── Left Column: Physical Layered Card Fan ─────────────── */}
           <div className="lg:col-span-6 flex flex-col items-center justify-center">
-            <div className="relative w-[270px] sm:w-[310px] aspect-[1/1.4] select-none group">
-              
-              {/* Ghost Under-layer 1 (Deepest) */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 rounded-2xl bg-[#1e1f23] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] pointer-events-none p-6 flex flex-col justify-between"
-                style={{ transform: "rotate(-12deg) translate(-16px, 12px)" }}
-              >
-                <div className="flex justify-between items-center opacity-30">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white">LUMACV ENGINE</span>
-                  <span className="size-2 rounded-full bg-white/40" />
-                </div>
-                <div className="space-y-2 opacity-20">
-                  <div className="h-2 w-1/2 bg-white rounded" />
-                  <div className="h-1.5 w-3/4 bg-white rounded" />
-                  <div className="h-1.5 w-2/3 bg-white rounded" />
-                </div>
-                <div className="opacity-20 text-[10px] font-mono text-white">READY TO EXPORT</div>
-              </div>
+            <div className="relative w-[270px] sm:w-[310px] aspect-[1/1.4] select-none">
+              {/* Real deck-shuffle: every format is its own permanent card
+                  (never remounted, never content-swapped) parked at a "slot"
+                  position computed from its distance behind the selected one.
+                  Changing selectedFormat just moves the slot targets — front
+                  springs back and fades toward the rear, the next-up card
+                  springs up to the front, exactly like fanning a real deck.
+                  Only the front card is draggable/interactive. */}
+              {FORMATS.map((fmt, i) => {
+                const slot = (i - selectedIndex + FORMATS.length) % FORMATS.length;
+                const isFront = slot === 0;
+                const slotStyle = [
+                  { x: 0, y: 0, rotate: -2, scale: 1, opacity: 1 },
+                  { x: -10, y: 8, rotate: -6, scale: 0.96, opacity: 1 },
+                  { x: -20, y: 16, rotate: -10, scale: 0.92, opacity: 0.85 },
+                  { x: -30, y: 24, rotate: -14, scale: 0.88, opacity: 0.6 },
+                ][slot];
 
-              {/* Ghost Under-layer 2 (Middle) */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 rounded-2xl bg-[#292b30] border border-white/12 shadow-[0_25px_60px_rgba(0,0,0,0.7)] pointer-events-none p-6 flex flex-col justify-between"
-                style={{ transform: "rotate(-6deg) translate(-8px, 6px)" }}
-              >
-                <div className="flex justify-between items-center opacity-40">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white">TYPST 100% VECTOR</span>
-                  <span className="size-2 rounded-full bg-white/50" />
-                </div>
-                <div className="space-y-2 opacity-25">
-                  <div className="h-2 w-2/3 bg-white rounded" />
-                  <div className="h-1.5 w-5/6 bg-white rounded" />
-                  <div className="h-1.5 w-1/2 bg-white rounded" />
-                </div>
-                <div className="opacity-25 text-[10px] font-mono text-white">ATS VERIFIED</div>
-              </div>
+                return (
+                  <motion.div
+                    key={fmt.id}
+                    drag={isFront ? "x" : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.55}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -60 || info.velocity.x < -400) cycleFormat(1);
+                      else if (info.offset.x > 60 || info.velocity.x > 400) cycleFormat(-1);
+                    }}
+                    animate={{
+                      ...slotStyle,
+                      backgroundColor: fmt.color.bg,
+                      color: fmt.color.text,
+                    }}
+                    whileHover={isFront ? { rotate: 0, scale: 1.03, y: -6 } : undefined}
+                    whileDrag={isFront ? { rotate: 0, scale: 1.02, cursor: "grabbing" } : undefined}
+                    transition={SPRING_PRESETS.snappy}
+                    style={{ zIndex: 40 - slot }}
+                    className={cn(
+                      "absolute inset-0 rounded-2xl p-6 sm:p-7 flex flex-col justify-between overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.5),0_8px_20px_rgba(0,0,0,0.25)] ring-1 ring-black/10 dark:ring-white/20 ring-inset",
+                      isFront ? "cursor-grab active:cursor-grabbing touch-pan-y" : "pointer-events-none"
+                    )}
+                  >
+                    {/* Top Header */}
+                    <div className="flex items-center justify-between text-[11px] font-semibold tracking-tight">
+                      <span className="font-bold tracking-wider uppercase text-[10.5px] opacity-90">
+                        LUMACV • {fmt.label.toUpperCase()}
+                      </span>
+                      <span className="p-1 rounded-md bg-current/15 backdrop-blur-xs">
+                        <ArrowUpRight className="size-3.5 stroke-[2.5]" />
+                      </span>
+                    </div>
 
-              {/* Top Active Card with Vibrant Format Color & Deck Shuffle Animation */}
-              <motion.div
-                key={selectedFormat.id}
-                initial={{ y: -16, rotate: 0, scale: 1.04, opacity: 0.9 }}
-                animate={{ y: 0, rotate: -2, scale: 1, opacity: 1 }}
-                whileHover={{ rotate: 0, scale: 1.03, y: -6 }}
-                transition={SPRING_PRESETS.snappy}
-                style={{
-                  backgroundColor: selectedFormat.color.bg,
-                  color: selectedFormat.color.text,
-                }}
-                className="relative h-full w-full rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-[0_30px_70px_rgba(0,0,0,0.5),0_8px_20px_rgba(0,0,0,0.25)] ring-1 ring-black/10 dark:ring-white/20 ring-inset cursor-pointer overflow-hidden transition-colors duration-300"
-              >
-                {/* Top Header */}
-                <div className="flex items-center justify-between text-[11px] font-semibold tracking-tight">
-                  <span className="font-bold tracking-wider uppercase text-[10.5px] opacity-90">
-                    LUMACV • {selectedFormat.label.toUpperCase()}
-                  </span>
-                  <span className="p-1 rounded-md bg-current/15 backdrop-blur-xs">
-                    <ArrowUpRight className="size-3.5 stroke-[2.5]" />
-                  </span>
-                </div>
+                    {/* Candidate Info */}
+                    <div className="mt-1">
+                      <h3 className="text-2xl font-bold tracking-tight leading-tight">
+                        {candidate.name}
+                      </h3>
+                      <p className="text-xs font-semibold opacity-85 mt-0.5 tracking-wide">
+                        {candidate.title}
+                      </p>
 
-                {/* Candidate Info */}
-                <div className="mt-1">
-                  <h3 className="text-2xl font-bold tracking-tight leading-tight">
-                    {candidate.name}
-                  </h3>
-                  <p className="text-xs font-semibold opacity-85 mt-0.5 tracking-wide">
-                    {candidate.title}
-                  </p>
+                      {/* Faint skeleton layout lines */}
+                      <div className="mt-4 space-y-1.5 opacity-35">
+                        <div className="h-[2.5px] w-full bg-current rounded-full" />
+                        <div className="h-[2.5px] w-5/6 bg-current rounded-full" />
+                        <div className="h-[2.5px] w-2/3 bg-current rounded-full" />
+                      </div>
+                    </div>
 
-                  {/* Faint skeleton layout lines */}
-                  <div className="mt-4 space-y-1.5 opacity-35">
-                    <div className="h-[2.5px] w-full bg-current rounded-full" />
-                    <div className="h-[2.5px] w-5/6 bg-current rounded-full" />
-                    <div className="h-[2.5px] w-2/3 bg-current rounded-full" />
-                  </div>
-                </div>
+                    {/* Big Bold Format Extension */}
+                    <div className="my-auto py-5 text-center overflow-hidden">
+                      <span className="inline-block font-extrabold text-[58px] sm:text-[68px] tracking-tighter font-mono leading-none select-none">
+                        {fmt.ext}
+                      </span>
+                    </div>
 
-                {/* Big Bold Format Extension with animated entry/exit */}
-                <div className="my-auto py-5 text-center overflow-hidden">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={selectedFormat.ext}
-                      initial={{ opacity: 0, y: 16, scale: 0.85 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -16, scale: 0.85 }}
-                      transition={{ type: "spring", stiffness: 450, damping: 26 }}
-                      className="inline-block font-extrabold text-[58px] sm:text-[68px] tracking-tighter font-mono leading-none select-none"
-                    >
-                      {selectedFormat.ext}
-                    </motion.span>
-                  </AnimatePresence>
-                </div>
-
-                {/* Card Bottom Bar */}
-                <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider font-semibold opacity-90 pt-2 border-t border-current/20">
-                  <span className="tracking-widest">Sample resume</span>
-                  <ArrowDown className="size-3.5 stroke-[2.5]" />
-                </div>
-              </motion.div>
-
+                    {/* Card Bottom Bar */}
+                    <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider font-semibold opacity-90 pt-2 border-t border-current/20">
+                      <span className="tracking-widest">Sample resume</span>
+                      <ArrowDown className="size-3.5 stroke-[2.5]" />
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
-
-            {/* Subtle Caption */}
-            <p className="mt-8 text-xs text-muted-foreground font-medium tracking-wide">
-              Click any format to preview real tactile styling
-            </p>
           </div>
 
           {/* ── Right Column: Interactive Format List + Download CTA ───────────── */}
@@ -481,21 +465,6 @@ export function ExportFormatShowcase() {
                   </>
                 )}
               </motion.button>
-
-              <div className="mt-3.5 flex items-center justify-between text-[11.5px] text-muted-foreground px-1">
-                <span className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-primary" />
-                  <span>100% Client-Side</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-primary" />
-                  <span>Zero Signup</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-primary" />
-                  <span>Instant Typst Build</span>
-                </span>
-              </div>
             </div>
 
           </div>

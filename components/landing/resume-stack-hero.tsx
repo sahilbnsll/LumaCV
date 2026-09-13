@@ -7,6 +7,7 @@ import { motion, useSpring, useMotionTemplate, useReducedMotion } from "framer-m
 import { ResumePreview } from "./resume-preview";
 import { SPRING_PRESETS } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
+import { PALETTES } from "@/lib/design-tokens";
 
 // ─── 3 maximally distinct Typst-compiled templates ───────────────────────────
 // Each shows a genuinely different layout: left-rule tech, two-column sidebar,
@@ -33,12 +34,16 @@ const HERO_TEMPLATES = [
   },
 ];
 
-const ACCENT_COLORS = [
-  { name: "Plum", value: "#735c9a" },
-  { name: "Moss", value: "#507665" },
-  { name: "Clay", value: "#a26046" },
-  { name: "Cobalt", value: "#2563eb" },
-];
+// Sourced from the real editor's palette system (lib/design-tokens.ts) —
+// this used to be its own private, decorative 4-color list that didn't
+// match what you can actually pick in the resume builder (its "Cobalt" was
+// even a different hex than the real one). Every color here is a real,
+// selectable resume accent, and any new palette added there now shows up
+// here automatically. "Default Slate" is left out since it's a neutral
+// fallback, not really an "accent" someone reaches for.
+const ACCENT_COLORS = Object.values(PALETTES)
+  .filter((p) => p.id !== "none")
+  .map((p) => ({ name: p.label, value: p.hex }));
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-4";
@@ -65,7 +70,7 @@ function getPaperTransform(position: "front" | "left" | "right", spread: boolean
 
 export function ResumeStackHero() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [accent, setAccent] = useState("#2563eb");
+  const [accent, setAccent] = useState(PALETTES.cobalt.hex);
   const [selectedIdx, setSelectedIdx] = useState(0); // index into HERO_TEMPLATES
   const [spread, setSpread] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -84,6 +89,7 @@ export function ResumeStackHero() {
   }deg) rotateY(${reducedMotion ? 0 : rotateY}deg) rotateZ(-7deg)`;
 
   const activeTemplateName = HERO_TEMPLATES[selectedIdx].name;
+  const activeColorName = ACCENT_COLORS.find((c) => c.value === accent)?.name ?? "";
 
   // ── Drag handlers ─────────────────────────────────────────────────────────
 
@@ -180,12 +186,6 @@ export function ResumeStackHero() {
               <ArrowDown className="w-3.5 h-3.5" aria-hidden="true" />
             </a>
           </div>
-
-          <p className="mt-[17px] text-muted-foreground text-[12px] leading-[1.9] max-[540px]:mt-[15px] max-[540px]:text-[11px]">
-            <strong className="font-medium text-foreground">Free forever and open source.</strong>
-            <br />
-            No ads, paywalls, or tracking.
-          </p>
         </div>
 
         {/* ── Right: 3D paper sculpture + interactive dock ── */}
@@ -287,10 +287,21 @@ export function ResumeStackHero() {
             ))}
           </fieldset>
 
-          {/* Accent color — the one live control, tied to the headline's accent word */}
-          <fieldset className="flex items-center justify-between gap-4 rounded-[4px] border border-border bg-card px-[21px] py-[15px] shadow-sm">
-            <legend className={dockLabel}>Accent color</legend>
-            <div className="flex">
+          {/* Accent color — the one live control, tied to the headline's accent word.
+              10 real swatches now (was 4), so this wraps instead of forcing a
+              single row beside the label the way it could when there were few
+              enough to fit. The legend and the selected color's name share a
+              row (like the "Stack/Spread pages" row above it) instead of the
+              legend sitting alone above the swatches — and naming the current
+              selection means you don't have to hover/guess which dot is which. */}
+          <fieldset className="rounded-[4px] border border-border bg-card px-[21px] py-[15px] shadow-sm">
+            <div className="mb-[7px] flex items-center justify-between gap-3">
+              <legend className="text-[11px] leading-[1.4] text-muted-foreground">Accent color</legend>
+              <span className="text-[11px] font-medium leading-[1.4] text-foreground" aria-live="polite">
+                {activeColorName}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-x-1 gap-y-2">
               {ACCENT_COLORS.map((color) => (
                 <button
                   key={color.value}

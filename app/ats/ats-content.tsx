@@ -13,6 +13,7 @@ import { resumeDataToPlainText } from '@/lib/resume-plaintext';
 import { DEMO_RESUME_DATA } from '@/lib/demo-data';
 import { ResumeData } from '@/lib/resume-schema';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { notify } from '@/lib/notify';
@@ -44,6 +45,10 @@ interface NormalizedAtsResult {
     /** False when there weren't enough real JD keywords to score against — the UI
      *  must show an honest "no JD" state instead of a fabricated 0%/85% score. */
     isCalculated: boolean;
+    /** True when a JD *was* pasted but analyzing it requires sign-in — distinct
+     *  from simply not having pasted one, so the "no JD" panel can tell the
+     *  user the real reason instead of asking them to paste a JD they already did. */
+    jdAuthRequired: boolean;
     scoreReason: string;
     requiredMatched: string[];
     requiredMissing: string[];
@@ -69,7 +74,24 @@ interface NormalizedAtsResult {
     strongestSections: string[];
 }
 
-const SAMPLE_JOB_DESCRIPTIONS = [
+interface SampleJdKeywords {
+    required_skills: string[];
+    preferred_skills: string[];
+    responsibilities: string[];
+    buzzwords: string[];
+}
+
+const SAMPLE_JOB_DESCRIPTIONS: Array<{
+    title: string;
+    company: string;
+    text: string;
+    /** Pre-computed keyword extraction for this fixed, known JD text. Lets
+     *  "Test with sample roles" work instantly for guests with zero network
+     *  call and zero auth requirement — /api/v1/resume/analyze-jd is a real
+     *  AI call and correctly requires sign-in, but there's no reason to pay
+     *  that cost (or hit that wall) analyzing text that never changes. */
+    keywords: SampleJdKeywords;
+}> = [
     {
         title: "Staff Frontend Engineer",
         company: "Vercel / Stripe scale",
@@ -79,7 +101,13 @@ Requirements:
 - Deep expertise in Core Web Vitals, SSR/ISR caching strategies, and modern CSS architecture (Tailwind CSS, CSS Modules).
 - Proven track record designing and maintaining accessible design systems adhering to WCAG 2.1 AA specifications.
 - Strong proficiency with state management, vector rendering (SVG/Canvas), and client-side AST parsers.
-- Experience mentoring senior engineers, leading architectural RFCs, and establishing automated testing pipelines (Playwright, Jest).`
+- Experience mentoring senior engineers, leading architectural RFCs, and establishing automated testing pipelines (Playwright, Jest).`,
+        keywords: {
+            required_skills: ["React", "Next.js", "TypeScript", "Core Web Vitals", "SSR", "ISR", "Tailwind CSS", "CSS Modules", "SVG", "Canvas", "Playwright", "Jest"],
+            preferred_skills: ["WCAG 2.1 AA", "Design Systems", "State Management", "AST Parsers"],
+            responsibilities: ["Building high-performance web applications", "Designing and maintaining accessible design systems", "Mentoring senior engineers", "Leading architectural RFCs", "Establishing automated testing pipelines"],
+            buzzwords: ["production experience", "scale"],
+        },
     },
     {
         title: "Senior Full-Stack Engineer",
@@ -90,7 +118,13 @@ Requirements:
 - Advanced relational database design with PostgreSQL, Prisma/Drizzle ORM, query optimization, and Redis caching.
 - Hands-on experience architecting microservices with Docker, Kubernetes, AWS (ECS, S3, CloudFront), and GitHub Actions CI/CD.
 - Experience designing RESTful and GraphQL APIs with strict OpenAPI/Zod validation schemas.
-- Familiarity with event-driven architectures (Kafka, SQS) and automated end-to-end security compliance.`
+- Familiarity with event-driven architectures (Kafka, SQS) and automated end-to-end security compliance.`,
+        keywords: {
+            required_skills: ["Node.js", "TypeScript", "Python", "PostgreSQL", "Prisma", "Drizzle ORM", "Redis", "Docker", "Kubernetes", "AWS", "ECS", "S3", "CloudFront", "GitHub Actions", "GraphQL", "RESTful APIs", "OpenAPI", "Zod"],
+            preferred_skills: ["Kafka", "SQS", "Event-driven architecture", "Security compliance"],
+            responsibilities: ["Building scalable web services and distributed systems", "Architecting microservices", "Designing RESTful and GraphQL APIs", "Query optimization"],
+            buzzwords: ["CI/CD", "distributed systems"],
+        },
     },
     {
         title: "Lead Product Engineer",
@@ -101,8 +135,14 @@ Requirements:
 - Mastery of modern React, Next.js App Router, Tailwind CSS, and Framer Motion for rich micro-interactions.
 - Experience integrating generative AI workflows (OpenAI, Gemini APIs, structured outputs, streaming completions).
 - Strong product intuition, rapid prototyping velocity, user-centric thinking, and metric-driven experimentation.
-- Self-directed problem solver capable of owning entire feature lifecycles from technical spec to production release.`
-    }
+- Self-directed problem solver capable of owning entire feature lifecycles from technical spec to production release.`,
+        keywords: {
+            required_skills: ["React", "Next.js App Router", "Tailwind CSS", "Framer Motion", "Generative AI", "OpenAI", "Gemini APIs", "Structured Outputs", "Streaming Completions"],
+            preferred_skills: ["Product Design", "Rapid Prototyping", "Metric-driven Experimentation"],
+            responsibilities: ["Bridging product design with engineering", "Owning entire feature lifecycles", "Building rich micro-interactions"],
+            buzzwords: ["product intuition", "self-directed"],
+        },
+    },
 ];
 
 function AtsCheckerContent() {
@@ -217,7 +257,15 @@ function AtsCheckerContent() {
             };
 
             let jdAnalysisFailed = false;
-            if (jobDescription.trim().length > 30) {
+            let jdAnalysisAuthRequired = false;
+            const matchedSample = SAMPLE_JOB_DESCRIPTIONS.find((s) => s.text.trim() === jobDescription.trim());
+
+            if (matchedSample) {
+                // Known, fixed text — use the pre-computed keywords instead of
+                // paying for (and auth-gating) a real AI call to re-derive
+                // something that never changes.
+                jdKeywords = matchedSample.keywords;
+            } else if (jobDescription.trim().length > 30) {
                 const jdRes = await fetch('/api/v1/resume/analyze-jd', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -232,7 +280,13 @@ function AtsCheckerContent() {
                 } else {
                     // Don't silently score against an empty keyword set as if the JD
                     // had been read — tell the user their JD wasn't actually analyzed.
+                    // This endpoint requires sign-in (it's a real AI call, unlike the
+                    // rest of this tool) — that's the actual cause most of the time,
+                    // so say so instead of a generic "couldn't extract keywords" that
+                    // leaves a perfectly good pasted JD looking like it failed for no
+                    // reason.
                     jdAnalysisFailed = true;
+                    jdAnalysisAuthRequired = jdRes.status === 401;
                 }
             }
 
@@ -255,7 +309,11 @@ function AtsCheckerContent() {
             const rawData = await scoreRes.json();
 
             if (jdAnalysisFailed) {
-                notify.error('Job description not analyzed', 'Could not extract keywords — scoring your resume without a target JD.');
+                if (jdAnalysisAuthRequired) {
+                    notify.error('Sign in to analyze against a job description', 'JD-based keyword matching requires an account — scoring your resume without a target JD for now.');
+                } else {
+                    notify.error('Job description not analyzed', 'Could not extract keywords — scoring your resume without a target JD.');
+                }
             }
 
             // Normalize response safely regardless of shape.
@@ -266,6 +324,7 @@ function AtsCheckerContent() {
             const normalized: NormalizedAtsResult = {
                 score: Math.round((rawData.score ?? 0) * 100),
                 isCalculated: rawData.isCalculated === true,
+                jdAuthRequired: jdAnalysisAuthRequired,
                 scoreReason: rawData.gapAnalysis?.scoreReason || rawData.scoreReason || 'Parser evaluated token coverage and structural section headers.',
                 requiredMatched: rawData.breakdown?.required_skills?.matched || rawData.details?.required?.matched || [],
                 requiredMissing: rawData.breakdown?.required_skills?.missing || rawData.details?.required?.missing || [],
@@ -285,7 +344,18 @@ function AtsCheckerContent() {
             setAnalysisResult(normalized);
             setAnalysisState('complete');
             setActiveTab('diagnostics');
-            notify.success('ATS analysis complete', `${normalized.score}% score`);
+            // A 0% (or any) score is only meaningful once it's actually been
+            // measured against real JD keywords — without that, `score` is
+            // just the empty-keyword default, and announcing it as an
+            // "analysis complete ... score" reads as a real result when
+            // nothing was actually scored. The "no target JD" panel already
+            // makes that state clear in the UI; the toast should match it
+            // instead of contradicting it with a fake percentage.
+            if (normalized.isCalculated) {
+                notify.success('ATS analysis complete', `${normalized.score}% score`);
+            } else if (!jdAnalysisFailed) {
+                notify.success('Resume checked', 'Add a target job description for a real match score.');
+            }
         } catch (err) {
             console.error('ATS Analysis error:', err);
             const msg = err instanceof Error ? err.message : 'Unable to complete ATS analysis';
@@ -690,9 +760,13 @@ function AtsCheckerContent() {
                                             <div className="rounded-2xl border border-border/70 bg-muted/20 p-6 flex items-start gap-3">
                                                 <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                                                 <div className="space-y-1">
-                                                    <h3 className="text-sm font-semibold text-foreground">No target job description provided</h3>
+                                                    <h3 className="text-sm font-semibold text-foreground">
+                                                        {analysisResult.jdAuthRequired ? 'Sign in to score against your job description' : 'No target job description provided'}
+                                                    </h3>
                                                     <p className="text-xs text-muted-foreground leading-relaxed">
-                                                        Paste a job description on the left to get a real ATS keyword-match score. Without one, there&apos;s nothing to score your resume against.
+                                                        {analysisResult.jdAuthRequired
+                                                            ? 'Your job description was received, but matching it against keywords requires an account. Sign in and re-run the audit for a real score.'
+                                                            : "Paste a job description on the left to get a real ATS keyword-match score. Without one, there's nothing to score your resume against."}
                                                     </p>
                                                 </div>
                                             </div>
@@ -802,9 +876,17 @@ function AtsCheckerContent() {
                                                         </span>
                                                     ))}
                                                     {[...analysisResult.requiredMissing, ...analysisResult.preferredMissing].length === 0 && (
-                                                        <p className="text-xs text-emerald-500 font-medium">
-                                                            Zero critical keyword gaps identified!
-                                                        </p>
+                                                        analysisResult.isCalculated ? (
+                                                            <p className="text-xs text-emerald-500 font-medium">
+                                                                Zero critical keyword gaps identified!
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-xs text-muted-foreground italic">
+                                                                {analysisResult.jdAuthRequired
+                                                                    ? 'Sign in to compare against your pasted JD.'
+                                                                    : 'No target JD provided — nothing to compare against yet.'}
+                                                            </p>
+                                                        )
                                                     )}
                                                 </div>
                                             </div>
@@ -870,7 +952,7 @@ export default function AtsCheckerPageContent() {
             fallback={
                 <div className="min-h-screen bg-background flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Loader variant="metaballs" size={40} className="text-primary" />
                         <p className="text-xs font-mono">Initializing ATS Checker...</p>
                     </div>
                 </div>

@@ -95,10 +95,10 @@ export function WizardStepper() {
                             <div className="w-2.5 sm:w-5 mx-0.5 sm:mx-1 h-[1px] bg-border/50 dark:bg-white/10 relative overflow-hidden" aria-hidden="true">
                                 {isCompleted && (
                                     <motion.div
-                                        initial={{ width: "0%" }}
-                                        animate={{ width: "100%" }}
+                                        initial={{ scaleX: 0 }}
+                                        animate={{ scaleX: 1 }}
                                         transition={{ duration: 0.3 }}
-                                        className="h-full bg-gradient-to-r from-emerald-500 to-primary"
+                                        className="h-full w-full origin-left bg-gradient-to-r from-emerald-500 to-primary"
                                     />
                                 )}
                             </div>

@@ -34,40 +34,52 @@ export function TailorModeSelector({ className }: { className?: string }) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* MODE 1: Optimize Resume (Strictly Fact-Preserving) */}
                 <div
                     onClick={() => handleSelectMode('optimize')}
                     className={cn(
-                        "relative flex flex-col justify-between p-4 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
+                        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
                         tailorMode === 'optimize'
-                            ? "border-emerald-500/80 bg-emerald-500/[0.04] dark:bg-emerald-500/[0.07] ring-2 ring-emerald-500/40 shadow-sm"
-                            : "border-border/70 bg-card/60 hover:border-border hover:bg-card/90"
+                            ? "border-emerald-500/70 bg-emerald-500/[0.05] dark:bg-emerald-500/[0.08] ring-2 ring-emerald-500/30 shadow-md shadow-emerald-500/5 -translate-y-0.5"
+                            : "border-border/70 bg-card/60 hover:border-emerald-500/30 hover:bg-card/90 hover:-translate-y-0.5 hover:shadow-sm"
                     )}
                 >
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                <ShieldCheck className="h-3 w-3" />
-                                100% Fact-Preserving
+                    <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className={cn(
+                                "flex h-10 w-10 items-center justify-center rounded-xl shrink-0 transition-colors",
+                                tailorMode === 'optimize'
+                                    ? "bg-emerald-500 text-white shadow-sm"
+                                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/15"
+                            )}>
+                                <ShieldCheck className="h-5 w-5" />
+                            </div>
+                            <span
+                                className={cn(
+                                    "flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all",
+                                    tailorMode === 'optimize'
+                                        ? "bg-emerald-500 text-white shadow-xs scale-100 opacity-100"
+                                        : "border border-border/70 text-transparent scale-90 opacity-60"
+                                )}
+                            >
+                                <Check className="h-3 w-3 stroke-[3]" />
                             </span>
-                            {tailorMode === 'optimize' && (
-                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs">
-                                    <Check className="h-3 w-3 stroke-[3]" />
-                                </span>
-                            )}
                         </div>
 
                         <div>
-                            <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
-                                <span>Optimize Resume</span>
+                            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+                                100% Fact-Preserving
+                            </span>
+                            <h4 className="font-display font-bold text-base text-foreground">
+                                Optimize Resume
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                Enhances grammar, executive phrasing, bullet structure, and ATS formatting using <strong>only the verified tools and roles already in your resume</strong>.
+                                Enhances grammar, executive phrasing, bullet structure, and ATS formatting using <strong className="text-foreground/90">only the verified tools and roles already in your resume</strong>.
                             </p>
                         </div>
 
-                        <div className="pt-2 border-t border-border/40 space-y-1 text-[11px] text-muted-foreground">
+                        <div className="pt-2.5 border-t border-border/40 space-y-1.5 text-[11px] text-muted-foreground">
                             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                                 <Check className="h-3 w-3 shrink-0" />
                                 <span>Zero hallucination: Never fabricates new tools or tasks</span>
@@ -84,35 +96,47 @@ export function TailorModeSelector({ className }: { className?: string }) {
                 <div
                     onClick={() => handleSelectMode('tailor')}
                     className={cn(
-                        "relative flex flex-col justify-between p-4 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
+                        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
                         tailorMode === 'tailor'
-                            ? "border-primary bg-primary/[0.04] ring-2 ring-primary/40 shadow-sm"
-                            : "border-border/70 bg-card/60 hover:border-border hover:bg-card/90"
+                            ? "border-primary/70 bg-primary/[0.05] ring-2 ring-primary/30 shadow-md shadow-primary/5 -translate-y-0.5"
+                            : "border-border/70 bg-card/60 hover:border-primary/30 hover:bg-card/90 hover:-translate-y-0.5 hover:shadow-sm"
                     )}
                 >
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                                <Target className="h-3 w-3" />
-                                Aggressive JD Alignment
+                    <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className={cn(
+                                "flex h-10 w-10 items-center justify-center rounded-xl shrink-0 transition-colors",
+                                tailorMode === 'tailor'
+                                    ? "bg-primary text-white shadow-sm"
+                                    : "bg-primary/10 text-primary group-hover:bg-primary/15"
+                            )}>
+                                <Target className="h-5 w-5" />
+                            </div>
+                            <span
+                                className={cn(
+                                    "flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all",
+                                    tailorMode === 'tailor'
+                                        ? "bg-primary text-white shadow-xs scale-100 opacity-100"
+                                        : "border border-border/70 text-transparent scale-90 opacity-60"
+                                )}
+                            >
+                                <Check className="h-3 w-3 stroke-[3]" />
                             </span>
-                            {tailorMode === 'tailor' && (
-                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white shadow-xs">
-                                    <Check className="h-3 w-3 stroke-[3]" />
-                                </span>
-                            )}
                         </div>
 
                         <div>
-                            <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
-                                <span>Aggressive JD Alignment</span>
+                            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-primary mb-1">
+                                Target JD Alignment
+                            </span>
+                            <h4 className="font-display font-bold text-base text-foreground">
+                                Aggressive JD Alignment
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                                 Aggressively rewrites, reorders, and reframes experience to maximize ATS keyword match against the target job description — bending the wording, not the facts.
                             </p>
                         </div>
 
-                        <div className="pt-2 border-t border-border/40 space-y-1 text-[11px] text-muted-foreground">
+                        <div className="pt-2.5 border-t border-border/40 space-y-1.5 text-[11px] text-muted-foreground">
                             <div className="flex items-center gap-1.5 text-primary font-medium">
                                 <Sparkles className="h-3 w-3 shrink-0" />
                                 <span>Maximizes ATS keyword coverage with target JD terminology</span>
@@ -125,7 +149,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                     </div>
 
                     {!hasJd && tailorMode === 'tailor' && (
-                        <div className="mt-2.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] flex items-center gap-1.5">
+                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] flex items-center gap-1.5">
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                             <span>No Job Description was provided in Step 1. Mode will adapt to industry best practices.</span>
                         </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Cpu, Zap, ShieldCheck, FileText, CheckCircle2, Sparkles } from "lucide-react";
+import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
 interface TypstCompileVisualizerProps {
@@ -61,39 +62,11 @@ export function TypstCompileVisualizer({
         className
       )}
     >
-      {/* 1. Full-Height Sweeping Laser Scanner Beam */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Sweeping Laser Line with Neon Blur Glow */}
-        <motion.div
-          animate={{ y: ["-10%", "110%"] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 dark:via-cyan-300 to-transparent shadow-[0_0_15px_#0071e3,0_0_35px_#38bdf8]"
-        />
+      {/* Ambient Typst Mathematical Blueprint Grid — faint texture only, no
+          laser-sweep / LiDAR-crosshair "document scanner" cliché. */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[linear-gradient(to_right,#0071e3_1px,transparent_1px),linear-gradient(to_bottom,#0071e3_1px,transparent_1px)] bg-[size:48px_48px] opacity-[0.04] dark:opacity-[0.07]" />
 
-        {/* Luminous Light Cone behind the beam */}
-        <motion.div
-          animate={{ y: ["-10%", "110%"] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-x-0 h-28 -top-28 bg-gradient-to-b from-transparent to-primary/10 dark:to-primary/20 pointer-events-none"
-        />
-
-        {/* Ambient Typst Mathematical Blueprint Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0071e3_1px,transparent_1px),linear-gradient(to_bottom,#0071e3_1px,transparent_1px)] bg-[size:48px_48px] opacity-[0.04] dark:opacity-[0.07]" />
-      </div>
-
-      {/* 2. Precision Corner Alignment Crosshairs (LiDAR Scanner Visual) */}
-      <div className="absolute inset-6 pointer-events-none">
-        {/* Top-Left */}
-        <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-primary/70 dark:border-cyan-400/80 rounded-tl-sm" />
-        {/* Top-Right */}
-        <div className="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-primary/70 dark:border-cyan-400/80 rounded-tr-sm" />
-        {/* Bottom-Left */}
-        <div className="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-primary/70 dark:border-cyan-400/80 rounded-bl-sm" />
-        {/* Bottom-Right */}
-        <div className="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-primary/70 dark:border-cyan-400/80 rounded-br-sm" />
-      </div>
-
-      {/* 3. Floating Holographic Synthesis HUD Capsule */}
+      {/* Floating Holographic Synthesis HUD Capsule */}
       <motion.div
         initial={{ scale: 0.92, y: 8, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -120,15 +93,11 @@ export function TypstCompileVisualizer({
 
         {/* Center: Dual-Orbit Holographic Reactor + Document Simulation */}
         <div className="flex items-center gap-4 py-1">
-          {/* Orbital Quantum Reactor */}
+          {/* Holographic Synthesis Core */}
           <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-            {/* Outer Orbital Ring */}
-            <div className="absolute inset-0 rounded-full border-2 border-dashed border-primary/40 dark:border-cyan-400/40 animate-spin [animation-duration:6s]" />
-            {/* Inner Counter-Rotating Ring */}
-            <div className="absolute inset-1.5 rounded-full border-2 border-dotted border-indigo-400/50 [animation-direction:reverse] animate-spin [animation-duration:3.5s]" />
-            {/* Glowing Core */}
-            <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-cyan-400 flex items-center justify-center shadow-[0_0_15px_#0071e3] text-white">
-              <Zap className="h-3.5 w-3.5 fill-white" />
+            <Loader variant="helix" size={48} speed={0.9} className="text-primary dark:text-cyan-400" />
+            <div className="absolute w-6 h-6 rounded-full bg-gradient-to-tr from-primary to-cyan-400 flex items-center justify-center shadow-[0_0_15px_#0071e3] text-white">
+              <Zap className="h-3 w-3 fill-white" />
             </div>
           </div>
 

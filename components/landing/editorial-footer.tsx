@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import {
@@ -10,12 +10,36 @@ import {
   DiscordLogoIcon,
   RedditLogoIcon,
   CoffeeIcon,
+  GlobeSimpleIcon,
 } from "@phosphor-icons/react";
 import { LumaLogo } from "@/components/luma-logo";
 import { SUPPORT_CONFIG } from "@/lib/support-config";
 
 const githubUrl = "https://github.com/sahilbnsll/LumaCV";
 const licenseUrl = `${githubUrl}/blob/master/LICENSE`;
+const portfolioUrl = "https://sahilbansal.net/";
+
+// Module-level cache so every page's footer mount shares one fetch instead
+// of hitting GitHub's unauthenticated rate limit per navigation.
+let cachedReleaseTag: string | null = null;
+let releaseFetchPromise: Promise<string | null> | null = null;
+
+function fetchLatestReleaseTag(): Promise<string | null> {
+  if (cachedReleaseTag) return Promise.resolve(cachedReleaseTag);
+  if (!releaseFetchPromise) {
+    releaseFetchPromise = fetch("https://api.github.com/repos/sahilbnsll/LumaCV/releases/latest", {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const tag = typeof data?.tag_name === "string" ? data.tag_name : null;
+        if (tag) cachedReleaseTag = tag;
+        return tag;
+      })
+      .catch(() => null);
+  }
+  return releaseFetchPromise;
+}
 
 type FooterLink = {
   label: string;
@@ -45,7 +69,6 @@ const COLUMNS: FooterColumn[] = [
       { label: "Documentation", href: "/docs" },
       { label: "Changelog", href: `${githubUrl}/releases`, isExternal: true },
       { label: "Source Code", href: githubUrl, isExternal: true },
-      { label: "Support Center", href: "/support" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -54,7 +77,7 @@ const COLUMNS: FooterColumn[] = [
     links: [
       { label: "GitHub Sponsors", href: SUPPORT_CONFIG.githubSponsors.url, isExternal: true },
       { label: "Report an issue", href: `${githubUrl}/issues`, isExternal: true },
-      { label: "Billing & Donations", href: "/billing" },
+      { label: "Billing & Support", href: "/billing" },
       { label: "Buy Me a Coffee", href: SUPPORT_CONFIG.buyMeACoffee.url, isExternal: true },
     ],
   },
@@ -69,6 +92,7 @@ const COLUMNS: FooterColumn[] = [
 ];
 
 const SOCIAL_LINKS = [
+  { url: portfolioUrl, label: "Portfolio", icon: GlobeSimpleIcon },
   { url: githubUrl, label: "GitHub", icon: GithubLogoIcon },
   { url: "https://x.com/sahilbnsll", label: "X", icon: XLogoIcon },
   { url: "https://linkedin.com/in/sahilbansal", label: "LinkedIn", icon: LinkedinLogoIcon },
@@ -81,6 +105,53 @@ void DiscordLogoIcon;
 void RedditLogoIcon;
 
 export function EditorialFooter() {
+  const [releaseTag, setReleaseTag] = useState<string | null>(cachedReleaseTag);
+
+  useEffect(() => {
+    if (releaseTag) return;
+    let cancelled = false;
+    fetchLatestReleaseTag().then((tag) => {
+      if (!cancelled && tag) setReleaseTag(tag);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [releaseTag]);
+
+  // Cursor-following wordmark glow — mutates the glow layer's CSS vars
+  // directly via ref instead of setState, so mousemove never re-renders the
+  // footer (same rAF-throttle approach as interactive-watermark.tsx, minus
+  // the state write). The glow itself is a second copy of the wordmark text,
+  // stacked exactly on top with its own background-clip:text + mix-blend
+  // screen — so the neon only ever lights up inside the letter strokes,
+  // never as a rectangle behind/around them.
+  const wordmarkAreaRef = useRef<HTMLDivElement>(null);
+  const wordmarkGlowRef = useRef<HTMLParagraphElement>(null);
+  const wordmarkRafRef = useRef<number | null>(null);
+
+  const handleWordmarkMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const area = wordmarkAreaRef.current;
+    if (!area || wordmarkRafRef.current !== null) return;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    wordmarkRafRef.current = window.requestAnimationFrame(() => {
+      wordmarkRafRef.current = null;
+      const glow = wordmarkGlowRef.current;
+      if (!glow) return;
+      const rect = area.getBoundingClientRect();
+      const x = ((clientX - rect.left) / rect.width) * 100;
+      const y = ((clientY - rect.top) / rect.height) * 100;
+      glow.style.setProperty("--glow-x", `${x}%`);
+      glow.style.setProperty("--glow-y", `${y}%`);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (wordmarkRafRef.current !== null) window.cancelAnimationFrame(wordmarkRafRef.current);
+    };
+  }, []);
+
   return (
     <footer id="footer" className="relative isolate z-1 overflow-clip bg-transparent text-foreground">
       
@@ -189,18 +260,57 @@ export function EditorialFooter() {
           >
             Sahil Bansal
           </a>
-          <span aria-hidden="true" className="px-2 text-border">
-            /
-          </span>
-          <span className="font-mono tabular-nums text-muted-foreground">v2.4.0</span>
+          {releaseTag && (
+            <>
+              <span aria-hidden="true" className="px-2 text-border">
+                /
+              </span>
+              <a
+                href={`${githubUrl}/releases/tag/${releaseTag}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono tabular-nums text-muted-foreground hover:text-foreground hover:underline underline-offset-[3px] transition-colors"
+              >
+                {releaseTag}
+              </a>
+            </>
+          )}
         </p>
       </div>
 
-      {/* ── Oversized Wordmark Watermark (LumaCV Signature Element) ── */}
-      <div className="container-marketing mt-10 max-[540px]:mt-7 select-none overflow-hidden pb-3 pointer-events-none">
+      {/* ── Oversized Wordmark Watermark (LumaCV Signature Element) ──
+          Cursor-revealed gradient — the same technique already proven in
+          components/interactive-watermark.tsx (currently unused elsewhere):
+          a second copy of the wordmark, filled with the site's vivid
+          rose→violet→cyan gradient, confined to the glyphs via
+          background-clip:text and revealed only inside a soft circular
+          mask-image that follows the cursor (mask-image, not mix-blend —
+          same soft falloff their SVG radialGradient used: opaque core,
+          ~45% still solid, fading to nothing by 75%). Nothing paints in the
+          gaps or outside the wordmark, and it needs no theme variant since
+          the mask/gradient combination is identical in light and dark. */}
+      <div
+        ref={wordmarkAreaRef}
+        onMouseMove={handleWordmarkMouseMove}
+        className="group container-marketing relative mt-10 max-[540px]:mt-7 select-none overflow-hidden pb-3"
+      >
         <p
           aria-hidden="true"
           className="select-none bg-gradient-to-b from-foreground/20 from-30% to-foreground/[0.02] dark:from-[#f1f0eb] dark:from-40% dark:to-[rgb(241_240_235/4%)] bg-clip-text font-display font-bold text-[clamp(64px,14.4vw,175px)] text-transparent leading-[0.78] tracking-[-0.07em]"
+        >
+          LumaCV
+        </p>
+        <p
+          ref={wordmarkGlowRef}
+          aria-hidden="true"
+          style={{
+            "--glow-x": "20%",
+            "--glow-y": "50%",
+            backgroundImage: "linear-gradient(90deg, #f43f5e 0%, #fb7185 28%, #c084fc 52%, #818cf8 76%, #38bdf8 100%)",
+            WebkitMaskImage: "radial-gradient(200px circle at var(--glow-x) var(--glow-y), #fff, #fff 40%, transparent 75%)",
+            maskImage: "radial-gradient(200px circle at var(--glow-x) var(--glow-y), #fff, #fff 40%, transparent 75%)",
+          } as React.CSSProperties}
+          className="pointer-events-none absolute inset-0 select-none bg-clip-text font-display font-bold text-[clamp(64px,14.4vw,175px)] text-transparent leading-[0.78] tracking-[-0.07em] opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
         >
           LumaCV
         </p>

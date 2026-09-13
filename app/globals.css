@@ -301,6 +301,45 @@
   border: 1px solid var(--border);
 }
 
+/* Liquid Glass — Apple's 2025 material: translucency + blur/saturate (same
+   base as .glass-card) plus the two things that actually read as "glass"
+   rather than "frosted panel": a soft specular glow layered into the
+   background (light source, top-left) and an inset highlight tracing the
+   top edge, like real glass catching light along its rim. Full SVG
+   refraction (feTurbulence/feDisplacementMap) is Chromium-only and falls
+   back to plain blur in Safari/Firefox, so this sticks to the cross-browser
+   CSS-only technique instead. Reserve for a few deliberately premium
+   surfaces (donation card, UPI dialog) — not a blanket replacement for
+   .glass-card everywhere. */
+.liquid-glass {
+  /* High transparency by design — a mostly-flat page background behind a
+     ~70%-opaque panel leaves almost nothing for backdrop-filter to actually
+     blur, which is what made the first pass read as "just a dark box." At
+     ~30% base opacity the page genuinely shows through and the blur has
+     real material to distort, which is what actually sells "glass." */
+  /* !important throughout: consuming components (Sonner's toast, Radix
+     Dialog) ship their own default background/border in their own
+     stylesheet at equal-or-higher specificity, which silently won over a
+     plain class here and made the toast render fully opaque despite
+     `liquid-glass` being present in its className. This class is a
+     deliberate, opt-in override — forcing it to win is the point. */
+  background:
+    radial-gradient(130% 100% at 18% -12%, oklch(1 0 0 / 0.22), transparent 55%),
+    radial-gradient(120% 100% at 100% 120%, oklch(0 0 0 / 0.18), transparent 60%),
+    oklch(0.205 0 0 / 0.28) !important;
+  /* A heavy blur (was 28px) smears thin 1px background linework into nothing
+     — real glass keeps shapes behind it recognizable, just softened. 10px
+     is enough to read as "glass" without erasing what's behind it. */
+  backdrop-filter: blur(10px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+  border: 1px solid oklch(1 0 0 / 0.14) !important;
+  border-radius: var(--radius-xl);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.3),
+    inset 0 0 0 1px oklch(1 0 0 / 0.05),
+    0 8px 32px oklch(0 0 0 / 0.3);
+}
+
 /* Light mode overrides */
 :root:not(.dark) .glass,
 .light .glass {
@@ -343,6 +382,29 @@
   backdrop-filter: blur(32px) saturate(160%);
   -webkit-backdrop-filter: blur(32px) saturate(160%);
   border-bottom: 1px solid oklch(0 0 0 / 0.06);
+}
+
+:root:not(.dark) .liquid-glass,
+.light .liquid-glass {
+  /* Light-mode pages here sit on a near-white background, so a plain
+     white-on-white fill has almost nothing behind it to visibly refract —
+     it just reads as a flat card. Leaning harder on the two things that
+     read as "glass" independent of what's behind it — a brighter specular
+     catch-light at the top-left and a deeper falloff at the bottom-right —
+     plus a more defined edge, keeps it legible as glass on any background,
+     not just a textured one. */
+  background:
+    radial-gradient(130% 100% at 18% -12%, oklch(1 0 0 / 0.85), transparent 55%),
+    radial-gradient(120% 100% at 100% 120%, oklch(0 0 0 / 0.08), transparent 60%),
+    oklch(1 0 0 / 0.22) !important;
+  backdrop-filter: blur(10px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(200%) !important;
+  border: 1px solid oklch(0 0 0 / 0.14) !important;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 1),
+    inset 0 0 0 1px oklch(1 0 0 / 0.5),
+    0 8px 32px oklch(0 0 0 / 0.08),
+    0 2px 8px oklch(0 0 0 / 0.05);
 }
 
 :root:not(.dark) .glass-border,

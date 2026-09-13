@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Layers, ShieldCheck } from "lucide-react";
+import { ArrowRight, Layers } from "lucide-react";
 import { motion, useScroll, useTransform, useMotionValue, useReducedMotion, useMotionValueEvent } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ImageStreamHero, StreamImage } from "@/components/ui/image-stream-hero";
@@ -170,22 +170,6 @@ export function LumaStreamHero() {
                 </div>
               </div>
 
-              {/* Bottom Trust Line */}
-              <div
-                className={cn(
-                  "flex items-center justify-center gap-4 text-[11px] sm:text-xs text-muted-foreground/80 font-medium",
-                  pointerActive ? "pointer-events-auto" : "pointer-events-none"
-                )}
-              >
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="size-3.5 text-emerald-500" />
-                  100% Client-Side Privacy
-                </span>
-                <span className="hidden sm:inline">·</span>
-                <span className="hidden sm:inline">Free &amp; Open Source</span>
-                <span className="hidden sm:inline">·</span>
-                <span className="hidden sm:inline">No Hidden Subscriptions</span>
-              </div>
             </motion.div>
           </ImageStreamHero>
         </motion.div>

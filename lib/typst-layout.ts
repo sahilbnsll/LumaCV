@@ -125,7 +125,7 @@ export function getTemplateFitCopy(level: TemplateFitLevel): { label: string; de
         case 'tight':
             return { label: 'Tight fit', detail: 'Works, but extra content may feel dense' };
         case 'multi_page_risk':
-            return { label: 'Multi-page risk', detail: 'Likely to compress hard or spill with more content' };
+            return { label: 'Page risk', detail: 'Likely to compress hard or spill with more content' };
     }
 }
 

@@ -10,6 +10,7 @@ import { EditorialFooter } from '@/components/landing/editorial-footer';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -1401,7 +1402,7 @@ export default function ProfileWorkstationPage() {
             fallback={
                 <div className="min-h-screen bg-background flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Loader variant="metaballs" size={40} className="text-primary" />
                         <p className="text-xs font-mono">Loading Profile & Settings...</p>
                     </div>
                 </div>

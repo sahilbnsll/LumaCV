@@ -93,7 +93,7 @@ export function UpiDonationDialog({
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="sm:max-w-md w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 rounded-3xl border border-border/80 dark:border-white/10 bg-background/95 backdrop-blur-2xl shadow-2xl focus-visible:outline-none">
+      <DialogContent className="liquid-glass sm:max-w-md w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 shadow-xl shadow-black/[0.04] dark:shadow-black/30 focus-visible:outline-none">
         {/* Header with Emerald Accent Badge */}
         <DialogHeader className="text-left space-y-2 pb-1">
           <div className="flex items-center gap-3">

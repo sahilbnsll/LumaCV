@@ -172,11 +172,22 @@ export function PdfPreview() {
 
                     if (!response.ok) {
                         let detail = `HTTP ${response.status}`;
+                        // Read the body once as text, then try to parse it as JSON —
+                        // calling response.json() and, on failure, response.text() on
+                        // the same Response throws "body stream already read" because
+                        // .json() already consumed the stream even when parsing fails.
                         try {
-                            const errJson = await response.json();
-                            detail = (errJson.details as string) || (errJson.error as string) || detail;
+                            const raw = (await response.text()).trim();
+                            if (raw) {
+                                try {
+                                    const errJson = JSON.parse(raw);
+                                    detail = (errJson.details as string) || (errJson.error as string) || detail;
+                                } catch {
+                                    detail = raw.slice(0, 400);
+                                }
+                            }
                         } catch {
-                            detail = (await response.text()).slice(0, 400);
+                            // Body unreadable — keep the HTTP status fallback.
                         }
                         // 4xx errors are not retryable
                         if (response.status < 500) {
@@ -356,6 +367,13 @@ export function PdfPreview() {
                                 <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />
                                 <span className="text-[11px] font-mono text-primary font-semibold">
                                     {retryCount > 0 ? `Retry ${retryCount}/${MAX_RETRIES}…` : 'Compiling…'}
+                                </span>
+                            </>
+                        ) : status === 'failed' && isAuthError ? (
+                            <>
+                                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                                <span className="text-[11px] font-mono text-amber-500 font-semibold">
+                                    Sign in required
                                 </span>
                             </>
                         ) : status === 'failed' ? (

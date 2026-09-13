@@ -33,8 +33,7 @@ const AUTHED_DESTINATIONS: NavDestination[] = [
     { href: '/applications', label: 'Applications Tracker', description: 'Kanban board for job interviews & status' },
     { href: '/ats', label: 'ATS Checker', description: 'Real-time keyword matching and parse scoring' },
     { href: '/templates', label: 'Templates Gallery', description: 'Browse all 52 high-density Typst designs', badge: '52 Free' },
-    { href: '/billing', label: 'Billing & Plans', description: 'Free forever plan & compute transparency' },
-    { href: '/support', label: 'Support & Donate', description: 'Help fund serverless Typst infrastructure', badge: 'Sponsor' },
+    { href: '/billing', label: 'Billing & Support', description: 'Free forever plan, compute transparency & donations', badge: 'Sponsor' },
     { href: '/docs', label: 'Documentation', description: 'Guides, ATS tips, and Typst compiler syntax' },
     { href: '/profile', label: 'Profile & Settings', description: 'API keys, contact info, and preferences' },
 ];
@@ -45,8 +44,7 @@ const GUEST_DESTINATIONS: NavDestination[] = [
     { href: '/ats', label: 'ATS Checker', description: 'Real-time keyword matching and parse scoring' },
     { href: '/editor', label: 'Resume Editor', description: 'Interactive visual Typst editor with vector PDF exports' },
     { href: '/docs', label: 'Documentation', description: 'Guides, ATS tips, and Typst compiler syntax' },
-    { href: '/billing', label: 'Billing & Plans', description: 'Free forever plan & compute transparency' },
-    { href: '/support', label: 'Support & Donate', description: 'Help fund serverless Typst infrastructure', badge: 'Sponsor' },
+    { href: '/billing', label: 'Billing & Support', description: 'Free forever plan, compute transparency & donations', badge: 'Sponsor' },
     { href: '/contact', label: 'Contact & Feedback', description: 'Reach out to the maintainers & report issues' },
     { href: '/login', label: 'Sign In / Register', description: 'Access saved drafts, cloud sync, and tracker', badge: 'Account' },
 ];
@@ -254,9 +252,15 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
 
                     <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-5 sm:px-8 py-4 border-t border-border/60 text-xs text-muted-foreground shrink-0 bg-background/50">
                         {user ? (
-                            <Link href="/profile" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
-                                Settings
-                            </Link>
+                            <>
+                                <Link href="/dashboard" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
+                                    Dashboard
+                                </Link>
+                                <span className="text-border">·</span>
+                                <Link href="/profile" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
+                                    Settings
+                                </Link>
+                            </>
                         ) : (
                             <Link href="/login" onClick={onClose} className="hover:text-foreground transition-colors font-medium">
                                 Sign in
@@ -268,11 +272,7 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
                         </Link>
                         <span className="text-border">·</span>
                         <Link href="/billing" onClick={onClose} className="hover:text-foreground transition-colors">
-                            Billing
-                        </Link>
-                        <span className="text-border">·</span>
-                        <Link href="/support" onClick={onClose} className="hover:text-foreground transition-colors">
-                            Support
+                            Billing &amp; Support
                         </Link>
                         <span className="text-border">·</span>
                         <Link href="/contact" onClick={onClose} className="hover:text-foreground transition-colors">

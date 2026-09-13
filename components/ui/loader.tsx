@@ -247,14 +247,14 @@ function Metaballs({ size, speed, reduce }: PartProps) {
       </defs>
       <g filter={`url(#${id})`} fill="currentColor">
         <motion.circle cy="50" r="15"
+          initial={{ cx: reduce ? 40 : 30 }}
           animate={reduce ? { opacity: [0.4, 1, 0.4] } : { cx: [30, 70, 30] }}
           transition={{ duration: speed * 1.6, ease: EASE_IN_OUT, repeat: Infinity }}
-          cx={reduce ? 40 : undefined}
         />
         <motion.circle cy="50" r="15"
+          initial={{ cx: reduce ? 60 : 70 }}
           animate={reduce ? { opacity: [0.4, 1, 0.4] } : { cx: [70, 30, 70] }}
           transition={{ duration: speed * 1.6, ease: EASE_IN_OUT, repeat: Infinity }}
-          cx={reduce ? 60 : undefined}
         />
       </g>
     </svg>

@@ -52,6 +52,9 @@
   teal: rgb("#0E7490"),      // 🌊 Ocean Teal / Petrol — modern, creative, sleek
   slate: rgb("#334155"),     // ⚙️ Graphite Slate — minimal, neutral, modern monochrome
   black: rgb("#000000"),     // 📄 High-contrast Pure Black — 100% ATS safe
+  plum: rgb("#735c9a"),      // 🎨 Muted Plum — design, brand, creative leadership
+  moss: rgb("#507665"),      // 🌿 Moss Green — sustainability, agriculture, wellness
+  clay: rgb("#a26046"),      // 🏺 Terracotta Clay — hospitality, real estate, craft
 )
 
 // Helper to quickly build a complete color palette from a single accent color
@@ -247,6 +250,9 @@
     muted-color: rgb("#262626"),
     rule-color: rgb("#525252"),
   ),
+  plum: create-palette(swatches.plum),
+  moss: create-palette(swatches.moss),
+  clay: create-palette(swatches.clay),
 )
 
 

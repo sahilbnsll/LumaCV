@@ -127,6 +127,40 @@ export const PALETTES: Record<string, ColorPalette> = {
         accentMuted: 'rgba(0, 0, 0, 0.08)',
         contrastOnAccent: '#ffffff',
     },
+    // These three were previously only decorative swatches on the homepage
+    // hero (resume-stack-hero.tsx) with no real palette backing them — the
+    // hero has been switched to source its swatches from this file instead,
+    // so the two color pickers can never drift out of sync again.
+    plum: {
+        id: 'plum',
+        label: 'Muted Plum',
+        hex: '#735c9a',
+        description: 'Understated violet-plum for design, brand, and creative leadership roles.',
+        accent: '#735c9a',
+        accentHover: '#5a4680',
+        accentMuted: 'rgba(115, 92, 154, 0.12)',
+        contrastOnAccent: '#ffffff',
+    },
+    moss: {
+        id: 'moss',
+        label: 'Moss Green',
+        hex: '#507665',
+        description: 'Earthy moss green for sustainability, agriculture, and wellness sectors.',
+        accent: '#507665',
+        accentHover: '#3d5b4e',
+        accentMuted: 'rgba(80, 118, 101, 0.12)',
+        contrastOnAccent: '#ffffff',
+    },
+    clay: {
+        id: 'clay',
+        label: 'Terracotta Clay',
+        hex: '#a26046',
+        description: 'Warm terracotta clay for hospitality, real estate, and craft-led industries.',
+        accent: '#a26046',
+        accentHover: '#7d4a36',
+        accentMuted: 'rgba(162, 96, 70, 0.12)',
+        contrastOnAccent: '#ffffff',
+    },
 };
 
 /**

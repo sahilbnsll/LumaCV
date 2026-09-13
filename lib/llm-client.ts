@@ -260,16 +260,12 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
     }
 
     // Platform default system fallbacks (STRICT: Free users without keys can ONLY use system default models)
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (geminiKey && !userKeys?.gemini) {
-        const google = createGoogleGenerativeAI({ apiKey: geminiKey });
-        configs.push({
-            provider: google,
-            models: taskType === 'heavy' ? GEMINI_HEAVY_MODELS : GEMINI_LIGHT_MODELS,
-            name: 'System-Gemini (Default)'
-        });
-    }
-
+    // Groq goes first: it's LPU-accelerated and consistently the fastest chain
+    // member by a wide margin (often sub-second first-token, vs several
+    // seconds for Gemini/OpenAI-class hosted inference). Most users have no
+    // BYOK key, so this ordering is what the majority of real requests pay —
+    // trying the slowest-typical provider first was adding real, avoidable
+    // latency to the common case even when nothing failed over at all.
     const groqKey = process.env.GROQ_API_KEY;
     if (groqKey && !userKeys?.groq) {
         const groq = createOpenAI({
@@ -281,6 +277,16 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
             provider: (modelId: string) => groq.chat(modelId),
             models: taskType === 'heavy' ? GROQ_HEAVY_MODELS : GROQ_LIGHT_MODELS,
             name: 'System-Groq (Default)'
+        });
+    }
+
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey && !userKeys?.gemini) {
+        const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+        configs.push({
+            provider: google,
+            models: taskType === 'heavy' ? GEMINI_HEAVY_MODELS : GEMINI_LIGHT_MODELS,
+            name: 'System-Gemini (Default)'
         });
     }
 

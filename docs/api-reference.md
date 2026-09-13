@@ -12,9 +12,9 @@ All API routes are served under `/api/v1/`.
 Compiles structured JSON resume data or raw Typst source markup into a native vector PDF using the local Typst compiler.
 
 - **Runtime**: Node.js Serverless Function
-- **Rate Limit**: 30 requests / minute
+- **Rate Limit**: 90 requests / minute (in-memory, per instance — see [`lib/rate-limit.ts`](../lib/rate-limit.ts))
 - **Max Payload Size**: 2 MB
-- **Timeout**: 15 seconds
+- **Timeout**: 15 seconds per Typst process (60s route-level max)
 
 #### Headers
 | Header | Type | Required | Description |

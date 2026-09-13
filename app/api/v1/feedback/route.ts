@@ -3,10 +3,22 @@ import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { sendFeedbackEmail } from '@/lib/email-service';
+import { ratelimit } from '@/lib/rate-limit';
 
 const FEEDBACK_FILE = path.join(process.cwd(), 'data', 'feedback.json');
 
 export async function POST(req: NextRequest) {
+    // Public, unauthenticated by design (anyone should be able to send
+    // feedback) — but every submission sends a real email to the admin and
+    // writes to Supabase/disk, so it needs the same abuse-protection as any
+    // other externally-consequential endpoint, not the compile route's
+    // in-memory limiter (that one's built for near-zero-cost local calls).
+    const ip = req.ip ?? '127.0.0.1';
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+        return NextResponse.json({ error: 'Too many feedback submissions. Please try again later.' }, { status: 429 });
+    }
+
     try {
         const body = await req.json();
         const { name, email, company, rating, type, message, page } = body;

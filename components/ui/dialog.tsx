@@ -39,7 +39,11 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        // A flat bg-black/50 in light mode crushes the page behind a liquid-glass
+        // dialog into a uniform dark dim — the glass panel then has nothing varied
+        // to blur and reads as flat gray instead of translucent. A lighter, blurred
+        // overlay keeps the real page (softened) behind the glass in both themes.
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/15 backdrop-blur-[2px] dark:bg-black/60",
         className
       )}
       {...props}

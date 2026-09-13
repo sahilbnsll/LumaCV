@@ -5,10 +5,10 @@ import {
   Info,
   AlertTriangle,
   AlertCircle,
-  Loader2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { Loader } from "@/components/ui/loader";
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
@@ -50,16 +50,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
           />
         ),
         loading: (
-          <Loader2
-            className="size-4 text-primary animate-spin shrink-0 mt-0.5"
-            aria-hidden="true"
+          <Loader
+            variant="spinner"
+            size={16}
+            className="text-primary shrink-0 mt-0.5"
           />
         ),
       }}
       toastOptions={{
         classNames: {
           toast:
-            "group/toast font-sans bg-card text-foreground border border-border/80 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.12),0_2px_6px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_24px_-4px_rgba(0,0,0,0.4),0_2px_8px_-2px_rgba(0,0,0,0.3)] rounded-xl flex items-start gap-2.5 p-3 pr-9 w-[340px] max-w-[calc(100vw-32px)] select-none",
+            "liquid-glass group/toast font-sans text-foreground shadow-[0_4px_16px_-2px_rgba(0,0,0,0.12),0_2px_6px_-1px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_24px_-4px_rgba(0,0,0,0.4),0_2px_8px_-2px_rgba(0,0,0,0.3)] !rounded-2xl flex items-start gap-2.5 p-3 pr-9 w-[340px] max-w-[calc(100vw-32px)] select-none",
           title: "text-[13px] font-semibold text-foreground tracking-tight leading-snug",
           description: "text-[12px] text-muted-foreground font-normal leading-relaxed mt-0.5",
           actionButton:

@@ -270,10 +270,10 @@ export const ThemeTypeSchema = z.string().optional().default('none').transform((
   const t = (val || 'none').toLowerCase();
   if (t === 'obsidian') return 'black';
   if (t === 'ocean') return 'cobalt';
-  const allowed = ['none', 'navy', 'cobalt', 'emerald', 'burgundy', 'teal', 'slate', 'black'];
+  const allowed = ['none', 'navy', 'cobalt', 'emerald', 'burgundy', 'teal', 'slate', 'black', 'plum', 'moss', 'clay'];
   return allowed.includes(t) ? t : 'none';
 });
-export type ThemeType = 'none' | 'navy' | 'cobalt' | 'emerald' | 'burgundy' | 'teal' | 'slate' | 'black';
+export type ThemeType = 'none' | 'navy' | 'cobalt' | 'emerald' | 'burgundy' | 'teal' | 'slate' | 'black' | 'plum' | 'moss' | 'clay';
 
 export const TemplateTypeSchema = z.enum([
   'modern',

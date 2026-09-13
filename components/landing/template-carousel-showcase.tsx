@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ALL_TEMPLATES, ResumeTemplate } from "@/lib/templates-data";
 import {
@@ -32,6 +32,29 @@ export function TemplateCarouselShowcase() {
   const carouselRef = useRef<CoverflowCarouselHandle>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const totalCount = ALL_TEMPLATES.length;
+  const pillRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const pillStripRef = useRef<HTMLDivElement>(null);
+
+  // The strip only shows a handful of the 15 pills at once (overflow-x-auto,
+  // hidden scrollbar) — without this, using the carousel's prev/next arrows
+  // moves the active template forward while its pill can silently scroll out
+  // of view, so the strip stops reflecting what's actually selected.
+  //
+  // This deliberately does NOT use scrollIntoView(): that walks every
+  // scrollable ancestor up to and including the browser window, so on the
+  // very first render (activeIdx starts at 0, and this section sits below
+  // the fold) it was scrolling the entire page down to this strip on load —
+  // not just centering the pill within its own row. Computing and applying
+  // the offset directly on the strip's own scroll container keeps this
+  // change fully local to that one element.
+  useEffect(() => {
+    const strip = pillStripRef.current;
+    const btn = pillRefs.current[activeIdx];
+    if (!strip || !btn) return;
+    const target =
+      btn.offsetLeft - strip.clientWidth / 2 + btn.offsetWidth / 2;
+    strip.scrollTo({ left: target, behavior: "smooth" });
+  }, [activeIdx]);
 
   const slides: CoverflowSlide[] = React.useMemo(
     () =>
@@ -99,7 +122,7 @@ export function TemplateCarouselShowcase() {
 
         {/* Streamlined Single-Row Template Capsule Strip */}
         <div className="mt-8 flex flex-col items-center">
-          <div className="w-full max-w-3xl overflow-x-auto no-scrollbar py-2 px-2">
+          <div ref={pillStripRef} className="w-full max-w-3xl overflow-x-auto no-scrollbar py-2 px-2">
             <fieldset
               className="flex items-center justify-start sm:justify-center gap-1.5 p-1 rounded-full bg-card/80 border border-border backdrop-blur-md w-max mx-auto shadow-xs"
               aria-label="Choose a template"
@@ -108,6 +131,7 @@ export function TemplateCarouselShowcase() {
                 <button
                   type="button"
                   key={item.id}
+                  ref={(el) => { pillRefs.current[itemIdx] = el; }}
                   className={`rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all cursor-pointer whitespace-nowrap ${
                     itemIdx === activeIdx
                       ? "bg-foreground text-background font-semibold shadow-xs"

@@ -46,20 +46,25 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+// Wrapped in forwardRef because every Radix trigger (DropdownMenuTrigger,
+// PopoverTrigger, TooltipTrigger, ...) rendered with `asChild` relies on its
+// Slot cloning a ref onto this component's real DOM node to measure/position
+// itself. Without forwardRef, that ref silently fails to attach — Radix ends
+// up with no real anchor element, and Floating UI falls back to measuring
+// the popper content against itself, producing wildly wrong positions (e.g.
+// a dropdown menu rendering off-screen instead of below its trigger).
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> &
+    VariantProps<typeof buttonVariants> & {
+      asChild?: boolean
+    }
+>(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : "button"
 
   return (
     <Comp
+      ref={ref}
       data-slot="button"
       data-variant={variant}
       data-size={size}
@@ -67,6 +72,7 @@ function Button({
       {...props}
     />
   )
-}
+})
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

@@ -138,7 +138,7 @@ export function Step3Processing() {
                 // from 2 AI calls down to 1. These stay as brief UI checkpoints so the
                 // progress view still reads as distinct steps.
                 setCurrentStageIndex(0);
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 150));
                 if (isCancelled) return;
                 setCompletedStages(prev => [...prev, 'analyzing']);
 
@@ -164,7 +164,7 @@ export function Step3Processing() {
 
                 // Stage 4: Checking for unsupported claims
                 setCurrentStageIndex(3);
-                await new Promise(resolve => setTimeout(resolve, 450));
+                await new Promise(resolve => setTimeout(resolve, 200));
                 if (isCancelled) return;
                 setCompletedStages(prev => [...prev, 'checking']);
 
@@ -313,10 +313,12 @@ export function Step3Processing() {
                 {!errorMessage && (
                     <div className="space-y-2 pt-2">
                         <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden relative border border-border/40 p-0.5">
+                            {/* transform:scaleX instead of animating width — width triggers
+                                layout/reflow on every frame, scaleX is GPU-composited. */}
                             <motion.div
-                                className="h-full bg-gradient-to-r from-primary via-cyan-400 to-primary rounded-full shadow-[0_0_12px_rgba(56,189,248,0.5)]"
-                                initial={{ width: "15%" }}
-                                animate={{ width: `${((currentStageIndex + 1) / PIPELINE_STAGES.length) * 100}%` }}
+                                className="h-full w-full origin-left bg-gradient-to-r from-primary via-cyan-400 to-primary rounded-full shadow-[0_0_12px_rgba(56,189,248,0.5)]"
+                                initial={{ scaleX: 0.15 }}
+                                animate={{ scaleX: (currentStageIndex + 1) / PIPELINE_STAGES.length }}
                                 transition={{ duration: 0.5, ease: "easeOut" }}
                             />
                         </div>

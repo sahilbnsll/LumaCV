@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CompileResumeRequestSchema } from '@/lib/resume-schema';
 import { hashTextServer } from '@/lib/content-hash';
 import { compileTypst } from '@/lib/compiler-service';
-import { ratelimit } from '@/lib/rate-limit';
+import { compileRatelimit } from '@/lib/rate-limit';
 import { recordResumeCompiled } from '@/lib/stats-service';
 import { requireUser } from '@/lib/auth';
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = req.ip ?? "127.0.0.1";
-    const { success } = await ratelimit.limit(ip);
+    const { success } = await compileRatelimit.limit(ip);
     if (!success) {
         return new NextResponse('Too many requests. Please try again later.', { status: 429 });
     }

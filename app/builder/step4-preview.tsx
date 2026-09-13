@@ -104,7 +104,12 @@ function BreakdownBar({
                 </div>
             </div>
             <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                <div className={cn('h-full rounded-full transition-all duration-500', colorClass)} style={{ width: `${after.ratio}%` }} />
+                {/* transform:scaleX instead of width — width triggers layout/reflow
+                    on every transition frame, scaleX is GPU-composited. */}
+                <div
+                    className={cn('h-full w-full origin-left rounded-full transition-transform duration-500 ease-out', colorClass)}
+                    style={{ transform: `scaleX(${after.ratio / 100})` }}
+                />
             </div>
             <div className="flex justify-between text-[10px] text-muted-foreground pt-0.5">
                 <span>Weight: {weight}% of total score</span>

@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import {
     FileUp,
     FileText,
@@ -93,12 +94,14 @@ export function ResumeUploadModal({ open, onOpenChange, onParsed }: ResumeUpload
             setStep('success');
             notify.success('Resume parsed successfully', file.name);
 
-            // Auto-apply after brief success animation
+            // Auto-apply after a brief success flash — long enough to register,
+            // short enough not to feel like the app is stalling after a parse
+            // that (once the AI call itself returns) is already done.
             setTimeout(() => {
                 onParsed(data);
                 resetState();
                 onOpenChange(false);
-            }, 900);
+            }, 350);
 
         } catch (err) {
             console.error('Upload/parse error:', err);
@@ -189,7 +192,7 @@ export function ResumeUploadModal({ open, onOpenChange, onParsed }: ResumeUpload
                             >
                                 <div className="relative">
                                     <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                                        <Loader2 className="w-7 h-7 text-primary animate-spin" />
+                                        <Loader variant="helix" size={28} className="text-primary" />
                                     </div>
                                     <Sparkles className="w-4 h-4 text-amber-500 absolute -top-1 -right-1 animate-pulse" />
                                 </div>

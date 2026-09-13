@@ -10,13 +10,14 @@ import { Step1JD } from './step1-jd';
 import { AppHeader } from '@/components/app-header';
 import { EditorialFooter } from '@/components/landing/editorial-footer';
 import { Button } from '@/components/ui/button';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
+import { Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Step2Details = dynamic(() => import('./step2-details').then((m) => m.Step2Details), {
     loading: () => (
-        <div className="flex items-center justify-center py-20 text-muted-foreground text-xs font-mono">
-            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+        <div className="flex items-center justify-center gap-3 py-20 text-muted-foreground text-xs font-mono">
+            <Loader variant="metaballs" size={28} className="text-primary" />
             Loading experience studio...
         </div>
     ),
@@ -25,8 +26,8 @@ const Step2Details = dynamic(() => import('./step2-details').then((m) => m.Step2
 
 const Step3Processing = dynamic(() => import('./step3-processing').then((m) => m.Step3Processing), {
     loading: () => (
-        <div className="flex items-center justify-center py-20 text-muted-foreground text-xs font-mono">
-            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+        <div className="flex items-center justify-center gap-3 py-20 text-muted-foreground text-xs font-mono">
+            <Loader variant="metaballs" size={28} className="text-primary" />
             Preparing AI tailoring pipeline...
         </div>
     ),
@@ -35,8 +36,8 @@ const Step3Processing = dynamic(() => import('./step3-processing').then((m) => m
 
 const Step4Preview = dynamic(() => import('./step4-preview').then((m) => m.Step4Preview), {
     loading: () => (
-        <div className="flex items-center justify-center py-20 text-muted-foreground text-xs font-mono">
-            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+        <div className="flex items-center justify-center gap-3 py-20 text-muted-foreground text-xs font-mono">
+            <Loader variant="metaballs" size={28} className="text-primary" />
             Loading preview canvas & templates...
         </div>
     ),
@@ -62,7 +63,7 @@ export default function BuilderPageContent() {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader variant="metaballs" size={40} className="text-primary" />
                     <p className="text-xs font-mono">Initializing workspace...</p>
                 </div>
             </div>

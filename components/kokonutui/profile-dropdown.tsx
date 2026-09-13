@@ -79,7 +79,7 @@ export default function ProfileDropdown({
     {
       label: "Status",
       value: data.subscription || "Open Source",
-      href: "/support",
+      href: "/billing",
       icon: <CreditCard className="h-4 w-4 text-emerald-500" />,
     },
     {

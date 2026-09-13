@@ -75,57 +75,73 @@ export function SupportProjectSection() {
             </div>
           </div>
 
-          {/* ── Right Column: 3D Skewed Physical Paper Support Memo ── */}
-          <div className="w-full max-w-[480px] lg:ml-auto">
-            <div className="transform-[perspective(1000px)_rotateY(-7deg)_rotateZ(2deg)] hover:transform-[perspective(1000px)_rotateY(-3deg)_rotateZ(1deg)] transition-transform duration-300 relative rounded-[2px_4px_2px_2px] bg-[#d9dad5] px-[30px] sm:px-[35px] pt-[29px] pb-6 text-[#2d2e30] shadow-[1px_1px_0_#fafaf3_inset,1px_2px_0_#a9aaa6,2px_4px_0_#6b6c6a,8px_19px_30px_#0005] after:absolute after:top-0 after:right-0 after:size-[26px] after:rounded-[0_0_0_4px] after:bg-[#f4f5ec] after:shadow-[-1px_2px_2px_#0002] after:content-['']">
-              
-              {/* Memo Header: Logo & Brand */}
-              <div className="flex items-center gap-[11px] pr-5 text-[14px] font-medium tracking-[-0.02em] text-[#2d2e30]">
-                <LumaLogo size={22} />
+          {/* ── Right Column: Support Channels Card ── */}
+          <div className="w-full max-w-[640px] lg:ml-auto [perspective:1600px]">
+            {/* Notice-board tilt — more pronounced than a subtle hover-lift
+                card: rotateY for depth, a touch of rotateZ so it reads as
+                "hung on a wall slightly crooked" rather than a flat panel.
+                Relaxes toward flat on hover instead of staying static. */}
+            <div className="liquid-glass relative overflow-hidden px-10 sm:px-12 pt-10 pb-8 text-foreground shadow-xl shadow-black/[0.04] dark:shadow-black/30 [transform:rotateY(-12deg)_rotateX(3deg)_rotateZ(-1.5deg)] hover:[transform:rotateY(-3deg)_rotateX(0deg)_rotateZ(0deg)_translateY(-4px)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+              {/* Soft accent wash — the same restrained "one glow, one accent"
+                  treatment used elsewhere on this page, not a flat plain card */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/[0.08] blur-[60px]"
+              />
+
+              {/* Header: Logo & Brand */}
+              <div className="relative flex items-center gap-3.5 text-[18px] font-medium tracking-[-0.02em] text-foreground">
+                <LumaLogo size={30} />
                 <span className="font-semibold font-display">LumaCV</span>
               </div>
 
-              {/* Memo Title */}
-              <h3 className="mt-[28px] mb-6 font-display font-semibold text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.045em] text-[#2d2e30]">
+              {/* Title */}
+              <h3 className="relative mt-9 mb-8 font-display font-semibold text-[38px] sm:text-[44px] leading-[1.1] tracking-[-0.045em] text-foreground">
                 Support the project
               </h3>
 
               {/* Channel 1: GitHub Sponsors */}
-              <a 
+              <a
                 href={SUPPORT_CONFIG.githubSponsors.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group/link flex min-h-[64px] items-center gap-[14px] border-t border-[#2d2e3038] text-[14px] font-medium text-[#2d2e30] hover:text-black transition-colors focus-visible:outline-[#37383a]"
+                className="group/link relative flex min-h-[80px] items-center gap-5 border-t border-border/70 text-[18px] font-medium text-foreground/90 hover:text-foreground transition-colors focus-visible:outline-ring"
               >
-                <Github className="size-[21px] shrink-0 text-[#2d2e30]" aria-hidden="true" />
+                <span className="flex size-13 shrink-0 items-center justify-center rounded-full bg-muted/70 text-muted-foreground transition-colors group-hover/link:bg-foreground/10 group-hover/link:text-foreground">
+                  <Github className="size-6" aria-hidden="true" />
+                </span>
                 <span>GitHub Sponsors</span>
-                <ArrowUpRight className="ml-auto size-5 text-[#2d2e30] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/link:translate-x-1 group-hover/link:-translate-y-1" aria-hidden="true" />
+                <ArrowUpRight className="ml-auto size-6 text-muted-foreground transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/link:translate-x-1 group-hover/link:-translate-y-1" aria-hidden="true" />
               </a>
 
               {/* Channel 2: Buy Me a Coffee */}
-              <a 
+              <a
                 href={SUPPORT_CONFIG.buyMeACoffee.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group/link flex min-h-[64px] items-center gap-[14px] border-t border-[#2d2e3038] text-[14px] font-medium text-[#2d2e30] hover:text-black transition-colors focus-visible:outline-[#37383a]"
+                className="group/link relative flex min-h-[80px] items-center gap-5 border-t border-border/70 text-[18px] font-medium text-foreground/90 hover:text-foreground transition-colors focus-visible:outline-ring"
               >
-                <Coffee className="size-[21px] shrink-0 text-[#2d2e30]" aria-hidden="true" />
+                <span className="flex size-13 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 transition-colors">
+                  <Coffee className="size-6" aria-hidden="true" />
+                </span>
                 <span>Buy Me a Coffee</span>
-                <ArrowUpRight className="ml-auto size-5 text-[#2d2e30] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/link:translate-x-1 group-hover/link:-translate-y-1" aria-hidden="true" />
+                <ArrowUpRight className="ml-auto size-6 text-muted-foreground transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/link:translate-x-1 group-hover/link:-translate-y-1" aria-hidden="true" />
               </a>
 
               {/* Channel 3: Direct UPI (India) */}
-              <button 
+              <button
                 type="button"
                 onClick={() => setUpiOpen(true)}
-                className="group/link flex min-h-[64px] w-full items-center gap-[14px] border-t border-[#2d2e3038] text-[14px] font-medium text-[#2d2e30] hover:text-black transition-colors focus-visible:outline-[#37383a] text-left cursor-pointer"
+                className="group/link relative flex min-h-[80px] w-full items-center gap-5 border-t border-border/70 text-[18px] font-medium text-foreground/90 hover:text-foreground transition-colors focus-visible:outline-ring text-left cursor-pointer"
               >
-                <QrCode className="size-[21px] shrink-0 text-[#2d2e30]" aria-hidden="true" />
+                <span className="flex size-13 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 transition-colors">
+                  <QrCode className="size-6" aria-hidden="true" />
+                </span>
                 <div className="flex flex-col">
                   <span>Direct UPI (India)</span>
-                  <span className="text-[11px] font-normal opacity-75">GPay · PhonePe · Paytm</span>
+                  <span className="text-[14px] font-normal text-muted-foreground">GPay · PhonePe · Paytm</span>
                 </div>
-                <ArrowUpRight className="ml-auto size-5 text-[#2d2e30] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/link:translate-x-1 group-hover/link:-translate-y-1" aria-hidden="true" />
+                <ArrowUpRight className="ml-auto size-6 text-muted-foreground transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/link:translate-x-1 group-hover/link:-translate-y-1" aria-hidden="true" />
               </button>
 
             </div>

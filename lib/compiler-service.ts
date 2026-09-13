@@ -154,6 +154,16 @@ export async function compileTypst(options: CompileTypstOptions): Promise<Provid
 
     // Compile Typst markup via stdin: avoids Windows CLI arg limits, quote mangling, and writable file requirements
     const args = ['compile', '--root', typstDir];
+    // theme.typ's font-sans/font-serif stacks list "Inter" and "JetBrains Mono"
+    // as the FIRST/primary choice — but neither ships with Typst's own embedded
+    // fonts (DejaVu Sans Mono, Libertinus Serif, New Computer Modern only), and
+    // production (Vercel/Linux) has no system font directory at all. Without
+    // this, every "sans" template silently fell through the entire fallback
+    // chain in production and rendered in Typst's last-resort serif default —
+    // wrong font, not just a missing one. typst/fonts/ bundles just the two
+    // fonts actually needed (Inter + JetBrains Mono, both variable-font single
+    // files), so this stays a narrow, fast directory on every platform.
+    args.push('--font-path', path.join(typstDir, 'fonts'));
     if (process.platform === 'win32') {
       args.push('--font-path', 'C:\\Windows\\Fonts');
     }

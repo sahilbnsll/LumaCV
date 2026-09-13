@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
@@ -17,6 +17,7 @@ import { LumaLogo } from '@/components/luma-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { FullScreenNav, KineticMenuButton } from '@/components/full-screen-nav';
 import { EditorialFooter } from '@/components/landing/editorial-footer';
 import {
@@ -73,6 +74,7 @@ function EditorContent() {
     const [viewMode, setViewMode] = useState<'entry' | 'editor'>('editor');
     const [templateSheetOpen, setTemplateSheetOpen] = useState(false);
     const [palettePopoverOpen, setPalettePopoverOpen] = useState(false);
+    const paletteMenuRef = useRef<HTMLDivElement>(null);
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
@@ -82,6 +84,26 @@ function EditorContent() {
     // Track current active resume ID from URL or generate default
     const queryId = searchParams.get('id');
     const [currentResumeId, setCurrentResumeId] = useState<string>(() => queryId || (user?.id ? `editor-${user.id}-default` : 'local-editor-default'));
+
+    // Close the Accent Color Palette popover on outside click or Escape —
+    // mirrors the downloadMenuRef pattern in components/pdf-preview.tsx.
+    useEffect(() => {
+        if (!palettePopoverOpen) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (paletteMenuRef.current && !paletteMenuRef.current.contains(e.target as Node)) {
+                setPalettePopoverOpen(false);
+            }
+        };
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setPalettePopoverOpen(false);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [palettePopoverOpen]);
 
     // 1. URL Query Param Synchronization & Initial Load
     useEffect(() => {
@@ -203,7 +225,7 @@ function EditorContent() {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader variant="metaballs" size={40} className="text-primary" />
                     <p className="text-xs font-mono">Loading Resume Studio...</p>
                 </div>
             </div>
@@ -218,14 +240,14 @@ function EditorContent() {
                     <div className="w-full flex h-14 items-center justify-between px-4 sm:px-6">
                         <Link
                             href="/"
-                            className="group flex items-center gap-2 hover:opacity-90 rounded-lg"
+                            className="group flex items-center gap-2.5 hover:opacity-90 rounded-lg"
                             title="LumaCV Home"
                         >
-                            <LumaLogo size={22} />
-                            <span className="font-display font-semibold tracking-tight text-sm text-foreground">
+                            <LumaLogo size={26} />
+                            <span className="font-display font-bold tracking-[-0.03em] text-base sm:text-lg text-foreground">
                                 LumaCV
                             </span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40 ml-1">
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40 ml-1 hidden sm:inline">
                                 Resume Editor
                             </span>
                         </Link>
@@ -264,14 +286,18 @@ function EditorContent() {
             <header className="sticky top-0 z-40 glass-nav border-b border-border/60 transition-colors">
                 <div className="w-full flex h-14 items-center justify-between px-3 sm:px-6">
                     {/* Left: Brand + Document Title */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 shrink">
                         <Link
                             href="/"
                             className="group flex items-center gap-2 hover:opacity-90 focus-visible:ring-1 focus-visible:ring-primary rounded-lg"
                             title="LumaCV Home"
                         >
-                            <LumaLogo size={22} />
-                            <span className="font-display font-semibold tracking-tight text-sm text-foreground hidden sm:inline">
+                            <LumaLogo size={24} />
+                            {/* Brand weight/tracking matched to the shared AppHeader lockup
+                                (font-bold, tracking-[-0.03em]) — kept at text-sm and hidden
+                                below sm: this bar is already tight with the candidate name,
+                                badge, and the scrollable tool row. */}
+                            <span className="font-display font-bold tracking-[-0.03em] text-sm text-foreground hidden sm:inline">
                                 LumaCV
                             </span>
                         </Link>
@@ -290,13 +316,19 @@ function EditorContent() {
                     </div>
 
                     {/* Center / Action Controls */}
-                    <div className="flex items-center gap-1.5 sm:gap-2.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                        {/* Feature buttons scroll on narrow screens instead of forcing the
+                            page to overflow horizontally or clipping off entirely — same
+                            pattern as the section-tabs row in the compact resume editor.
+                            Theme/account/menu stay pinned outside this so they're always
+                            reachable without needing to discover the scroll. */}
+                        <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar min-w-0">
                         {/* 1. Import / Upload Resume Trigger */}
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setUploadModalOpen(true)}
-                            className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer"
+                            className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer shrink-0"
                             title="Import another resume (PDF or Word)"
                         >
                             <FileUp className="h-3.5 w-3.5 text-primary" />
@@ -308,7 +340,7 @@ function EditorContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => setTemplateSheetOpen(true)}
-                            className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer"
+                            className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer shrink-0"
                             title="Browse and select from 52 templates"
                         >
                             <Layout className="h-3.5 w-3.5 text-primary" />
@@ -319,71 +351,12 @@ function EditorContent() {
                         </Button>
 
                         {/* 3. Check ATS Link */}
-                        <Button asChild variant="outline" size="sm" className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer hidden lg:inline-flex">
+                        <Button asChild variant="outline" size="sm" className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer shrink-0 hidden lg:inline-flex">
                             <Link href={currentResumeId ? `/ats?id=${currentResumeId}` : '/ats'}>
                                 <Activity className="h-3.5 w-3.5 text-emerald-500" />
                                 <span>Check ATS</span>
                             </Link>
                         </Button>
-
-                        {/* 4. Accent Color Palette Selector */}
-                        <div className="relative">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPalettePopoverOpen(!palettePopoverOpen)}
-                                className="h-8 w-8 sm:w-auto sm:px-2.5 p-0 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer"
-                                title="Change accent color palette"
-                            >
-                                <div
-                                    className="h-3.5 w-3.5 rounded-full border border-black/20 shrink-0"
-                                    style={{ backgroundColor: (PALETTES as Record<string, { hex: string; label: string }>)[theme]?.hex || '#64748B' }}
-                                />
-                                <span className="hidden sm:inline text-xs capitalize">
-                                    {theme === 'none' ? 'Slate' : theme}
-                                </span>
-                            </Button>
-
-                            <AnimatePresence>
-                                {palettePopoverOpen && (
-                                    <motion.div
-                                        variants={MOTION_VARIANTS.fadeScale}
-                                        initial="initial"
-                                        animate="animate"
-                                        exit="exit"
-                                        className="absolute right-0 top-10 z-50 p-2.5 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-xl w-52 space-y-1.5"
-                                    >
-                                        <div className="text-[11px] font-semibold text-muted-foreground px-1 pb-1 border-b border-border/40">
-                                            Accent Color Palette
-                                        </div>
-                                        <div className="grid grid-cols-4 gap-1.5 pt-1">
-                                            {Object.entries(PALETTES).map(([key, pal]) => {
-                                                const isSelected = theme === key;
-                                                return (
-                                                    <button
-                                                        key={key}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setTheme(key);
-                                                            setPalettePopoverOpen(false);
-                                                            notify.paletteApplied(pal.label);
-                                                        }}
-                                                        className={cn(
-                                                            "h-8 rounded-xl flex items-center justify-center transition-transform hover:scale-105 cursor-pointer relative",
-                                                            isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                                                        )}
-                                                        style={{ backgroundColor: pal.hex }}
-                                                        title={pal.label}
-                                                    >
-                                                        {isSelected && <Check className="h-3 w-3 text-white stroke-[3]" />}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
 
                         {/* 5. Autosave Status Badge */}
                         <div className="hidden xl:flex items-center gap-1.5 text-xs text-muted-foreground px-2 min-w-[120px]">
@@ -415,24 +388,109 @@ function EditorContent() {
                                 )}
                             </AnimatePresence>
                         </div>
+                        </div>
 
-                        {/* 6. Export Options (Split Button with Radix DropdownMenu) */}
-                        <div className="inline-flex items-center rounded-xl shadow-2xs">
+                        {/* 4. Accent Color Palette Selector — kept outside the scrollable
+                            row above: an overflow-x-auto ancestor computes overflow-y:auto
+                            too (a plain CSS overflow rule, not just a Radix quirk), which
+                            clipped this popover's absolutely-positioned dropdown out of
+                            view — it opened in state but was invisible/unreachable. Same
+                            root cause and fix as the Export dropdown below. Closes on
+                            outside click / Escape via paletteMenuRef below, mirroring the
+                            download-menu pattern in components/pdf-preview.tsx. */}
+                        <div className="relative shrink-0" ref={paletteMenuRef}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPalettePopoverOpen(!palettePopoverOpen)}
+                                className="h-8 w-8 sm:w-auto sm:px-2.5 p-0 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer"
+                                title="Change accent color palette"
+                            >
+                                <div
+                                    className="h-3.5 w-3.5 rounded-full border border-black/20 shrink-0"
+                                    style={{ backgroundColor: PALETTES[theme]?.hex || '#64748B' }}
+                                />
+                                <span className="hidden sm:inline text-xs">
+                                    {PALETTES[theme]?.label ?? 'Default Slate'}
+                                </span>
+                                <ChevronDown className="hidden sm:inline h-3 w-3 text-muted-foreground shrink-0" />
+                            </Button>
+
+                            <AnimatePresence>
+                                {palettePopoverOpen && (
+                                    <motion.div
+                                        variants={MOTION_VARIANTS.fadeScale}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        className="absolute right-0 top-10 z-50 p-3 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-xl w-64 space-y-2.5"
+                                    >
+                                        <div className="flex items-center justify-between px-0.5 pb-2 border-b border-border/40">
+                                            <span className="text-[11px] font-semibold text-muted-foreground">
+                                                Accent Color Palette
+                                            </span>
+                                            <span className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                                                <span
+                                                    className="h-2.5 w-2.5 rounded-full border border-black/20 shrink-0"
+                                                    style={{ backgroundColor: PALETTES[theme]?.hex || '#64748B' }}
+                                                />
+                                                {PALETTES[theme]?.label ?? 'Default Slate'}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {Object.entries(PALETTES).map(([key, pal]) => {
+                                                const isSelected = theme === key;
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setTheme(key);
+                                                            setPalettePopoverOpen(false);
+                                                            notify.paletteApplied(pal.label);
+                                                        }}
+                                                        className={cn(
+                                                            "group h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 cursor-pointer relative ring-1 ring-black/10",
+                                                            isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-card"
+                                                        )}
+                                                        style={{ backgroundColor: pal.hex }}
+                                                        title={pal.label}
+                                                        aria-label={pal.label}
+                                                        aria-pressed={isSelected}
+                                                    >
+                                                        {isSelected && <Check className="h-3.5 w-3.5 text-white stroke-[3] drop-shadow" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* 6. Export Options (Split Button with Radix DropdownMenu) — kept
+                            outside the scrollable row above: nesting this trigger inside an
+                            overflow-x-auto ancestor confused Radix's collision-boundary
+                            detection and positioned the dropdown content off-screen (top:
+                            -353px) instead of below the button. Download is also the single
+                            most important action here, so it deserves guaranteed visibility
+                            regardless. */}
+                        <div className="inline-flex items-center rounded-xl shadow-2xs shrink-0">
                             <Button
                                 size="sm"
                                 onClick={handleDownloadPdf}
                                 disabled={isDownloading}
-                                className="h-8 px-3 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-l-xl rounded-r-none cursor-pointer select-none border-r border-primary-foreground/20"
+                                className="h-8 px-2.5 sm:px-3 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-l-xl rounded-r-none cursor-pointer select-none border-r border-primary-foreground/20"
                             >
                                 {isDownloading ? (
                                     <>
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        <span>Compiling...</span>
+                                        <span className="hidden sm:inline">Compiling...</span>
                                     </>
                                 ) : (
                                     <>
                                         <Download className="h-3.5 w-3.5" />
-                                        <span>PDF</span>
+                                        <span className="hidden sm:inline">PDF</span>
                                     </>
                                 )}
                             </Button>
@@ -481,9 +539,11 @@ function EditorContent() {
                             </DropdownMenu>
                         </div>
 
-                        <ThemeToggle />
-                        {user ? <UserMenu /> : null}
-                        <KineticMenuButton open={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
+                        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                            <ThemeToggle />
+                            {user ? <UserMenu /> : null}
+                            <KineticMenuButton open={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
+                        </div>
                     </div>
                 </div>
 
@@ -588,7 +648,7 @@ export default function EditorPageContent() {
             fallback={
                 <div className="min-h-screen bg-background flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Loader variant="metaballs" size={40} className="text-primary" />
                         <p className="text-xs font-mono">Initializing Editor...</p>
                     </div>
                 </div>

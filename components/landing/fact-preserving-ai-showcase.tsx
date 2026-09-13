@@ -139,7 +139,7 @@ export function FactPreservingAiShowcase() {
 
   return (
     <section
-      className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-transparent text-foreground overflow-hidden"
+      className="relative py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-transparent text-foreground overflow-hidden"
     >
       {/* Subtle fine dot matrix pattern overlay */}
       <div 
@@ -152,20 +152,20 @@ export function FactPreservingAiShowcase() {
         }}
       />
 
-      <div className="relative max-w-marketing mx-auto space-y-14">
-        
+      <div className="relative max-w-marketing mx-auto space-y-9">
+
         {/* ── Editorial Header ── */}
         <div
-          className="max-w-3xl space-y-5"
+          className="max-w-3xl space-y-3"
         >
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.12]">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-[1.12]">
             Strengthen your phrasing.{" "}
             <span className="text-muted-foreground font-medium">
               Never fabricate facts.
             </span>
           </h2>
 
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
             Generic AI models frequently invent statistics and claim unverified impact. LumaCV
             constrains rewriting strictly to grammar, precision, and verified technical scope.
           </p>
@@ -218,7 +218,7 @@ export function FactPreservingAiShowcase() {
             </div>
           </div>
 
-          <div className="p-5 sm:p-8 lg:p-10 space-y-8">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 
             {/* Current Scenario Info Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -226,7 +226,7 @@ export function FactPreservingAiShowcase() {
                 <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground font-medium">
                   Active Resume Entry • {scenario.category}
                 </span>
-                <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mt-0.5">
+                <h3 className="text-lg sm:text-xl font-bold text-foreground tracking-tight mt-0.5">
                   {scenario.role}
                 </h3>
               </div>
@@ -261,11 +261,11 @@ export function FactPreservingAiShowcase() {
             </div>
 
             {/* ── Main Comparison Stage: Side by Side or Interactive Diff ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
               {/* LEFT: Candidate's Original Raw Bullet (5 cols) */}
-              <div className="lg:col-span-5 rounded-2xl border border-border bg-card/60 p-5 sm:p-6 space-y-4 flex flex-col justify-between">
-                <div className="space-y-3">
+              <div className="lg:col-span-5 rounded-2xl border border-border bg-card/60 p-4 sm:p-5 space-y-3 flex flex-col justify-between">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
                       Original Input
@@ -275,8 +275,8 @@ export function FactPreservingAiShowcase() {
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-muted/40 border border-border">
-                    <p className="text-sm sm:text-base text-foreground leading-relaxed font-sans">
+                  <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
+                    <p className="text-sm text-foreground leading-relaxed font-sans">
                       • {scenario.original}
                     </p>
                   </div>
@@ -318,10 +318,10 @@ export function FactPreservingAiShowcase() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
-                      className="rounded-2xl border border-border bg-card/60 p-5 sm:p-6 space-y-5 shadow-xl"
+                      className="rounded-2xl border border-border bg-card/60 p-4 sm:p-5 space-y-4 shadow-xl"
                     >
                       {/* Card Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-border">
                         <div className="flex items-center gap-2">
                           <div className="p-1.5 rounded-lg bg-muted text-foreground">
                             <Sparkles className="w-4 h-4 text-foreground" />
@@ -341,7 +341,7 @@ export function FactPreservingAiShowcase() {
                       </div>
 
                       {/* Transformed Bullet Display */}
-                      <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2">
+                      <div className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-1.5">
                         <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
                           <span>Synthesized Bullet Statement</span>
                           {isApplied && (
@@ -351,13 +351,13 @@ export function FactPreservingAiShowcase() {
                             </span>
                           )}
                         </div>
-                        <p className="text-base sm:text-lg font-medium text-foreground leading-relaxed">
+                        <p className="text-sm sm:text-base font-medium text-foreground leading-relaxed">
                           • {scenario.grounded.text}
                         </p>
                       </div>
 
                       {/* Grounding Principles Breakdown */}
-                      <div className="p-3.5 rounded-xl bg-muted/30 border border-border space-y-2.5 text-xs">
+                      <div className="p-3 rounded-xl bg-muted/30 border border-border space-y-2 text-xs">
                         <div className="flex items-start gap-2">
                           <strong className="text-muted-foreground font-mono uppercase tracking-wider shrink-0 mt-0.5">
                             Rule:
@@ -384,12 +384,12 @@ export function FactPreservingAiShowcase() {
                       </div>
 
                       {/* Interactive Buttons */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                         <div className="flex items-center gap-2">
                           {!isApplied ? (
                             <Button
                               onClick={() => setIsApplied(true)}
-                              className="h-10 px-5 text-xs font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background gap-2 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background gap-2 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all"
                             >
                               <span>Apply wording to studio</span>
                               <ArrowRight className="w-3.5 h-3.5" />
@@ -398,7 +398,7 @@ export function FactPreservingAiShowcase() {
                             <Button
                               variant="outline"
                               onClick={() => setIsApplied(false)}
-                              className="h-10 px-4 text-xs font-medium rounded-xl border-border text-foreground bg-card hover:bg-muted gap-2 cursor-pointer"
+                              className="h-9 px-3.5 text-xs font-medium rounded-xl border-border text-foreground bg-card hover:bg-muted gap-2 cursor-pointer"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
                               <span>Reset wording</span>
@@ -408,7 +408,7 @@ export function FactPreservingAiShowcase() {
                           <Button
                             variant="ghost"
                             onClick={() => handleCopy(scenario.grounded.text)}
-                            className="h-10 px-3 text-xs text-muted-foreground hover:text-foreground rounded-xl gap-1.5 cursor-pointer"
+                            className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground rounded-xl gap-1.5 cursor-pointer"
                           >
                             {copied ? <Check className="w-3.5 h-3.5 text-foreground" /> : <Copy className="w-3.5 h-3.5" />}
                             <span>{copied ? "Copied!" : "Copy phrasing"}</span>
@@ -428,10 +428,10 @@ export function FactPreservingAiShowcase() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
-                      className="rounded-2xl border border-rose-500/40 bg-rose-500/5 dark:bg-rose-950/[0.14] p-5 sm:p-6 space-y-5 shadow-[0_15px_40px_rgba(244,63,94,0.12)]"
+                      className="rounded-2xl border border-rose-500/40 bg-rose-500/5 dark:bg-rose-950/[0.14] p-4 sm:p-5 space-y-4 shadow-[0_15px_40px_rgba(244,63,94,0.12)]"
                     >
                       {/* Card Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-rose-500/20">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-rose-500/20">
                         <div className="flex items-center gap-2">
                           <div className="p-1 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-400">
                             <AlertTriangle className="w-4 h-4" />
@@ -451,17 +451,17 @@ export function FactPreservingAiShowcase() {
                       </div>
 
                       {/* Hallucinated Bullet Display */}
-                      <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2">
+                      <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-1.5">
                         <div className="text-[11px] font-mono text-rose-600 dark:text-rose-400 font-medium">
                           Fabricated Resume Statement (Unverifiable in background checks)
                         </div>
-                        <p className="text-base sm:text-lg font-medium text-rose-950 dark:text-rose-100 leading-relaxed">
+                        <p className="text-sm sm:text-base font-medium text-rose-950 dark:text-rose-100 leading-relaxed">
                           • {scenario.hallucinated.text}
                         </p>
                       </div>
 
                       {/* Flagged Hallucinations */}
-                      <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-2 text-xs">
+                      <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-1.5 text-xs">
                         <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold font-mono text-[11px]">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           <span>LumaCV Guardrails Flagged 3 Severe Vulnerabilities:</span>
@@ -476,11 +476,11 @@ export function FactPreservingAiShowcase() {
                       </div>
 
                       {/* Call to switch back */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                         <Button
                           onClick={() => setViewMode("grounded")}
                           variant="invert"
-                          className="h-10 px-5 text-xs font-semibold gap-2"
+                          className="h-9 px-4 text-xs font-semibold gap-2"
                         >
                           <ShieldCheck className="w-3.5 h-3.5 text-background" />
                           <span>Switch back to Fact-Preserving AI</span>
@@ -498,7 +498,7 @@ export function FactPreservingAiShowcase() {
             </div>
 
             {/* ── Subtext & Direct Navigation Footer ── */}
-            <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-border gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-3 border-t border-border gap-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-2 text-center sm:text-left">
                 <span className="size-1.5 rounded-full bg-zinc-400" />
                 <span>AI optimization in LumaCV is strictly optional, transparent, and candidate-governed.</span>
