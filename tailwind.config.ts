@@ -15,9 +15,13 @@ const config: Config = {
                 mono: ["var(--font-mono)", "var(--font-geist-mono)", "monospace"],
             },
             fontSize: {
-                "display-2xl": ["4rem", { lineHeight: "1.05", letterSpacing: "-0.035em" }],
-                "display-xl": ["3rem", { lineHeight: "1.10", letterSpacing: "-0.03em" }],
-                "display-lg": ["2rem", { lineHeight: "1.15", letterSpacing: "-0.025em" }],
+                // Fluid display scale extracted from the homepage's actual hero/section
+                // headings (components/landing/*) so every section shares one source
+                // instead of hand-rolled clamp() values.
+                "display-hero": ["clamp(3.25rem, 5.85vw, 5.125rem)", { lineHeight: "1.035", letterSpacing: "-0.064em" }],
+                "display-2xl": ["clamp(2.5rem, 5.2vw, 4.375rem)", { lineHeight: "1.06", letterSpacing: "-0.055em" }],
+                "display-xl": ["clamp(2.375rem, 4.5vw, 3.75rem)", { lineHeight: "1.08", letterSpacing: "-0.04em" }],
+                "display-lg": ["clamp(2.125rem, 4vw, 3.375rem)", { lineHeight: "1.12", letterSpacing: "-0.04em" }],
                 "heading-md": ["1.5rem", { lineHeight: "1.25", letterSpacing: "-0.02em" }],
                 "heading-sm": ["1.125rem", { lineHeight: "1.35", letterSpacing: "-0.015em" }],
                 "body-lg": ["1rem", { lineHeight: "1.55", letterSpacing: "-0.005em" }],
@@ -27,9 +31,17 @@ const config: Config = {
             },
             maxWidth: {
                 "reading": "48rem",    // 768px (Legal, Settings, Single-Column Forms)
-                "marketing": "72rem",  // 1152px (Landing, Demo, Billing)
+                "marketing": "74rem",  // 1184px — matches the homepage's actual editorial container width
                 "dashboard": "80rem",  // 1280px (Dashboard project matrices)
                 "studio": "100rem",    // 1600px (Split-screen review workspace)
+            },
+            minHeight: {
+                // Apple HIG minimum tap target — the homepage already used this value
+                // ad hoc (`min-h-[44px]`) in several places; this makes it a real token.
+                "touch": "44px",
+            },
+            minWidth: {
+                "touch": "44px",
             },
             boxShadow: {
                 "card": "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03)",
@@ -78,6 +90,14 @@ const config: Config = {
                 destructive: {
                     DEFAULT: "var(--destructive)",
                     foreground: "var(--destructive-foreground)",
+                },
+                success: {
+                    DEFAULT: "var(--success)",
+                    foreground: "var(--success-foreground)",
+                },
+                warning: {
+                    DEFAULT: "var(--warning)",
+                    foreground: "var(--warning-foreground)",
                 },
                 border: "var(--border)",
                 input: "var(--input)",

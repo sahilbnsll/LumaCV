@@ -1,1 +1,1 @@
-declare module 'pdfjs-dist/build/pdf.min.js';
+declare module 'pdfjs-dist/build/pdf.min.mjs';

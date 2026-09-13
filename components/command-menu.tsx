@@ -17,6 +17,11 @@ import {
     X,
     KeyRound,
     MessageSquarePlus,
+    FileCode2,
+    Target,
+    Briefcase,
+    BookOpen,
+    User
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAppStore } from '@/lib/store';
@@ -24,7 +29,7 @@ import { motionTokens } from '@/lib/design-tokens';
 import { ALL_TEMPLATES } from '@/lib/templates-data';
 import { TemplateType } from '@/lib/resume-schema';
 
-export function CommandMenu() {
+export function CommandMenu({ hideTrigger = false }: { hideTrigger?: boolean } = {}) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -60,50 +65,85 @@ export function CommandMenu() {
 
     const items = [
         {
-            id: 'new-resume',
-            label: 'New Tailored Resume',
-            category: 'Navigation',
-            icon: Plus,
-            action: () => router.push('/builder'),
+            id: 'editor',
+            label: 'Resume Editor',
+            category: 'Workspaces',
+            icon: FileCode2,
+            action: () => router.push('/editor'),
         },
         {
             id: 'my-resumes',
-            label: 'My Resumes / Projects',
-            category: 'Navigation',
+            label: 'My Resumes',
+            category: 'Workspaces',
             icon: FileText,
             action: () => router.push('/dashboard'),
         },
         {
-            id: 'live-demo',
-            label: 'Live Sample Resume',
-            category: 'Navigation',
+            id: 'ats-checker',
+            label: 'ATS Checker',
+            category: 'Workspaces',
+            icon: Target,
+            action: () => router.push('/ats'),
+        },
+        {
+            id: 'templates-gallery',
+            label: 'Templates',
+            category: 'Workspaces',
+            icon: LayoutTemplate,
+            action: () => router.push('/templates'),
+        },
+        {
+            id: 'ai-tailor',
+            label: 'Optimize Resume',
+            category: 'Workspaces',
             icon: Sparkles,
-            action: () => router.push('/demo'),
+            action: () => router.push('/builder'),
         },
         {
-            id: 'billing',
-            label: 'Community Access & Support',
-            category: 'Account',
-            icon: Heart,
-            action: () => router.push('/billing'),
+            id: 'applications',
+            label: 'Applications',
+            category: 'Workspaces',
+            icon: Briefcase,
+            action: () => router.push('/applications'),
         },
         {
-            id: 'settings',
-            label: 'Account & Security Settings',
+            id: 'profile-hub',
+            label: 'Profile',
             category: 'Account',
-            icon: Settings,
+            icon: User,
             action: () => router.push('/profile'),
         },
         {
+            id: 'settings',
+            label: 'Settings',
+            category: 'Account',
+            icon: Settings,
+            action: () => router.push('/profile#security'),
+        },
+        {
             id: 'ai-keys',
-            label: 'Configure AI Provider Keys (BYOK)',
+            label: 'AI Provider Keys',
             category: 'Account',
             icon: KeyRound,
-            action: () => router.push('/profile#api-keys'),
+            action: () => router.push('/profile#ai-keys'),
+        },
+        {
+            id: 'docs',
+            label: 'Documentation',
+            category: 'Help',
+            icon: BookOpen,
+            action: () => router.push('/docs'),
+        },
+        {
+            id: 'support-center',
+            label: 'Support',
+            category: 'Help',
+            icon: HelpCircle,
+            action: () => router.push('/support'),
         },
         ...ALL_TEMPLATES.map((tmpl) => ({
             id: `template-${tmpl.id}`,
-            label: `Switch Template: ${tmpl.name} (${tmpl.badge})`,
+            label: `Switch Template: ${tmpl.name}`,
             category: `Templates (${tmpl.categoryLabel})`,
             icon: LayoutTemplate,
             action: () => {
@@ -120,14 +160,14 @@ export function CommandMenu() {
         },
         {
             id: 'support',
-            label: 'Contact Support & Help Center',
+            label: 'Contact Us',
             category: 'Help',
             icon: HelpCircle,
             action: () => router.push('/contact'),
         },
         {
             id: 'feedback',
-            label: 'Give Feedback & Suggestions',
+            label: 'Give Feedback',
             category: 'Help',
             icon: MessageSquarePlus,
             action: () => {
@@ -162,19 +202,21 @@ export function CommandMenu() {
     return (
         <>
             {/* Responsive Command Palette Trigger Button */}
-            <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/25 px-2 sm:px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
-                aria-label="Open command palette (Cmd+K)"
-                title="Command Palette (Cmd+K)"
-            >
-                <Search className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-[11px] font-medium">Quick actions</span>
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/80 bg-background/80 px-1.5 py-0.2 font-mono text-[10px] text-muted-foreground shadow-2xs">
-                    ⌘K
-                </kbd>
-            </button>
+            {!hideTrigger && (
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/25 px-2 sm:px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
+                    aria-label="Open command palette (Cmd+K)"
+                    title="Command Palette (Cmd+K)"
+                >
+                    <Search className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline text-[11px] font-medium">Quick actions</span>
+                    <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/80 bg-background/80 px-1.5 py-0.2 font-mono text-[10px] text-muted-foreground shadow-2xs">
+                        ⌘K
+                    </kbd>
+                </button>
+            )}
 
             {/* Accessible Dialog Overlay */}
             <AnimatePresence>

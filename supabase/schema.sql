@@ -14,9 +14,18 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
   full_name text,
+  username text,
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
 );
+
+-- Backfill for pre-existing installs that ran this script before `username` existed
+alter table public.profiles add column if not exists username text;
+
+-- Case-insensitive uniqueness so "Alex" and "alex" can't collide
+create unique index if not exists idx_profiles_username_lower
+  on public.profiles (lower(username))
+  where username is not null;
 
 -- Enable Row Level Security (RLS)
 alter table public.profiles enable row level security;
@@ -39,15 +48,17 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name)
+  insert into public.profiles (id, email, full_name, username)
   values (
     new.id,
     new.email,
-    coalesce(new.raw_user_meta_data->>'full_name', '')
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    nullif(new.raw_user_meta_data->>'username', '')
   )
   on conflict (id) do update set
     email = excluded.email,
-    full_name = coalesce(excluded.full_name, profiles.full_name);
+    full_name = coalesce(excluded.full_name, profiles.full_name),
+    username = coalesce(excluded.username, profiles.username);
   return new;
 end;
 $$;
@@ -55,6 +66,14 @@ $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- Also sync on updateUser() calls (e.g. changing username/full_name from
+-- Settings) — without this, public.profiles silently goes stale after the
+-- first sign-up and username login stops resolving the current username.
+drop trigger if exists on_auth_user_updated on auth.users;
+create trigger on_auth_user_updated
+  after update on auth.users
   for each row execute procedure public.handle_new_user();
 
 -- ==============================================================================

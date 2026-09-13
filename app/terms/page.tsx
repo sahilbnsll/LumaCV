@@ -1,10 +1,24 @@
-"use client";
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import { AppFooter } from '@/components/app-footer';
-import { ArrowLeft, CheckCircle2, Scale } from 'lucide-react';
+import { EditorialFooter } from '@/components/landing/editorial-footer';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+export const metadata: Metadata = {
+    title: 'Terms of Service | LumaCV',
+    description: 'Terms of Service for using LumaCV\'s free, open-source resume building platform.',
+    openGraph: {
+        title: 'Terms of Service | LumaCV',
+        description: 'Terms of Service for using LumaCV\'s free, open-source resume building platform.',
+        url: '/terms',
+    },
+    twitter: {
+        title: 'Terms of Service | LumaCV',
+        description: 'Terms of Service for using LumaCV\'s free, open-source resume building platform.',
+    },
+    alternates: { canonical: '/terms' },
+};
 
 export default function TermsPage() {
     return (
@@ -22,10 +36,6 @@ export default function TermsPage() {
                 </div>
 
                 <div className="space-y-3 border-b border-border/50 pb-6 mb-8">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-                        <Scale className="h-3 w-3" />
-                        <span>Platform Terms</span>
-                    </div>
                     <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-foreground">
                         Terms of Service
                     </h1>
@@ -82,7 +92,27 @@ export default function TermsPage() {
                     <section className="space-y-3">
                         <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
-                            5. Questions & Legal Inquiries
+                            5. Open Source License
+                        </h2>
+                        <p>
+                            LumaCV's source code is released under the MIT License and available on GitHub. These Terms of Service govern your use of the hosted application at this domain; the license governs your rights to the underlying code if you self-host or modify it.
+                        </p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            6. Third-Party AI Providers
+                        </h2>
+                        <p>
+                            AI features route your input to third-party providers (Google Gemini, Groq, Mistral AI, OpenRouter, OpenAI, GitHub Models, or your own Anthropic key via BYOK). Your use of those features is also subject to each provider's own terms; LumaCV isn't responsible for their availability, output quality, or policies.
+                        </p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-base font-display font-bold text-foreground flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            7. Questions & Legal Inquiries
                         </h2>
                         <p>
                             For inquiries regarding our terms, licensing, or commercial distribution, please reach out to <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>.
@@ -91,7 +121,7 @@ export default function TermsPage() {
                 </div>
             </main>
 
-            <AppFooter />
+            <EditorialFooter />
         </div>
     );
 }

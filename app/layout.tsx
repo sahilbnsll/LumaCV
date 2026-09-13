@@ -2,13 +2,17 @@ import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/components/auth-provider';
 import dynamic from 'next/dynamic';
 
 const FeedbackWidget = dynamic(
   () => import('@/components/feedback-widget').then((m) => m.FeedbackWidget),
+  { ssr: false }
+);
+const DarkModeBackground = dynamic(
+  () => import('@/components/dark-mode-background').then((m) => m.DarkModeBackground),
   { ssr: false }
 );
 import './globals.css';
@@ -73,10 +77,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/icon.svg' },
+      { url: '/logo.png', type: 'image/png' },
     ],
     shortcut: '/icon.svg',
-    apple: '/icon.svg',
+    // iOS home-screen icons need a raster format — SVG doesn't render there.
+    apple: [{ url: '/logo.png', type: 'image/png', sizes: '320x320' }],
   },
 };
 
@@ -114,7 +119,7 @@ export default function RootLayout({
       'Sub-50ms Typst PDF typesetting',
       '100% factual ATS integrity guarantee',
       'Client-side privacy with zero telemetry',
-      '48 professional resume design archetypes',
+      '52 professional resume design archetypes',
       'Real-time job description gap analysis',
     ],
   };
@@ -134,9 +139,12 @@ export default function RootLayout({
         </a>
         <AuthProvider url={supabaseUrl} anonKey={supabaseAnonKey}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            {children}
+            <DarkModeBackground />
+            <div className="relative z-10 flex flex-col min-h-screen">
+              {children}
+            </div>
             <FeedbackWidget />
-            <Toaster position="top-center" closeButton richColors />
+            <Toaster />
           </ThemeProvider>
           <Analytics />
         </AuthProvider>

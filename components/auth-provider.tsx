@@ -34,20 +34,41 @@ export function AuthProvider({
     }, [url, anonKey]);
 
     useEffect(() => {
+        const checkLocal = () => {
+            if (typeof window !== 'undefined') {
+                const stored = localStorage.getItem('lumacv_local_user');
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        setUser(parsed as User);
+                    } catch {}
+                }
+            }
+        };
+
         if (!supabase) {
+            checkLocal();
             setLoading(false);
             return;
         }
 
         supabase.auth.getSession().then(({ data }) => {
-            setSession(data.session ?? null);
-            setUser(data.session?.user ?? null);
+            if (data.session) {
+                setSession(data.session);
+                setUser(data.session.user);
+            } else {
+                checkLocal();
+            }
             setLoading(false);
         });
 
         const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-            setSession(nextSession ?? null);
-            setUser(nextSession?.user ?? null);
+            if (nextSession) {
+                setSession(nextSession);
+                setUser(nextSession.user);
+            } else {
+                checkLocal();
+            }
             setLoading(false);
         });
 
@@ -68,6 +89,7 @@ export function AuthProvider({
                 console.error("Supabase signOut error:", e);
             }
             if (typeof window !== 'undefined') {
+                localStorage.removeItem('lumacv_local_user');
                 localStorage.removeItem('lumacv_saved_resumes');
                 localStorage.removeItem('lumacv_resume_storage');
                 localStorage.removeItem('lumacv_active_projects');

@@ -31,6 +31,13 @@ export async function POST(req: NextRequest) {
     const workerSecret = process.env.COMPILE_WORKER_SECRET;
     const forwardedSecret = req.headers.get('x-worker-secret');
 
+    // Fail closed: this must end up authenticated via EITHER a verified QStash
+    // signature OR a matching worker secret. The previous `else if (workerSecret
+    // && forwardedSecret !== workerSecret)` only rejected when a secret was
+    // actually configured — if COMPILE_WORKER_SECRET was unset (and no QStash
+    // signature was sent), the request silently proceeded unauthenticated,
+    // letting anyone trigger compile jobs and Supabase storage writes.
+    let verified = false;
     if (currentSigningKey && nextSigningKey && signature) {
         const receiver = new Receiver({ currentSigningKey, nextSigningKey });
         try {
@@ -40,13 +47,18 @@ export async function POST(req: NextRequest) {
                 url: req.url,
                 upstashRegion: req.headers.get('upstash-region') ?? undefined,
             });
+            verified = true;
         } catch (error) {
             return NextResponse.json(
                 { error: 'Invalid QStash signature', details: error instanceof Error ? error.message : 'Unknown error' },
                 { status: 401 }
             );
         }
-    } else if (workerSecret && forwardedSecret !== workerSecret) {
+    } else if (workerSecret && forwardedSecret === workerSecret) {
+        verified = true;
+    }
+
+    if (!verified) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

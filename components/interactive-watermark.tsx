@@ -172,7 +172,7 @@ export function InteractiveWatermark({
             {/* ========================================================================= */}
             <div className="relative max-w-3xl mx-auto px-4 sm:px-6 mt-8 sm:mt-12 space-y-3 z-10">
                 <h2 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl tracking-tight text-foreground">
-                    By the community, for the community.
+                    Built by whoever shows up.
                 </h2>
 
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">

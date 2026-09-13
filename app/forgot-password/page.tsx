@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import { AppFooter } from '@/components/app-footer';
+import { EditorialFooter } from '@/components/landing/editorial-footer';
 import { useAuth } from '@/components/auth-provider';
 import { LumaLogo } from '@/components/luma-logo';
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 import { getAppUrl } from '@/lib/app-url';
 
 export default function ForgotPasswordPage() {
@@ -22,12 +22,12 @@ export default function ForgotPasswordPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email.trim()) {
-            toast.error('Please enter your email address');
+            notify.error('Email required', 'Please enter your email address');
             return;
         }
 
         if (!supabase) {
-            toast.error('Auth service unavailable in current environment');
+            notify.error('Auth unavailable', 'Service unavailable in current environment');
             return;
         }
 
@@ -39,9 +39,9 @@ export default function ForgotPasswordPage() {
             });
             if (error) throw error;
             setSent(true);
-            toast.success('Password reset email sent!');
+            notify.success('Reset email sent', 'Check your inbox for instructions');
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Failed to send reset link');
+            notify.error("Couldn't send link", err instanceof Error ? err.message : undefined);
         } finally {
             setLoading(false);
         }
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[90vw] h-[360px] bg-primary/8 rounded-full blur-3xl pointer-events-none -z-10" />
 
             <main className="flex-1 px-3 sm:px-4 py-12 sm:py-20 flex items-center justify-center">
-                <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card/90 p-5 sm:p-8 md:p-10 shadow-xl backdrop-blur-xl transition-all">
+                <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-5 sm:p-8 md:p-10 shadow-xl transition-all">
                     <div className="flex items-center gap-3 mb-6 pb-5 border-b border-border/60">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60 text-foreground border border-border/60 shadow-xs">
                             <LumaLogo size={22} />
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
                 </div>
             </main>
 
-            <AppFooter />
+            <EditorialFooter />
         </div>
     );
 }

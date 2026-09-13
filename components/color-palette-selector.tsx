@@ -4,6 +4,7 @@ import React from 'react';
 import { useAppStore } from '@/lib/store';
 import { Palette, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { notify } from '@/lib/notify';
 
 export interface ColorSwatch {
     id: string;
@@ -29,9 +30,14 @@ export function ColorPaletteSelector({ className }: { className?: string }) {
 
     const activeSwatch = COLOR_SWATCHES.find((s) => s.id === theme) || COLOR_SWATCHES[0];
 
+    const handleSelectTheme = (swatch: ColorSwatch) => {
+        setTheme(swatch.id);
+        notify.paletteApplied(swatch.label, swatch.description);
+    };
+
     return (
         <div className={cn(
-            "flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl border border-border/70 dark:border-white/10 bg-card/70 dark:bg-[#0e1014]/70 backdrop-blur-md shadow-xs flex-wrap sm:flex-nowrap",
+            "flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl border border-border bg-card shadow-xs flex-wrap sm:flex-nowrap",
             className
         )}>
             {/* Left: Section Label with Active Color Pill */}
@@ -40,7 +46,7 @@ export function ColorPaletteSelector({ className }: { className?: string }) {
                     <Palette className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={2.2} />
                     <span>Accent Palette:</span>
                 </div>
-                <span className="inline-flex text-[11px] font-medium text-muted-foreground px-2 py-0.5 rounded-full bg-muted/40 dark:bg-white/[0.04] border border-border/50">
+                <span className="inline-flex text-[11px] font-medium text-muted-foreground px-2 py-0.5 rounded-full bg-muted/40 border border-border/50">
                     {activeSwatch.label}
                 </span>
             </div>
@@ -60,7 +66,7 @@ export function ColorPaletteSelector({ className }: { className?: string }) {
                             role="radio"
                             aria-checked={isSelected}
                             aria-label={`${swatch.label} accent color`}
-                            onClick={() => setTheme(swatch.id)}
+                            onClick={() => handleSelectTheme(swatch)}
                             className={cn(
                                 "group relative h-6 w-6 sm:h-6.5 sm:w-6.5 rounded-full transition-all flex items-center justify-center cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                                 isSelected

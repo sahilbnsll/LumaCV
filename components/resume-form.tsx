@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ChevronUp, Plus, Save, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { ChevronDown, ChevronUp, Plus, Save, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { notify } from '@/lib/notify';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { ResumeData, ResumeDataSchema } from '@/lib/resume-schema';
+import { DraggableItemList } from '@/components/draggable-item-list';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { cn } from '@/lib/utils';
 
 type ArraySectionName =
     | 'skills'
@@ -76,6 +79,9 @@ const emptyResumeData: ResumeData = {
     customSections: [],
 };
 
+// ────────────────────────────────────────────────────────────────────────────
+// CollapsibleCard
+// ────────────────────────────────────────────────────────────────────────────
 function CollapsibleCard({
     title,
     defaultOpen = false,
@@ -90,16 +96,16 @@ function CollapsibleCard({
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-        <Card className="rounded-2xl border-border/70 dark:border-white/10 bg-card/90 dark:bg-[#0e1014]/90 shadow-sm backdrop-blur-md overflow-hidden transition-all duration-200 hover:border-border dark:hover:border-white/20">
+        <Card className="rounded-2xl border border-border bg-card shadow-xs overflow-hidden transition-all duration-200 hover:border-border">
             <CardHeader
-                className="flex cursor-pointer select-none flex-row items-center justify-between p-5 py-4 hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors"
+                className="flex cursor-pointer select-none flex-row items-center justify-between p-5 py-4 hover:bg-muted/30 transition-colors"
                 onClick={(event) => {
                     if ((event.target as HTMLElement).closest('.action-btn-no-toggle')) return;
                     setOpen((prev) => !prev);
                 }}
             >
                 <CardTitle className="flex items-center gap-2.5 text-sm sm:text-base font-display font-semibold tracking-tight text-foreground">
-                    <div className="h-6 w-6 rounded-lg bg-muted/60 dark:bg-white/5 border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground transition-transform duration-200">
+                    <div className="h-6 w-6 rounded-lg bg-muted/60 border border-border/60 flex items-center justify-center text-muted-foreground transition-transform duration-200">
                         {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                     </div>
                     <span>{title}</span>
@@ -111,6 +117,9 @@ function CollapsibleCard({
     );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// DynamicSectionList — with drag-and-drop reordering
+// ────────────────────────────────────────────────────────────────────────────
 function DynamicSectionList({
     title,
     form,
@@ -126,7 +135,7 @@ function DynamicSectionList({
     emptyItem: ResumeData[ArraySectionName][number];
     renderItem: (index: number) => React.ReactNode;
 }) {
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, move } = useFieldArray({
         control: form.control,
         name: name as never,
     });
@@ -140,49 +149,56 @@ function DynamicSectionList({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append(emptyItem)}
-                    className="h-7 px-2.5 text-xs rounded-lg border-border/70 dark:border-white/10 hover:border-primary/40 gap-1.5 cursor-pointer active:scale-95"
+                    onClick={() => {
+                        append(emptyItem);
+                        notify.added(title);
+                    }}
+                    className="h-7 px-2.5 text-xs rounded-lg border-border hover:border-primary/40 gap-1.5 cursor-pointer active:scale-95"
                 >
                     <Plus className="h-3.5 w-3.5 text-primary" />
                     <span>Add</span>
                 </Button>
             }
         >
-            <div className="space-y-4 pt-2">
-                {fields.map((field, index) => (
-                    <div key={field.id} className="relative space-y-4 rounded-xl border border-border/60 dark:border-white/10 bg-muted/25 dark:bg-white/[0.02] p-4 sm:p-5 transition-all">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-2.5 top-2.5 h-7 w-7 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer transition-colors"
-                            onClick={() => remove(index)}
-                            title="Remove item"
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <div className="pr-6">{renderItem(index)}</div>
-                    </div>
-                ))}
-                {fields.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/70 dark:border-white/10 p-6 text-center text-xs text-muted-foreground bg-muted/10">
+            <div className="space-y-3 pt-2">
+                {fields.length > 0 ? (
+                    <DraggableItemList
+                        fields={fields}
+                        onReorder={(from, to) => {
+                            move(from, to);
+                            notify.sectionMoved(title);
+                        }}
+                        onRemove={(index) => {
+                            remove(index);
+                            notify.deleted(title);
+                        }}
+                        renderItem={renderItem}
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground bg-muted/10">
                         <p>No entries added yet.</p>
                         <Button
                             type="button"
                             variant="link"
                             size="sm"
-                            onClick={() => append(emptyItem)}
+                            onClick={() => {
+                                append(emptyItem);
+                                notify.added(title);
+                            }}
                             className="text-primary font-medium text-xs mt-1 cursor-pointer"
                         >
                             + Add an entry
                         </Button>
                     </div>
-                ) : null}
+                )}
             </div>
         </CollapsibleCard>
     );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// NestedBulletList — bullet array editor (for experience, project bullets, etc.)
+// ────────────────────────────────────────────────────────────────────────────
 function NestedBulletList({
     form,
     path,
@@ -202,20 +218,47 @@ function NestedBulletList({
     return (
         <div className="space-y-2">
             {fields.map((item, index) => (
-                <div key={item.id} className="flex gap-2">
-                    <Input {...form.register(`${path}.${index}` as never)} placeholder={placeholder} />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                <div key={item.id} className="flex gap-2 items-center group">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0 mt-3" />
+                    <Input
+                        {...form.register(`${path}.${index}` as never)}
+                        placeholder={placeholder}
+                        className="flex-1 text-sm"
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                            remove(index);
+                            notify.deleted('Bullet point');
+                        }}
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-500 hover:bg-rose-500/10"
+                        title="Remove bullet"
+                    >
                         <Trash2 className="h-3 w-3" />
                     </Button>
                 </div>
             ))}
-            <Button type="button" variant="outline" size="sm" onClick={() => append('')} className="mt-2">
-                <Plus className="mr-2 h-3 w-3" /> {buttonLabel}
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                    append('' as never);
+                    notify.added('Bullet point');
+                }}
+                className="mt-1 h-7 px-2.5 text-xs gap-1.5 border-dashed hover:border-primary/40"
+            >
+                <Plus className="h-3 w-3 text-primary" /> {buttonLabel}
             </Button>
         </div>
     );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// ExperienceFields
+// ────────────────────────────────────────────────────────────────────────────
 function ExperienceFields({
     form,
     basePath,
@@ -247,12 +290,115 @@ function ExperienceFields({
             </div>
             <div className="space-y-2">
                 <Label>Impact Bullets</Label>
-                <NestedBulletList form={form} path={`${basePath}.bullets`} placeholder="Improved deployment speed by 40% using GitHub Actions and Docker" />
+                <NestedBulletList
+                    form={form}
+                    path={`${basePath}.bullets`}
+                    placeholder="Improved deployment speed by 40% using GitHub Actions and Docker"
+                />
             </div>
         </div>
     );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// ProjectFields — full field coverage with separate impactBullets + bullets
+// ────────────────────────────────────────────────────────────────────────────
+function ProjectFields({
+    form,
+    index,
+}: {
+    form: UseFormReturn<ResumeData>;
+    index: number;
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>Project Name</Label>
+                    <Input {...form.register(`projects.${index}.name`)} placeholder="My Awesome Project" />
+                </div>
+                <div className="space-y-2">
+                    <Label>Your Role</Label>
+                    <Input {...form.register(`projects.${index}.role`)} placeholder="Lead Developer" />
+                </div>
+                <div className="space-y-2">
+                    <Label>Start Date</Label>
+                    <Input {...form.register(`projects.${index}.startDate` as never)} placeholder="Jan 2024" />
+                </div>
+                <div className="space-y-2">
+                    <Label>End Date</Label>
+                    <Input {...form.register(`projects.${index}.endDate` as never)} placeholder="Present" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                    <Label>Project Link / URL</Label>
+                    <Input
+                        {...form.register(`projects.${index}.link`)}
+                        placeholder="https://github.com/you/project"
+                    />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                    <Label>Description</Label>
+                    <Textarea
+                        {...form.register(`projects.${index}.description`)}
+                        className="min-h-[80px]"
+                        placeholder="Brief overview of what the project does and why it matters."
+                    />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                    <Label>Tech Stack</Label>
+                    <Input
+                        {...form.register(`projects.${index}.techStack`)}
+                        placeholder="Next.js, Node.js, PostgreSQL, Docker"
+                    />
+                </div>
+            </div>
+
+            {/* Impact Summary (single-line, backward-compatible) */}
+            <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                    Impact Summary
+                    <span className="text-[10px] text-muted-foreground font-normal">(single line)</span>
+                </Label>
+                <Input
+                    {...form.register(`projects.${index}.impact`)}
+                    placeholder="Used by 5k+ students across 3 campuses"
+                />
+            </div>
+
+            {/* Impact / Result Bullets — new multi-bullet field */}
+            <div className="space-y-2 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.03] p-3">
+                <Label className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                    Impact / Result Bullets
+                    <span className="text-[10px] text-muted-foreground font-normal">(quantified outcomes)</span>
+                </Label>
+                <NestedBulletList
+                    form={form}
+                    path={`projects.${index}.impactBullets`}
+                    buttonLabel="Add Impact Bullet"
+                    placeholder="Reduced page load time by 60% → 400ms P95 via lazy loading & CDN"
+                />
+            </div>
+
+            {/* Highlight / Feature Bullets */}
+            <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/[0.03] p-3">
+                <Label className="flex items-center gap-1.5">
+                    Highlights / Feature Bullets
+                    <span className="text-[10px] text-muted-foreground font-normal">(key features, not outcomes)</span>
+                </Label>
+                <NestedBulletList
+                    form={form}
+                    path={`projects.${index}.bullets`}
+                    buttonLabel="Add Highlight"
+                    placeholder="Built ATS-friendly Typst output with multi-template support"
+                />
+            </div>
+        </div>
+    );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ResumeForm — main export
+// ────────────────────────────────────────────────────────────────────────────
 export function ResumeForm() {
     const resumeData = useAppStore((state) => state.resumeData);
     const setResumeData = useAppStore((state) => state.setResumeData);
@@ -297,32 +443,46 @@ export function ResumeForm() {
     const onSubmit = (data: ResumeData) => {
         setResumeData(data);
         setAutosaveState('saved');
-        toast.success('Resume details saved.');
+        notify.saved('All sections synchronized');
     };
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Status bar */}
             <div className="rounded-lg border bg-muted/20 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h3 className="text-sm font-semibold">Core Sections</h3>
-                        <p className="text-xs text-muted-foreground">Focus on the essentials first: header, summary, skills, experience, education, and projects.</p>
+                        <p className="text-xs text-muted-foreground">
+                            Drag entries to reorder · changes autosave and recompile the PDF instantly.
+                        </p>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                        {autosaveState === 'saving' && 'Autosaving…'}
-                        {autosaveState === 'saved' && 'All changes saved'}
-                        {autosaveState === 'invalid' && 'Draft changed - fix validation issues to save'}
-                        {autosaveState === 'idle' && 'Autosave ready'}
+                    <div className="text-xs">
+                        {autosaveState === 'saving' && (
+                            <StatusBadge state="saving" savingLabel="Autosaving…" />
+                        )}
+                        {autosaveState === 'saved' && (
+                            <StatusBadge state="saved" savedLabel="All changes saved" />
+                        )}
+                        {autosaveState === 'invalid' && (
+                            <StatusBadge state="failed" failedLabel="Fix validation issues to save" />
+                        )}
+                        {autosaveState === 'idle' && (
+                            <StatusBadge state="idle" idleLabel="Autosave ready" />
+                        )}
                     </div>
                 </div>
             </div>
 
+            {/* ── Personal Information ── */}
             <CollapsibleCard title="Personal Information" defaultOpen>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Full Name</Label>
                         <Input {...form.register('personalInfo.name')} />
-                        {form.formState.errors.personalInfo?.name ? <p className="text-xs text-red-500">{form.formState.errors.personalInfo.name.message}</p> : null}
+                        {form.formState.errors.personalInfo?.name ? (
+                            <p className="text-xs text-red-500">{form.formState.errors.personalInfo.name.message}</p>
+                        ) : null}
                     </div>
                     <div className="space-y-2">
                         <Label>Job Title</Label>
@@ -359,15 +519,27 @@ export function ResumeForm() {
                 </div>
             </CollapsibleCard>
 
+            {/* ── Professional Summary ── */}
             <CollapsibleCard title="Professional Summary" defaultOpen>
-                <Textarea {...form.register('summary')} className="min-h-[120px]" placeholder="Summarize total experience, domains, top tools, and strongest impact in 2-4 lines." />
-                {form.formState.errors.summary ? <p className="text-xs text-red-500">{form.formState.errors.summary.message}</p> : null}
+                <Textarea
+                    {...form.register('summary')}
+                    className="min-h-[120px]"
+                    placeholder="Summarize total experience, domains, top tools, and strongest impact in 2-4 lines."
+                />
+                {form.formState.errors.summary ? (
+                    <p className="text-xs text-red-500">{form.formState.errors.summary.message}</p>
+                ) : null}
             </CollapsibleCard>
 
+            {/* ── Tech Stack Summary ── */}
             <CollapsibleCard title="Tech Stack Summary" defaultOpen>
-                <Input {...form.register('techStackSummary')} placeholder="AWS | Terraform | Kubernetes | Docker | GitHub Actions | Prometheus" />
+                <Input
+                    {...form.register('techStackSummary')}
+                    placeholder="AWS | Terraform | Kubernetes | Docker | GitHub Actions | Prometheus"
+                />
             </CollapsibleCard>
 
+            {/* ── Skills ── */}
             <DynamicSectionList
                 title="Skills"
                 form={form}
@@ -388,6 +560,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Key Metrics ── */}
             <DynamicSectionList
                 title="Key Metrics"
                 form={form}
@@ -405,29 +578,36 @@ export function ResumeForm() {
                         </div>
                         <div className="space-y-2">
                             <Label>Context</Label>
-                            <Input {...form.register(`keyMetrics.${index}.context`)} placeholder="After workload rightsizing and reserved capacity planning" />
+                            <Input {...form.register(`keyMetrics.${index}.context`)} placeholder="After workload rightsizing" />
                         </div>
                     </div>
                 )}
             />
 
+            {/* ── Work Experience ── */}
             <DynamicSectionList
                 title="Work Experience"
                 form={form}
                 name="experience"
                 defaultOpen
                 emptyItem={{ title: '', company: '', location: '', dates: '', bullets: [''] }}
-                renderItem={(index) => <ExperienceFields form={form} basePath={`experience.${index}`} organizationLabel="Company" />}
+                renderItem={(index) => (
+                    <ExperienceFields form={form} basePath={`experience.${index}`} organizationLabel="Company" />
+                )}
             />
 
+            {/* ── Internships ── */}
             <DynamicSectionList
                 title="Internships"
                 form={form}
                 name="internships"
                 emptyItem={{ title: '', company: '', location: '', dates: '', bullets: [''] }}
-                renderItem={(index) => <ExperienceFields form={form} basePath={`internships.${index}`} organizationLabel="Organization" />}
+                renderItem={(index) => (
+                    <ExperienceFields form={form} basePath={`internships.${index}`} organizationLabel="Organization" />
+                )}
             />
 
+            {/* ── Education ── */}
             <DynamicSectionList
                 title="Education"
                 form={form}
@@ -472,57 +652,34 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Projects ── (with full field coverage + impactBullets) */}
             <DynamicSectionList
                 title="Projects"
                 form={form}
                 name="projects"
-                emptyItem={{ name: '', description: '', techStack: '', role: '', dates: '', impact: '', link: '', bullets: [] }}
-                renderItem={(index) => (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label>Project Name</Label>
-                                <Input {...form.register(`projects.${index}.name`)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Your Role</Label>
-                                <Input {...form.register(`projects.${index}.role`)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Dates</Label>
-                                <Input {...form.register(`projects.${index}.dates`)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Project Link</Label>
-                                <Input {...form.register(`projects.${index}.link`)} />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label>Description</Label>
-                                <Textarea {...form.register(`projects.${index}.description`)} className="min-h-[90px]" />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label>Tech Stack</Label>
-                                <Input {...form.register(`projects.${index}.techStack`)} placeholder="Next.js, Node.js, PostgreSQL" />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label>Impact / Result</Label>
-                                <Input {...form.register(`projects.${index}.impact`)} placeholder="Used by 5k+ students across 3 campuses" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Highlights</Label>
-                            <NestedBulletList form={form} path={`projects.${index}.bullets`} placeholder="Built ATS-friendly Typst output with multi-template support" />
-
-                        </div>
-                    </div>
-                )}
+                emptyItem={{
+                    name: '',
+                    description: '',
+                    techStack: '',
+                    role: '',
+                    startDate: '',
+                    endDate: '',
+                    dates: '',
+                    impact: '',
+                    impactBullets: [],
+                    link: '',
+                    bullets: [],
+                } as never}
+                renderItem={(index) => <ProjectFields form={form} index={index} />}
             />
 
+            {/* ────── Advanced Sections ────── */}
             <div className="rounded-lg border bg-muted/20 p-4">
                 <h3 className="text-sm font-semibold">Advanced Sections</h3>
                 <p className="text-xs text-muted-foreground">Use these when they genuinely strengthen the resume. Core sections should stay strongest.</p>
             </div>
 
+            {/* ── Certifications ── */}
             <DynamicSectionList
                 title="Certifications"
                 form={form}
@@ -558,6 +715,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Achievements & Awards ── */}
             <DynamicSectionList
                 title="Achievements & Awards"
                 form={form}
@@ -593,6 +751,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Open Source Contributions ── */}
             <DynamicSectionList
                 title="Open Source Contributions"
                 form={form}
@@ -630,6 +789,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Publications & Blogs ── */}
             <DynamicSectionList
                 title="Publications & Blogs"
                 form={form}
@@ -665,6 +825,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Leadership ── */}
             <DynamicSectionList
                 title="Leadership"
                 form={form}
@@ -698,6 +859,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Volunteering ── */}
             <DynamicSectionList
                 title="Volunteering"
                 form={form}
@@ -731,6 +893,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Conferences & Talks ── */}
             <DynamicSectionList
                 title="Conferences & Talks"
                 form={form}
@@ -770,6 +933,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Languages ── */}
             <DynamicSectionList
                 title="Languages"
                 form={form}
@@ -789,6 +953,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Interests & Hobbies ── */}
             <DynamicSectionList
                 title="Interests & Hobbies"
                 form={form}
@@ -808,6 +973,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── Products / Systems Owned ── */}
             <DynamicSectionList
                 title="Products / Systems Owned"
                 form={form}
@@ -835,14 +1001,27 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* ── DevOps / SRE Contributions ── */}
             <CollapsibleCard title="DevOps / SRE Contributions">
-                <NestedBulletList form={form} path="devopsContributions" buttonLabel="Add Contribution" placeholder="Built reusable CI/CD pipelines with GitHub Actions and Terraform" />
+                <NestedBulletList
+                    form={form}
+                    path="devopsContributions"
+                    buttonLabel="Add Contribution"
+                    placeholder="Built reusable CI/CD pipelines with GitHub Actions and Terraform"
+                />
             </CollapsibleCard>
 
+            {/* ── Security / Compliance Work ── */}
             <CollapsibleCard title="Security / Compliance Work">
-                <NestedBulletList form={form} path="securityContributions" buttonLabel="Add Contribution" placeholder="Implemented IAM least-privilege policies and audit controls" />
+                <NestedBulletList
+                    form={form}
+                    path="securityContributions"
+                    buttonLabel="Add Contribution"
+                    placeholder="Implemented IAM least-privilege policies and audit controls"
+                />
             </CollapsibleCard>
 
+            {/* ── Additional Information ── */}
             <CollapsibleCard title="Additional Information">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
@@ -868,6 +1047,7 @@ export function ResumeForm() {
                 </div>
             </CollapsibleCard>
 
+            {/* ── Custom Sections ── */}
             <DynamicSectionList
                 title="Custom Sections"
                 form={form}
@@ -887,6 +1067,7 @@ export function ResumeForm() {
                 )}
             />
 
+            {/* Sticky Save Button */}
             <div className="sticky bottom-4 z-10 pt-4">
                 <Button type="submit" className="w-full shadow-lg" size="lg">
                     <Save className="mr-2 h-4 w-4" /> Save Resume Data

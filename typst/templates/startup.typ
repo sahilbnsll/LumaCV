@@ -44,6 +44,7 @@
     }
     v(0.3em)
     set text(size: 7.8pt, fill: t.headline-fill)
+    show link: set text(fill: t.headline-fill)
     {
       let c = data.personal.contact
       let items = ()
@@ -75,11 +76,19 @@
     section("Skills", {
       let chips = ()
       for cat in skills {
-        for item in cat.items {
+        let skill-items = if "skills" in cat and type(cat.skills) == array {
+          cat.skills
+        } else if "items" in cat {
+          if type(cat.items) == array { cat.items } else { cat.items.split(",").map(s => s.trim()).filter(s => s != "") }
+        } else {
+          ()
+        }
+        for item in skill-items {
           chips.push(box(fill: rgb("#f3f0ff"), radius: 3pt, inset: (x: 6pt, y: 3pt), text(size: 7.6pt, fill: t.company-fill)[#item]))
         }
       }
-      chips.join(h(4pt) + v(4pt, weak: true))
+      set par(leading: 0.65em)
+      chips.join(h(5pt))
     })
   }
 

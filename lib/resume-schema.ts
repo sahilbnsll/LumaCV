@@ -63,23 +63,36 @@ export const PersonalInfoSchema = z.object({
 });
 
 export const SkillSchema = z.object({
+  id: z.string().optional(),
   category: z.string().min(1, 'Category is required'),
   items: z.string().min(1, 'Skills are required'),
 });
 
 export const ExperienceSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, 'Title is required'),
   company: z.string().min(1, 'Organization is required'),
   location: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   dates: z.string().min(1, 'Dates are required'),
+  description: z.string().optional(),
+  technologies: z.string().optional(),
+  companyUrl: z.string().optional(),
+  impact: z.string().optional(),
+  impactBullets: z.array(z.string()).optional(),
+  highlights: z.array(z.string()).optional(),
   bullets: z.array(z.string().min(1)).min(1, 'At least one bullet point is required'),
 });
 
 export const EducationSchema = z.object({
+  id: z.string().optional(),
   institution: z.string().min(1, 'Institution is required'),
   degree: z.string().min(1, 'Degree is required'),
   fieldOfStudy: z.string().optional(),
   location: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   dates: z.string().min(1, 'Dates are required'),
   gpa: z.string().optional(),
   coursework: z.string().optional(),
@@ -87,17 +100,28 @@ export const EducationSchema = z.object({
 });
 
 export const ProjectSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
   techStack: z.string().optional(),
   role: z.string().optional(),
+  /** Start date (e.g. "Jan 2024") — used separately from combined dates string */
+  startDate: z.string().optional(),
+  /** End date (e.g. "Present") — used separately from combined dates string */
+  endDate: z.string().optional(),
   dates: z.string().optional(),
+  /** Single-line impact summary, preserved for backward compatibility */
   impact: z.string().optional(),
+  /** Multi-bullet quantified results / impact (new — backward-compatible) */
+  impactBullets: z.array(z.string()).optional(),
   link: z.string().optional(),
-  bullets: z.array(z.string()).default([]),
+  /** Highlight / feature bullets rendered as a bullet list in the PDF */
+  bullets: z.array(z.string()).optional(),
+  highlights: z.array(z.string()).optional(),
 });
 
 export const CertificationSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, 'Certification name is required'),
   issuer: z.string().optional(),
   date: z.string().optional(),
@@ -107,6 +131,7 @@ export const CertificationSchema = z.object({
 });
 
 export const AchievementSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, 'Achievement name is required'),
   context: z.string().optional(),
   date: z.string().optional(),
@@ -301,6 +326,11 @@ export const TemplateTypeSchema = z.enum([
   'timeline',
   'swiss_alt',
   'timeline_alt',
+  // Modern Technical & Minimalist
+  'onyx',
+  'glalie',
+  'azurill',
+  'chikorita',
   // Academic & Research
   'academic',
   'research_modern',
@@ -314,16 +344,36 @@ export type TemplateType = z.infer<typeof TemplateTypeSchema>;
 
 export const GenerateResumeRequestSchema = z.object({
   resumeData: ResumeDataSchema,
-  jdKeywords: AnalyzeJDResponseSchema,
+  // Either pass pre-extracted jdKeywords, or raw `jd` text and let the tailor
+  // call extract keywords itself in the same completion — avoids a separate
+  // analyze-jd round trip when the caller doesn't already have jdKeywords.
+  jdKeywords: AnalyzeJDResponseSchema.optional(),
+  jd: z.string().optional(),
   template: TemplateTypeSchema.optional().default('modern'),
   theme: ThemeTypeSchema.optional().default('none'),
   tailorMode: z.enum(['optimize', 'tailor']).optional().default('optimize'),
 });
+export const TailorResumeRequestSchema = GenerateResumeRequestSchema;
+export type TailorResumeRequest = z.infer<typeof TailorResumeRequestSchema>;
+
+export const AtsAlignmentSummarySchema = z.object({
+  overallScore: z.number().min(0).max(100),
+  matchedRequirements: z.array(z.string()).default([]),
+  partiallyMatchedRequirements: z.array(z.string()).default([]),
+  unsupportedRequirements: z.array(z.string()).default([]),
+  incorporatedKeywords: z.array(z.string()).default([]),
+});
+export type AtsAlignmentSummary = z.infer<typeof AtsAlignmentSummarySchema>;
 
 export const GenerateResumeResponseSchema = z.object({
   tailoredResume: ResumeDataSchema,
   typstCode: z.string().optional(),
   confidenceScore: z.number().min(0).max(1),
+  // Present when the caller sent raw `jd` text instead of pre-extracted
+  // jdKeywords — lets the client score against the same keywords without a
+  // separate analyze-jd call.
+  jdKeywords: AnalyzeJDResponseSchema.optional(),
+  atsAlignmentSummary: AtsAlignmentSummarySchema.optional(),
   factCheckReport: z.object({
     passed: z.boolean(),
     issuesCount: z.number(),
@@ -378,8 +428,26 @@ export type PersonalInfo = z.infer<typeof PersonalInfoSchema>;
 export type Skill = z.infer<typeof SkillSchema>;
 export type Experience = z.infer<typeof ExperienceSchema>;
 export type Education = z.infer<typeof EducationSchema>;
+export type Project = z.infer<typeof ProjectSchema>;
+export type Certification = z.infer<typeof CertificationSchema>;
+export type Achievement = z.infer<typeof AchievementSchema>;
+export type Publication = z.infer<typeof PublicationSchema>;
+export type OpenSource = z.infer<typeof OpenSourceSchema>;
+export type Volunteer = z.infer<typeof VolunteerSchema>;
+export type Language = z.infer<typeof LanguageSchema>;
+export type Conference = z.infer<typeof ConferenceSchema>;
+export type Interest = z.infer<typeof InterestSchema>;
+export type Metric = z.infer<typeof MetricSchema>;
+export type Product = z.infer<typeof ProductSchema>;
+export type AdditionalInfo = z.infer<typeof AdditionalInfoSchema>;
+export type CustomSection = z.infer<typeof CustomSectionSchema>;
 export type ResumeData = z.infer<typeof ResumeDataSchema>;
 export type ResumeSectionKey = z.infer<typeof ResumeSectionKeySchema>;
+
+// Aliases for modular prompt and validator callers
+export type ExperienceItem = Experience;
+export type ProjectItem = Project;
+export type SkillGroup = Skill;
 
 export type ParseResumeRequest = z.infer<typeof ParseResumeRequestSchema>;
 export type ParseResumeResponse = z.infer<typeof ParseResumeResponseSchema>;

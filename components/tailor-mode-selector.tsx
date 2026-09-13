@@ -4,11 +4,21 @@ import React from 'react';
 import { useAppStore } from '@/lib/store';
 import { ShieldCheck, Sparkles, Check, Info, Target, Zap, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { notify } from '@/lib/notify';
 
 export function TailorModeSelector({ className }: { className?: string }) {
     const tailorMode = useAppStore((s) => s.tailorMode);
     const setTailorMode = useAppStore((s) => s.setTailorMode);
     const hasJd = useAppStore((s) => Boolean(s.jd && s.jd.trim().length > 20));
+
+    const handleSelectMode = (mode: 'optimize' | 'tailor') => {
+        setTailorMode(mode);
+        if (mode === 'optimize') {
+            notify.success('Optimization mode enabled', '100% Fact-preserving enhancements');
+        } else {
+            notify.info('Alignment mode enabled', 'Aggressive job description keyword matching');
+        }
+    };
 
     return (
         <div className={cn("space-y-3.5", className)}>
@@ -27,7 +37,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {/* MODE 1: Optimize Resume (Strictly Fact-Preserving) */}
                 <div
-                    onClick={() => setTailorMode('optimize')}
+                    onClick={() => handleSelectMode('optimize')}
                     className={cn(
                         "relative flex flex-col justify-between p-4 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
                         tailorMode === 'optimize'
@@ -57,7 +67,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                             </p>
                         </div>
 
-                        <div className="pt-2 border-t border-border/40 dark:border-white/5 space-y-1 text-[11px] text-muted-foreground">
+                        <div className="pt-2 border-t border-border/40 space-y-1 text-[11px] text-muted-foreground">
                             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                                 <Check className="h-3 w-3 shrink-0" />
                                 <span>Zero hallucination: Never fabricates new tools or tasks</span>
@@ -72,11 +82,11 @@ export function TailorModeSelector({ className }: { className?: string }) {
 
                 {/* MODE 2: Tailor Resume to JD (Aggressive Target Alignment) */}
                 <div
-                    onClick={() => setTailorMode('tailor')}
+                    onClick={() => handleSelectMode('tailor')}
                     className={cn(
                         "relative flex flex-col justify-between p-4 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
                         tailorMode === 'tailor'
-                            ? "border-primary bg-primary/[0.04] dark:bg-primary/[0.07] ring-2 ring-primary/40 shadow-sm"
+                            ? "border-primary bg-primary/[0.04] ring-2 ring-primary/40 shadow-sm"
                             : "border-border/70 bg-card/60 hover:border-border hover:bg-card/90"
                     )}
                 >
@@ -95,21 +105,21 @@ export function TailorModeSelector({ className }: { className?: string }) {
 
                         <div>
                             <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
-                                <span>Tailor Resume to JD</span>
+                                <span>Aggressive JD Alignment</span>
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                Intelligently rephrases and restructures experience to directly match the target job description, introducing relevant domain keywords and plausible context.
+                                Aggressively rewrites, reorders, and reframes experience to maximize ATS keyword match against the target job description — bending the wording, not the facts.
                             </p>
                         </div>
 
-                        <div className="pt-2 border-t border-border/40 dark:border-white/5 space-y-1 text-[11px] text-muted-foreground">
+                        <div className="pt-2 border-t border-border/40 space-y-1 text-[11px] text-muted-foreground">
                             <div className="flex items-center gap-1.5 text-primary font-medium">
                                 <Sparkles className="h-3 w-3 shrink-0" />
-                                <span>Injects target JD terminology to maximize ATS match score</span>
+                                <span>Maximizes ATS keyword coverage with target JD terminology</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <Check className="h-3 w-3 shrink-0 text-muted-foreground" />
-                                <span>Plausibly expands role scope to mirror required qualifications</span>
+                                <span>Semantic matching & bullet reordering without inventing facts</span>
                             </div>
                         </div>
                     </div>

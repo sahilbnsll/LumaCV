@@ -1,10 +1,20 @@
+export type TemplateLayout = 'single_column' | 'two_column';
+export type TemplateStyle = 'minimal' | 'classic' | 'modern' | 'professional';
+export type TemplateDensity = 'compact' | 'balanced' | 'spacious';
+export type TemplateUseCase = 'general' | 'technical' | 'academic' | 'executive';
+
 export interface ResumeTemplate {
     id: string;
     name: string;
+    subtitle: string;
+    layout: TemplateLayout;
+    style: TemplateStyle | string;
+    density: TemplateDensity;
+    useCase: TemplateUseCase;
+    tags: string[];
     category: 'ats' | 'tech' | 'executive' | 'creative' | 'academic';
     categoryLabel: string;
     badge: string;
-    style: string;
     description: string;
     previewImage: string;
     sourceFile: string;
@@ -13,11 +23,11 @@ export interface ResumeTemplate {
 }
 
 export const TEMPLATE_CATEGORIES = [
-    { id: 'all', label: 'All Templates', count: 48 },
-    { id: 'ats', label: 'ATS-Optimized', count: 13 },
-    { id: 'tech', label: 'Modern & Tech', count: 10 },
-    { id: 'executive', label: 'Executive & Advisory', count: 11 },
-    { id: 'creative', label: 'Editorial & Creative', count: 12 },
+    { id: 'all', label: 'All Templates', count: 52 },
+    { id: 'ats', label: 'ATS-Optimized', count: 14 },
+    { id: 'tech', label: 'Modern & Tech', count: 11 },
+    { id: 'executive', label: 'Executive & Advisory', count: 12 },
+    { id: 'creative', label: 'Editorial & Creative', count: 13 },
     { id: 'academic', label: 'Academic & Research', count: 2 },
 ] as const;
 
@@ -26,11 +36,20 @@ export type TemplateCategoryId = typeof TEMPLATE_CATEGORIES[number]['id'];
 export const ALL_TEMPLATES: ResumeTemplate[] = [
     {
         "id": "impact",
-        "name": "Executive Impact",
+        "name": "Apex",
+        "subtitle": "Bold achievement-first hierarchy for ICs and leaders",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Executive",
+            "Quantified Metrics",
+            "ATS-Safe"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Achievement-First",
-        "style": "Single-Column Linear",
         "description": "Achievement-first resume with a bold results hierarchy; engineered for senior ICs, staff engineers, and performance-heavy roles.",
         "previewImage": "/templates/impact.png",
         "sourceFile": "impact.typ",
@@ -39,11 +58,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "switch",
-        "name": "Career Transition",
+        "name": "Catalyst",
+        "subtitle": "Competency-led structure highlighting transferable strengths",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Career Switch",
+            "Skills Focus",
+            "ATS-Safe"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Competency Pivot",
-        "style": "Capability-Led Linear",
         "description": "Career-pivot format that surfaces transferable capabilities, core competencies, and domain versatility before chronology.",
         "previewImage": "/templates/switch.png",
         "sourceFile": "switch.typ",
@@ -52,11 +80,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "grad",
-        "name": "Early Career & Fellowship",
+        "name": "Ascent",
+        "subtitle": "Education-and-project forward flow for emerging practitioners",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "balanced",
+        "useCase": "academic",
+        "tags": [
+            "Early Career",
+            "University",
+            "Projects"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Emerging Professional",
-        "style": "Education-First Flow",
         "description": "Education and project-forward resume engineered for university graduates, fellowship candidates, and emerging practitioners.",
         "previewImage": "/templates/grad.png",
         "sourceFile": "grad.typ",
@@ -65,11 +102,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "leadership",
-        "name": "Executive Director",
+        "name": "Monarch",
+        "subtitle": "Restrained serif hierarchy for VPs and organizational heads",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Executive",
+            "Serif",
+            "Leadership"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Organizational Leadership",
-        "style": "Restrained Serif Headings",
         "description": "Executive serif treatment with profile-first hierarchy tailored for Directors, Vice Presidents, and people leaders.",
         "previewImage": "/templates/leadership.png",
         "sourceFile": "leadership.typ",
@@ -78,11 +124,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "casework",
-        "name": "Management Consulting",
+        "name": "Stratum",
+        "subtitle": "Structured case-and-engagement outcomes framework",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Consulting",
+            "Strategy",
+            "Client Work"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Advisory Engagements",
-        "style": "Structured Engagements",
         "description": "Consulting and strategy framework that presents client engagements, operational scope, and transformation outcomes with high clarity.",
         "previewImage": "/templates/casework.png",
         "sourceFile": "casework.typ",
@@ -91,11 +146,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "metrics",
-        "name": "Quantitative Outcomes",
+        "name": "Benchmark",
+        "subtitle": "High-signal KPI summary bar above career chronology",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "KPIs",
+            "Metrics",
+            "High-Impact"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "High-Signal KPI",
-        "style": "Performance KPI Header",
         "description": "Outcome-driven header with selected commercial, financial, and engineering metrics placed prominently above career chronology.",
         "previewImage": "/templates/metrics.png",
         "sourceFile": "metrics.typ",
@@ -104,11 +168,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "skillsfirst",
-        "name": "Technical Competency Matrix",
+        "name": "Corestack",
+        "subtitle": "Skills-first architecture for keyword-dense engineering roles",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Skills Matrix",
+            "Cloud",
+            "ATS-Safe"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Deep Domain Skills",
-        "style": "Technical Competency Grid",
         "description": "Technical skills-forward architecture for keyword-dense engineering, data science, AI infrastructure, and cyber security roles.",
         "previewImage": "/templates/skillsfirst.png",
         "sourceFile": "skillsfirst.typ",
@@ -117,11 +190,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "credential",
-        "name": "Certified Specialist",
+        "name": "Charter",
+        "subtitle": "Credential-forward structure for regulated professions & licensure",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Certifications",
+            "Compliance",
+            "Licensure"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Regulated Licensure",
-        "style": "Certifications-Forward",
         "description": "Credential and license-forward structure for certified specialists, legal counsel, healthcare professionals, and compliance leads.",
         "previewImage": "/templates/credential.png",
         "sourceFile": "credential.typ",
@@ -130,11 +212,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "international",
-        "name": "Global International Standard",
+        "name": "Atlas",
+        "subtitle": "Universal neutral linear layout across Americas, EMEA, and APAC",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "International",
+            "Global",
+            "Standard"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Multinational Format",
-        "style": "Neutral Linear Flow",
         "description": "Clean globally-oriented format with compact contact hierarchy and universally recognized section flow across Americas, EMEA, and APAC.",
         "previewImage": "/templates/international.png",
         "sourceFile": "international.typ",
@@ -143,11 +234,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "projectled",
-        "name": "Systems & Architecture Portfolio",
+        "name": "Forge",
+        "subtitle": "Deep-dive technical project architecture showcase",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "technical",
+        "tags": [
+            "Systems",
+            "Architecture",
+            "Projects"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Technical Projects",
-        "style": "Deep Technical Projects",
         "description": "Projects-first format designed for staff engineers, systems architects, researchers, and portfolio-heavy makers.",
         "previewImage": "/templates/projectled.png",
         "sourceFile": "projectled.typ",
@@ -156,11 +256,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "narrative",
-        "name": "Executive Narrative",
+        "name": "Tribune",
+        "subtitle": "Bookman serif typesetting for advisory and strategic partners",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "spacious",
+        "useCase": "executive",
+        "tags": [
+            "Editorial",
+            "Narrative",
+            "Serif"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Strategic Positioning",
-        "style": "Classic Bookman Typography",
         "description": "Editorial and restrained serif-led layout for corporate communications, strategic advisors, and senior practice partners.",
         "previewImage": "/templates/narrative.png",
         "sourceFile": "narrative.typ",
@@ -169,11 +278,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "strict",
-        "name": "Enterprise ATS Strict",
+        "name": "Sentinel",
+        "subtitle": "Zero-risk parsing single-column layout for legacy enterprise ATS",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Strict ATS",
+            "Monospace",
+            "Deterministic"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "Zero-Parsing Failure",
-        "style": "Pure Monospace Column",
         "description": "Ultra-conservative, high-contrast single-column layout engineered for guaranteed deterministic parsing across all legacy enterprise ATS filters.",
         "previewImage": "/templates/strict.png",
         "sourceFile": "strict.typ",
@@ -182,11 +300,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "ats_safe",
-        "name": "Universal ATS Standard",
+        "name": "Clearance",
+        "subtitle": "Standard machine-readable linear layout for Fortune 500 portals",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "ATS Baseline",
+            "Corporate",
+            "Machine-Readable"
+        ],
         "category": "ats",
         "categoryLabel": "ATS-Optimized",
         "badge": "High-Volume Screening",
-        "style": "Linear Pure Text",
         "description": "Standard machine-readable linear layout engineered specifically for Fortune 500 high-volume enterprise talent systems.",
         "previewImage": "/templates/ats_safe.png",
         "sourceFile": "ats_safe.typ",
@@ -195,11 +322,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "modern",
-        "name": "Modern Engineering Standard",
+        "name": "Vector",
+        "subtitle": "Left-aligned header with colored category divider rules",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "technical",
+        "tags": [
+            "Modern Tech",
+            "Clean Sans",
+            "Scaleup"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Flagship Technology",
-        "style": "Clean Sans-Serif",
         "description": "Left-aligned header with colored category divider rules. Tailored for venture-backed tech, scaleups, and enterprise software engineering.",
         "previewImage": "/templates/modern.png",
         "sourceFile": "modern.typ",
@@ -208,11 +344,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "engineering",
-        "name": "Staff Infrastructure Engineer",
+        "name": "Platform",
+        "subtitle": "Dual-tone split header with technical competencies matrix",
+        "layout": "two_column",
+        "style": "modern",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Infrastructure",
+            "SRE",
+            "Staff+"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Systems & Cloud",
-        "style": "High-Density Technical",
         "description": "Dual-tone split header with technical competencies matrix. Built for infrastructure, site reliability, and backend platform leaders.",
         "previewImage": "/templates/engineering.png",
         "sourceFile": "engineering.typ",
@@ -221,11 +366,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "compact",
-        "name": "High-Density Single Page",
+        "name": "Compact",
+        "subtitle": "Ultra-space-optimized vertical rhythm fitted for 6+ career milestones",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "1-Page Fit",
+            "Dense Rhythm",
+            "Senior IC"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Space-Optimized 1-Page",
-        "style": "Space-Optimized Split",
         "description": "Engineered for a strict 1-page fit with tight vertical rhythm for senior candidates with 6+ career milestones.",
         "previewImage": "/templates/compact.png",
         "sourceFile": "compact.typ",
@@ -234,11 +388,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "two_column",
-        "name": "Dual-Column Asymmetric",
+        "name": "Duplex",
+        "subtitle": "30/70 dual column layout with persistent skills and contact rail",
+        "layout": "two_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "technical",
+        "tags": [
+            "Two Column",
+            "Sidebar Rail",
+            "Visual"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Product & Architecture",
-        "style": "Asymmetric Split Grid",
         "description": "Modern 30/70 asymmetric two-column grid with dedicated skills sidebar for product leaders and technical engineering directors.",
         "previewImage": "/templates/two_column.png",
         "sourceFile": "two_column.typ",
@@ -247,11 +410,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "terminal",
-        "name": "Developer Terminal Monospace",
+        "name": "Terminal",
+        "subtitle": "Monospace CLI aesthetic for kernel, security, and cloud architects",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Terminal",
+            "CLI",
+            "Kernel/Security"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Kernel & Security",
-        "style": "Monospace Technical Grid",
         "description": "Clean developer-console aesthetic with high typographic precision for kernel engineers, security researchers, and cloud architects.",
         "previewImage": "/templates/terminal.png",
         "sourceFile": "generated-terminal.typ",
@@ -260,11 +432,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "matrix",
-        "name": "Distributed Systems Matrix",
+        "name": "Gridline",
+        "subtitle": "Grid-balanced structure emphasizing systems depth and platform scale",
+        "layout": "two_column",
+        "style": "professional",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Distributed",
+            "Systems Grid",
+            "Platform"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Data & Distributed",
-        "style": "Structured Density",
         "description": "Grid-balanced structure emphasizing technical depth, systems architecture, and distributed platform engineering.",
         "previewImage": "/templates/matrix.png",
         "sourceFile": "generated-matrix.typ",
@@ -273,11 +454,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "product",
-        "name": "Product Management Standard",
+        "name": "Prism",
+        "subtitle": "Outcome & customer discovery layout for PM leads and Group PMs",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Product Management",
+            "Growth",
+            "Discovery"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Product & Growth",
-        "style": "Outcome & User Led",
         "description": "Engineered for Senior Product Managers, Group PMs, and Heads of Product driving discovery, strategy, and business growth.",
         "previewImage": "/templates/product.png",
         "sourceFile": "new-product.typ",
@@ -286,11 +476,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "startup",
-        "name": "Venture & High-Growth Startup",
+        "name": "Velocity",
+        "subtitle": "Fast scannable blocks for 0-to-1 operators and high-growth scale",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Startup",
+            "0-to-1",
+            "High Velocity"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "0-to-1 Scale",
-        "style": "Fast Scannable Blocks",
         "description": "Dynamic layout emphasizing 0-to-1 impact, cross-functional velocity, and rapid commercial or product scaling.",
         "previewImage": "/templates/startup.png",
         "sourceFile": "provided-startup.typ",
@@ -299,11 +498,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "mono",
-        "name": "Precision Utilitarian Monospace",
+        "name": "Monocode",
+        "subtitle": "Disciplined monospace spacing for low-level systems & cryptography",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Utilitarian",
+            "Monospace",
+            "Systems"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Raw Typographic Rigor",
-        "style": "Pure Monospace Typo",
         "description": "Utilitarian monospace typography with disciplined spacing for low-level systems engineers, cryptographers, and compiler researchers.",
         "previewImage": "/templates/mono.png",
         "sourceFile": "provided-mono.typ",
@@ -312,11 +520,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "cadence",
-        "name": "Architectural Cadence",
+        "name": "Cadence",
+        "subtitle": "Calibrated typographic rhythm for software architects and directors",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "technical",
+        "tags": [
+            "Architecture",
+            "Calibrated Rhythm",
+            "Engineering Lead"
+        ],
         "category": "tech",
         "categoryLabel": "Modern & Tech",
         "badge": "Modern Systems",
-        "style": "Calibrated Rhythm",
         "description": "Refined typographic rhythm with balanced visual weight for software architects and senior engineering directors.",
         "previewImage": "/templates/cadence.png",
         "sourceFile": "new-cadence.typ",
@@ -325,11 +542,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "classic",
-        "name": "Ivy League Academic Classic",
+        "name": "Heritage",
+        "subtitle": "Formal Ivy League serif typography with centered dividing rules",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "spacious",
+        "useCase": "academic",
+        "tags": [
+            "Ivy League",
+            "Institutional",
+            "Serif Heritage"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Institutional Heritage",
-        "style": "Ivy League Serif",
         "description": "Formal Ivy League serif typography with centered dividing rules for corporate boards, academic institutions, and legal counsel.",
         "previewImage": "/templates/classic.png",
         "sourceFile": "classic.typ",
@@ -338,11 +564,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "executive",
-        "name": "C-Suite Executive Brief",
+        "name": "Executive",
+        "subtitle": "Authoritative serif layout designed for Managing Directors and CXOs",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "C-Suite",
+            "Board Advisory",
+            "Managing Director"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Executive Leadership",
-        "style": "Commanding Presence",
         "description": "Authoritative serif layout designed for Managing Directors, Chief Officers, Partners, and board advisory roles.",
         "previewImage": "/templates/executive.png",
         "sourceFile": "provided-executive.typ",
@@ -351,11 +586,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "consultant",
-        "name": "Strategy Practice Consultant",
+        "name": "Advisory",
+        "subtitle": "Structured engagement delivery for management consulting advisors",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Strategy",
+            "Transformation",
+            "Client Delivery"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Advisory & Transformation",
-        "style": "Client Engagement Focus",
         "description": "Structured layout emphasizing strategic advisory track record, client engagement delivery, and enterprise transformations.",
         "previewImage": "/templates/consultant.png",
         "sourceFile": "provided-consultant.typ",
@@ -364,11 +608,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "analyst",
-        "name": "Quantitative Financial Analyst",
+        "name": "Capital",
+        "subtitle": "Data-centric flow for quant researchers, analysts, and bankers",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Finance",
+            "Quant Markets",
+            "Banking"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Capital Markets",
-        "style": "Data-Centric Flow",
         "description": "Quantitative structure tuned for quantitative researchers, financial analysts, investment bankers, and macro strategists.",
         "previewImage": "/templates/analyst.png",
         "sourceFile": "provided-analyst.typ",
@@ -377,11 +630,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "meridian",
-        "name": "Corporate Governance Meridian",
+        "name": "Meridian",
+        "subtitle": "Prestigious layout with classic proportions for board compliance",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Governance",
+            "Compliance",
+            "Board Trust"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Institutional Trust",
-        "style": "Balanced Gravitas",
         "description": "Prestigious layout with classic proportions and subtle horizontal rules for corporate governance, compliance, and legal counsel.",
         "previewImage": "/templates/meridian.png",
         "sourceFile": "new-meridian.typ",
@@ -390,11 +652,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "ledger",
-        "name": "Financial Controller Ledger",
+        "name": "Ledger",
+        "subtitle": "Disciplined numeric hierarchy for CFOs, controllers, and PE partners",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "compact",
+        "useCase": "executive",
+        "tags": [
+            "CFO",
+            "Private Equity",
+            "Treasury"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Treasury & Capital",
-        "style": "Disciplined Columns",
         "description": "Built for Chief Financial Officers, Controllers, and Private Equity Partners with clear capital and numeric outcome hierarchy.",
         "previewImage": "/templates/ledger.png",
         "sourceFile": "new-ledger.typ",
@@ -403,11 +674,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "harbor",
-        "name": "Operations & Supply Chain Harbor",
+        "name": "Harbor",
+        "subtitle": "Grounded stability and visual anchor for supply chain leaders",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Operations",
+            "Supply Chain",
+            "Manufacturing"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Enterprise Operations",
-        "style": "Grounded Stability",
         "description": "Balanced visual anchor with elegant typographic rhythm for senior operations, manufacturing, and supply chain leaders.",
         "previewImage": "/templates/harbor.png",
         "sourceFile": "new-harbor.typ",
@@ -416,11 +696,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "statement",
-        "name": "Executive Statement & Bio",
+        "name": "Keynote",
+        "subtitle": "Prominent executive statement hero block paired with milestones",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "spacious",
+        "useCase": "executive",
+        "tags": [
+            "Executive Bio",
+            "Boardroom",
+            "Leadership Hero"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Boardroom Impact",
-        "style": "Bold Executive Hero",
         "description": "Strong opening executive statement block paired with high-clarity career progression for senior partners and directors.",
         "previewImage": "/templates/statement.png",
         "sourceFile": "generated-statement.typ",
@@ -429,11 +718,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "forma",
-        "name": "Structured Bauhaus Forma",
+        "name": "Forma",
+        "subtitle": "Harmonious geometric grid with modern architectural proportions",
+        "layout": "two_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Bauhaus",
+            "Architectural Grid",
+            "Advisory"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Architectural Grid",
-        "style": "Modern Proportions",
         "description": "Harmonious geometric grid with refined leading for high-trust corporate advisors and management consultants.",
         "previewImage": "/templates/forma.png",
         "sourceFile": "new-forma.typ",
@@ -442,11 +740,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "focus",
-        "name": "High-Signal Executive Focus",
+        "name": "Focus",
+        "subtitle": "Zero-fluff concise hierarchy highlighting ownership scope",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "compact",
+        "useCase": "executive",
+        "tags": [
+            "Laser Focus",
+            "Accountability",
+            "Concise"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Laser Accountability",
-        "style": "Concise Hierarchy",
         "description": "Zero-fluff, laser-focused layout highlighting career milestones, ownership scope, and executive accountability.",
         "previewImage": "/templates/focus.png",
         "sourceFile": "new-focus.typ",
@@ -455,11 +762,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "boutique",
-        "name": "Creative Studio Boutique",
+        "name": "Boutique",
+        "subtitle": "Refined editorial whitespace for Design Directors and Principals",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "spacious",
+        "useCase": "general",
+        "tags": [
+            "Creative Studio",
+            "Whitespace",
+            "Agency Principal"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Brand & Creative Agency",
-        "style": "Boutique Editorial",
         "description": "Refined editorial character with generous whitespace for Design Directors, Stylists, and Agency Principals.",
         "previewImage": "/templates/boutique.png",
         "sourceFile": "generated-boutique.typ",
@@ -468,11 +784,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "editorial",
-        "name": "Publishing & Media Editorial",
+        "name": "Editorial",
+        "subtitle": "Sophisticated print-magazine layout for journalists and authors",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "spacious",
+        "useCase": "general",
+        "tags": [
+            "Publishing",
+            "Journalism",
+            "Print Editorial"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Media & Journalism",
-        "style": "Editorial Typography",
         "description": "Sophisticated print-magazine layout for journalists, authors, editorial directors, and creative communications leaders.",
         "previewImage": "/templates/editorial.png",
         "sourceFile": "generated-editorial.typ",
@@ -481,11 +806,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "portfolio",
-        "name": "Design Director Portfolio",
+        "name": "Gallery",
+        "subtitle": "Curated layout showcasing work samples, briefs, and transformations",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Portfolio",
+            "Exhibition",
+            "Case Studies"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Work Exhibition",
-        "style": "Project Exhibition",
         "description": "Curated layout showcasing work samples, creative briefs, product case studies, and design system transformations.",
         "previewImage": "/templates/portfolio.png",
         "sourceFile": "generated-portfolio.typ",
@@ -494,11 +828,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "atelier",
-        "name": "Design Atelier Studio",
+        "name": "Atelier",
+        "subtitle": "Architectural margins, subtle rules, and European typographic grace",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "spacious",
+        "useCase": "general",
+        "tags": [
+            "Atelier",
+            "European Typography",
+            "Visual Craft"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Industrial & Visual Craft",
-        "style": "Studio Discipline",
         "description": "Inspired by European design ateliers with architectural margins, subtle rules, and typographic elegance.",
         "previewImage": "/templates/atelier.png",
         "sourceFile": "new-atelier.typ",
@@ -507,11 +850,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "swiss",
-        "name": "Zurich Swiss Typographic",
+        "name": "Helvetia",
+        "subtitle": "Iconic Swiss grid with crisp hierarchy and disciplined asymmetric tension",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Swiss Grid",
+            "Zurich Style",
+            "Asymmetric Tension"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "International Typographic",
-        "style": "Swiss Grid System",
         "description": "Based on the iconic Zurich typographic grid with crisp hierarchy, strong weights, and disciplined asymmetric tension.",
         "previewImage": "/templates/swiss.png",
         "sourceFile": "provided-swiss.typ",
@@ -520,11 +872,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "nordic",
-        "name": "Scandinavian Minimalist",
+        "name": "Nordic",
+        "subtitle": "Airy breathing room with calm tones, soft contrast, and high legibility",
+        "layout": "two_column",
+        "style": "minimal",
+        "density": "spacious",
+        "useCase": "general",
+        "tags": [
+            "Nordic",
+            "Minimalist",
+            "Calm Hierarchy"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Nordic Restraint",
-        "style": "Scandinavian Restraint",
         "description": "Airy, clean Scandinavian aesthetic prioritizing calm visual breathing room, soft tones, and high legibility.",
         "previewImage": "/templates/nordic.png",
         "sourceFile": "generated-nordic.typ",
@@ -533,11 +894,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "neo",
-        "name": "Contemporary Neo-Modern",
+        "name": "Avant",
+        "subtitle": "Modern digital aesthetic with sharp typographic contrast and tension",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Neo-Modern",
+            "Digital Age",
+            "Sharp Contrast"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Modernist Spatial",
-        "style": "Spatial Tension",
         "description": "Modern digital aesthetic with clean section breaks, sharp typographic contrast, and contemporary type pairings.",
         "previewImage": "/templates/neo.png",
         "sourceFile": "generated-neo.typ",
@@ -546,11 +916,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "monochrome",
-        "name": "Stark Monochromatic",
+        "name": "Minimal",
+        "subtitle": "Pure monochrome typesetting celebrating crisp ink on paper",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "compact",
+        "useCase": "general",
+        "tags": [
+            "Monochrome",
+            "High Contrast",
+            "Pure Print"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "High-Contrast Ink",
-        "style": "High Contrast Ink",
         "description": "Pure, stark monochrome typesetting celebrating the timeless clarity of crisp ink on high-grade paper.",
         "previewImage": "/templates/monochrome.png",
         "sourceFile": "generated-monochrome.typ",
@@ -559,11 +938,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "slate",
-        "name": "Contemporary Slate Minimal",
+        "name": "Slate",
+        "subtitle": "Subtle slate gray tones offering gentle visual hierarchy",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Slate Neutral",
+            "Architectural",
+            "Clean"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Architectural Neutral",
-        "style": "Muted Tones",
         "description": "Subtle slate gray tones offering gentle visual hierarchy without visual clutter or distraction.",
         "previewImage": "/templates/slate.png",
         "sourceFile": "new-slate.typ",
@@ -572,11 +960,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "timeline",
-        "name": "Chronological Career Arc",
+        "name": "Chronos",
+        "subtitle": "Visual chronological flow tracing tenure, promotion, and milestones",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Timeline",
+            "Career Progression",
+            "Milestone Arc"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Milestone Progression",
-        "style": "Chronological Accent",
         "description": "Visual chronological flow tracing tenure, career milestones, promotion velocity, and leadership progression.",
         "previewImage": "/templates/timeline.png",
         "sourceFile": "provided-timeline.typ",
@@ -585,11 +982,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "academic",
-        "name": "Academic Curriculum Vitae",
+        "name": "Scholar",
+        "subtitle": "Formal academic CV for publications, citations, grants, and chairs",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "spacious",
+        "useCase": "academic",
+        "tags": [
+            "Academic CV",
+            "Publications",
+            "Research Grants"
+        ],
         "category": "academic",
         "categoryLabel": "Academic & Research",
         "badge": "Full Academic CV",
-        "style": "Ivy League Academic",
         "description": "Formal academic curriculum vitae supporting detailed publication lists, citations, grants, fellowships, and conferences.",
         "previewImage": "/templates/academic.png",
         "sourceFile": "provided-academic.typ",
@@ -598,11 +1004,20 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "research_modern",
-        "name": "Scientific Research & Fellow",
+        "name": "Discovery",
+        "subtitle": "Contemporary scientific CV tuned for STEM, postdocs, and lab heads",
+        "layout": "single_column",
+        "style": "professional",
+        "density": "balanced",
+        "useCase": "academic",
+        "tags": [
+            "Scientific",
+            "STEM",
+            "Postdoc / Lab"
+        ],
         "category": "academic",
         "categoryLabel": "Academic & Research",
         "badge": "STEM & Laboratory",
-        "style": "Scientific & Empirical",
         "description": "Contemporary scientific CV format tuned for researchers, postdocs, laboratory heads, and scientific investigators.",
         "previewImage": "/templates/research_modern.png",
         "sourceFile": "new-research_modern.typ",
@@ -611,41 +1026,157 @@ export const ALL_TEMPLATES: ResumeTemplate[] = [
     },
     {
         "id": "generated_executive",
-        "name": "Principal Executive Edition",
+        "name": "Principal",
+        "subtitle": "Polished proportions with clean section headers and date alignments",
+        "layout": "single_column",
+        "style": "classic",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Principal",
+            "Executive",
+            "Polished Proportions"
+        ],
         "category": "executive",
         "categoryLabel": "Executive & Advisory",
         "badge": "Senior Practice Leader",
-        "style": "Polished Proportions",
         "description": "Alternative executive layout with clean section headers, refined date alignments, and polished executive typography.",
-        "previewImage": "/templates/generated-executive.png",
+        "previewImage": "/templates/generated_executive.png",
         "sourceFile": "generated-executive.typ",
         "isNew": false,
         "isAtsCompliant": true
     },
     {
         "id": "swiss_alt",
-        "name": "International Swiss Grid",
+        "name": "Zurich",
+        "subtitle": "Rigid horizontal rules and strict column discipline for design leaders",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "International Swiss",
+            "Grid Rules",
+            "Architecture"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Asymmetric International",
-        "style": "International Style Alt",
         "description": "Alternative Swiss layout with rigid horizontal rules and strict column hierarchy for design and architecture leaders.",
-        "previewImage": "/templates/generated-swiss.png",
+        "previewImage": "/templates/swiss_alt.png",
         "sourceFile": "generated-swiss.typ",
         "isNew": false,
         "isAtsCompliant": true
     },
     {
         "id": "timeline_alt",
-        "name": "Career Chronicle Progression",
+        "name": "Trajectory",
+        "subtitle": "Linear chronicle narrative with subtle promotion and tenure markers",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Chronicle",
+            "Tenure Markers",
+            "Linear Storyline"
+        ],
         "category": "creative",
         "categoryLabel": "Editorial & Creative",
         "badge": "Chronicle Storyline",
-        "style": "Linear Storyline",
         "description": "Alternative chronological narrative with subtle timeline markers, promotion paths, and milestone callouts.",
-        "previewImage": "/templates/generated-timeline.png",
+        "previewImage": "/templates/timeline_alt.png",
         "sourceFile": "generated-timeline.typ",
         "isNew": false,
+        "isAtsCompliant": true
+    },
+    {
+        "id": "onyx",
+        "name": "Onyx",
+        "subtitle": "High-contrast monochrome with sharp hairline section dividers",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Monochrome",
+            "Editorial",
+            "Minimalist",
+            "ATS-Safe"
+        ],
+        "category": "ats",
+        "categoryLabel": "ATS-Optimized",
+        "badge": "Monochrome Minimal",
+        "description": "Pristine monochrome typography with razor-sharp hairline borders and explicit result bullets, optimized for maximum legibility.",
+        "previewImage": "/templates/onyx.png",
+        "sourceFile": "onyx.typ",
+        "isNew": true,
+        "isAtsCompliant": true
+    },
+    {
+        "id": "glalie",
+        "name": "Lateral",
+        "subtitle": "Two-column executive layout with dedicated skills & contact sidebar",
+        "layout": "two_column",
+        "style": "modern",
+        "density": "balanced",
+        "useCase": "executive",
+        "tags": [
+            "Two-Column",
+            "Executive Sidebar",
+            "ATS-Safe"
+        ],
+        "category": "executive",
+        "categoryLabel": "Executive & Advisory",
+        "badge": "Asymmetric Sidebar",
+        "description": "Clean 30/70 asymmetric dual-column structure balancing high-density credentials with readable career narrative.",
+        "previewImage": "/templates/glalie.png",
+        "sourceFile": "glalie.typ",
+        "isNew": true,
+        "isAtsCompliant": true
+    },
+    {
+        "id": "azurill",
+        "name": "Stackline",
+        "subtitle": "High-density technical grid with cobalt accents and inline tags",
+        "layout": "single_column",
+        "style": "modern",
+        "density": "compact",
+        "useCase": "technical",
+        "tags": [
+            "Technical",
+            "High Density",
+            "Cobalt Accent"
+        ],
+        "category": "tech",
+        "categoryLabel": "Modern & Tech",
+        "badge": "High-Density Tech",
+        "description": "Engineered for technical engineers, full-stack devs, and DevOps specialists with structured contact cards and project tags.",
+        "previewImage": "/templates/azurill.png",
+        "sourceFile": "azurill.typ",
+        "isNew": true,
+        "isAtsCompliant": true
+    },
+    {
+        "id": "chikorita",
+        "name": "Sage",
+        "subtitle": "Warm organic typography with subtle sage accents and spacious flow",
+        "layout": "single_column",
+        "style": "minimal",
+        "density": "balanced",
+        "useCase": "general",
+        "tags": [
+            "Organic",
+            "Creative",
+            "Sage Accent"
+        ],
+        "category": "creative",
+        "categoryLabel": "Editorial & Creative",
+        "badge": "Organic Minimal",
+        "description": "Gentle, organic editorial layout tailored for product designers, creative technologists, and frontend innovators.",
+        "previewImage": "/templates/chikorita.png",
+        "sourceFile": "chikorita.typ",
+        "isNew": true,
         "isAtsCompliant": true
     }
 ];
@@ -657,11 +1188,9 @@ export const TEMPLATE_MAP = new Map<string, ResumeTemplate>(
 export function getTemplateById(id?: string): ResumeTemplate {
     if (!id) return ALL_TEMPLATES[0];
     const cleanId = id.toLowerCase().trim();
-    // Direct match
     if (TEMPLATE_MAP.has(cleanId)) {
         return TEMPLATE_MAP.get(cleanId)!;
     }
-    // Alias checks
     const stripped = cleanId.replace(/^(new-|original-|provided-|generated-)/, '');
     if (TEMPLATE_MAP.has(stripped)) {
         return TEMPLATE_MAP.get(stripped)!;

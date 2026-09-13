@@ -64,33 +64,43 @@ LumaCV is built as a high-throughput, deterministic resume engineering studio ce
 
 ## 3. Core Subsystems
 
-### 3.1 Client-Side PDF Text Extraction (`lib/pdf-parser.ts`)
+### 3.1 Client-Side Document Text Extraction (`lib/document-parser.ts`, `lib/pdf-parser.ts`)
 - Executes entirely on the client within the browser context (`typeof window !== 'undefined'`).
-- Loads `pdfjs-dist/build/pdf.min.js` alongside the same-origin web worker `/pdf.worker.min.js`.
-- Traverses document page streams to extract text tokens with preserved line-break spacing.
-- Scans page annotation tables for embedded hyperlinks (e.g. GitHub, LinkedIn, personal portfolios) and attaches them to candidate contact data.
+- PDF: loads `pdfjs-dist/build/pdf.min.mjs` (pdfjs-dist v6, ESM build) alongside the same-origin web worker `/pdf.worker.min.mjs`. Traverses document page streams to extract text tokens with preserved line-break spacing, and scans page annotation tables for embedded hyperlinks (GitHub, LinkedIn, portfolio) to attach to candidate contact data.
+- DOCX: `mammoth` extracts raw text client-side.
+- `.txt`/`.md`: read directly via the File API.
 
 ### 3.2 AI Client & BYOK Pipeline (`lib/llm-client.ts`)
-The AI engine implements multi-provider failover with support for user-supplied API keys:
+Every AI call in the app goes through `generateStream()`, which fails over
+across whichever of the following are configured, in this order — user BYOK
+keys first (if supplied via request headers), then system keys:
 
-| Provider | Supported Models | Primary Strength |
+| Provider | Models (heavy tasks) | Notes |
 | :--- | :--- | :--- |
-| **Google Gemini** | `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite` | Sub-400ms latency, native JSON schema mode |
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o3-mini` | Benchmark schema compliance & reasoning |
-| **Anthropic Claude** | `claude-3-5-sonnet`, `claude-3-5-haiku` | Nuanced editorial vocabulary for executive roles |
-| **Groq Cloud** | `qwen/qwen-2.5-32b`, `llama-3.3-70b` | Maximum token generation throughput |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-flash-latest` | Tried first; native JSON-friendly output |
+| **Groq Cloud** | `groq/compound-mini`, `groq/compound`, `qwen/qwen3.8-27b`, `qwen/qwen3.6-27b`, `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | OpenAI-compatible endpoint, called via `.chat()` (not the default Responses API) |
+| **Mistral AI** | `codestral-latest`, `ministral-14b-latest`, `open-mistral-nemo` | OpenAI-compatible endpoint |
+| **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free`, `nvidia/nemotron-3.5-lightning:free`, `poolside/laguna-s-2.1:free` | Free-tier models, OpenAI-compatible endpoint |
+| **OpenAI** (BYOK or `OPENAI_API_KEY`) | `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo` | |
+| **GitHub Models** | `gpt-4o-mini`, `Meta-Llama-3.1-8B-Instruct` | Free with a GitHub PAT, OpenAI-compatible endpoint |
+| **Anthropic Claude** (BYOK only) | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022` | |
+
+By default there is no cap on how many models/providers are tried (`maxAttempts`
+defaults to `Infinity`) — on a genuine failure it fails over through everything
+configured rather than giving up early, since resilience is the whole reason to
+configure several providers. The SDK's own built-in per-call retry is disabled
+(`maxRetries: 0`) so a rate-limited or quota-exhausted model fails over
+immediately instead of burning tens of seconds retrying itself. Callers can
+also pass a `validate(fullText)` predicate so a model whose output is
+syntactically fine but substantively empty/wrong is treated as a failure too,
+not accepted as a success.
 
 **Security & Privacy**:
 - BYOK keys supplied in request headers (`x-gemini-api-key`, etc.) exist ephemerally in memory only for the duration of the HTTP lifecycle. They are never written to disk, databases, or application log files.
-- The prompt caching layer (`lib/prompt-cache.ts`) deduplicates identical extraction and tailoring requests, minimizing model latency.
 
-### 3.3 Unified JD Analysis Service (`lib/jd-analysis.ts`)
-- Replaces legacy redundant parsing logic across `/api/v1/jd/analyze` and `/api/v1/resume/analyze-jd`.
-- Ingests raw job posting text and executes structured extraction with fallback parsing:
-  - Role title, company, and seniority level classification.
-  - Hard required competencies vs. preferred/bonus qualifications.
-  - Core responsibility statements and high-value ATS keyword lists.
-- Serves both API routes transparently, guaranteeing schema consistency.
+### 3.3 Job Description Analysis (`lib/jd-analysis.ts`)
+- Ingests raw job posting text and extracts required/preferred skills, core responsibilities, industry buzzwords, and seniority level as structured JSON.
+- Used standalone by `POST /api/v1/resume/analyze-jd` (the ATS Checker), and inlined into the same completion as `POST /api/v1/resume/tailor` when the caller sends raw `jd` text instead of pre-extracted keywords — so Step 3 tailoring needs only one AI call total, not a separate analyze-then-tailor round trip.
 
 ### 3.4 Modular Review Architecture (`components/builder/`)
 To ensure optimal frontend performance, eliminate re-render bottlenecks, and maintain code readability, the Step 4 preview interface is decomposed into isolated subcomponents:

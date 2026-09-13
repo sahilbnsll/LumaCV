@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStream, collectStream, extractJsonObjectFromAssistantText } from '@/lib/llm-client';
-import { GenerateResumeRequestSchema, GenerateResumeResponseSchema, ResumeData } from '@/lib/resume-schema';
+import { TailorResumeRequestSchema, GenerateResumeResponseSchema, ResumeData } from '@/lib/resume-schema';
 import { normalizeResumeFromLLM } from '@/lib/normalize-resume';
+import { normalizeAnalyzeJDFromLLM } from '@/lib/normalize-jd';
 import { generateTypst } from '@/lib/typst-generator';
-import { getPromptTemplate } from '@/lib/prompt-cache';
 import { ratelimit } from '@/lib/rate-limit';
 import { jsonrepair } from 'jsonrepair';
 import { validateAndCleanTailoredResume } from '@/lib/fact-validator';
 import { extractUserApiKeys, hasCustomKeys } from '@/lib/ai-keys';
 import { requireUser } from '@/lib/auth';
 import { recordBulletTailored } from '@/lib/stats-service';
+import { buildTailorPrompt } from '@/lib/prompts';
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-    // Strictly enforce authentication for all resume operations
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+    }
+
+    // Strictly enforce authentication for all resume tailoring
     const auth = await requireUser();
     if (auth.response) return auth.response;
 
@@ -32,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const validatedInput = GenerateResumeRequestSchema.safeParse(body);
+        const validatedInput = TailorResumeRequestSchema.safeParse(body);
 
         if (!validatedInput.success) {
             return NextResponse.json(
@@ -41,71 +47,64 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { resumeData, jdKeywords, template, theme, tailorMode } = validatedInput.data;
-
+        const { resumeData, jdKeywords: requestJdKeywords, jd, template, theme, tailorMode } = validatedInput.data;
         const isOptimizeOnly = tailorMode === 'optimize';
+        // Reassigned below if the model extracts it from raw `jd` text in this same
+        // completion — keeps every downstream reference (ATS summary, alignment map,
+        // confidence score) working the same regardless of which path supplied it.
+        let jdKeywords = requestJdKeywords ?? null;
 
-        const modeDirective = isOptimizeOnly
-            ? `
-================================================================================
-CRITICAL OPERATIONAL DIRECTIVE: MODE = OPTIMIZE RESUME (CONSERVATIVE & 100% FACTUAL)
-================================================================================
-1. STRICT FACTUAL TRUTH: You must ONLY improve phrasing, bullet impact, grammatical clarity, and ATS syntax using the technologies, tools, metrics, and experiences ALREADY PRESENT in the source resume.
-2. ABSOLUTELY ZERO FABRICATION: Do NOT introduce or hallucinate ANY new tools, frameworks, programming languages, headcounts, or responsibilities that the candidate did not mention.
-3. FOCUS: Enhance action verbs, eliminate passive voice, and optimize readability while maintaining 100% factual accuracy.
-`
-            : `
-================================================================================
-CRITICAL OPERATIONAL DIRECTIVE: MODE = TAILOR RESUME TO JD (AGGRESSIVE ALIGNMENT)
-================================================================================
-1. AGGRESSIVE JD TARGETING: Deeply adapt, rephrase, and align experience bullets and summary with the target job requirements and ATS keywords.
-2. INTELLIGENT RESTRUCTURING & KEYWORD ADAPTATION: You are permitted to plausibly introduce relevant industry-standard technologies, tools, methodologies, and context that directly mirror the target JD requirements within the candidate's existing roles to maximize keyword density and ATS match score.
-3. ANCHOR CORE TIMELINES: Preserve candidate employer names, degrees, and employment date ranges.
-`;
-
-        // Load prompt from in-memory cache
-        const promptTemplate = await getPromptTemplate('resume-tailor.txt');
-
-        let prompt: string;
-        if (isOptimizeOnly) {
-            prompt = promptTemplate
-                .replace('{{USER_RESUME_JSON}}', JSON.stringify(resumeData))
-                .replace('{{JD_KEYWORDS}}', JSON.stringify(jdKeywords)) + `\n\n${modeDirective}`;
-        } else {
-            prompt = `You are an elite career strategist, executive resume writer, and ATS optimization specialist.
-Your mission is to AGGRESSIVELY tailor and calibrate the candidate's resume for the target job description so that it achieves a 92%–96% ATS match rate while keeping company names, education, and dates authentic.
-
-CRITICAL OPERATIONAL DIRECTIVES (MODE = AGGRESSIVE JD TAILORING):
-1. TARGET ATS SCORE: You MUST achieve 90%–95%+ ATS semantic match against the target job description.
-2. TECHNICAL SKILLS CATEGORIES:
-   - You MUST ensure ALL target Required Skills (${JSON.stringify(jdKeywords.required_skills)}) and Preferred Skills (${JSON.stringify(jdKeywords.preferred_skills)}) are incorporated into the "skills" section.
-   - Organize them into clear categories: e.g. "Languages & Frameworks", "Cloud, DevOps & Databases", "Architecture & Tools".
-3. EXPERIENCE BULLETS REWRITING:
-   - Aggressively rewrite the candidate's existing experience bullets to feature the target JD responsibilities: ${JSON.stringify(jdKeywords.responsibilities.slice(0, 8))}.
-   - Seamlessly weave target keywords (${JSON.stringify(jdKeywords.buzzwords)}) and tools into the context of their actual work.
-   - Use the high-impact executive formula: [Action Verb] + [Target JD Skill / Context] + [Quantified Result / Impact].
-4. EXECUTIVE SUMMARY:
-   - Rewrite the summary (3-4 sentences) explicitly highlighting the candidate's expertise in the target tech stack (${(jdKeywords.required_skills || []).slice(0, 5).join(', ')}) aligned with the target role.
-5. PRESERVE FOUNDATIONS:
-   - Preserve candidate's company names, degrees, and employment dates.
-6. OUTPUT FORMAT:
-   - Return EXACTLY ONE valid JSON object matching the resume schema with "confidenceScore": 0.95. No markdown fences.
-
-CANDIDATE SOURCE RESUME JSON:
-${JSON.stringify(resumeData)}
-
-TARGET JOB INTELLIGENCE:
-${JSON.stringify(jdKeywords)}
-
-Return the aggressively tailored resume JSON conforming strictly to the schema with confidenceScore: 0.95.`;
-        }
+        // Build standardized, context-first prompt with zero-hallucination guarantees.
+        // When the caller only sent raw `jd` text, this single completion also does
+        // the job of the old separate analyze-jd call.
+        const prompt = buildTailorPrompt({
+            resumeData,
+            jdKeywords,
+            jd,
+            tailorMode,
+            template,
+            theme,
+        });
 
         let tailoredResume: ResumeData;
+        let rawAtsSummary: any = null;
         try {
             console.log(`[Tailor] Starting streaming tailor (Mode: ${tailorMode}, BYOK: ${usingCustomKeys})...`);
-            const { textStream, model } = await generateStream(prompt, undefined, 'heavy', { 
+            const { textStream, model } = await generateStream(prompt, undefined, 'heavy', {
+                // This response packs the full tailored resume + JD-keyword
+                // extraction + ATS alignment summary into one JSON payload —
+                // shrinking this to fit weaker models' limits (previously tried
+                // 4096) truncated real responses mid-JSON, corrupting output
+                // instead of failing cleanly. Exclude models too small for this
+                // payload from the heavy pool (see GROQ_HEAVY_MODELS) rather than
+                // shrinking everyone's budget to fit the smallest one.
                 maxTokens: 6000,
-                userKeys
+                userKeys,
+                // A weak fallback model can return syntactically valid JSON that's
+                // still an empty/near-empty resume (e.g. under load or a truncated
+                // response). If the source resume had real content, the tailored
+                // output should too — otherwise fail over to the next model rather
+                // than silently handing back a gutted resume as a "success".
+                validate: (fullText) => {
+                    try {
+                        const jsonText = extractJsonObjectFromAssistantText(fullText);
+                        let raw: unknown;
+                        try {
+                            raw = JSON.parse(jsonText);
+                        } catch {
+                            raw = JSON.parse(jsonrepair(jsonText));
+                        }
+                        const candidate = raw && typeof raw === 'object' && 'tailoredResume' in (raw as Record<string, unknown>)
+                            ? (raw as Record<string, unknown>).tailoredResume
+                            : raw;
+                        const normalized = normalizeResumeFromLLM(candidate);
+                        const sourceHasContent = resumeData.experience.length > 0 || !!resumeData.summary?.trim();
+                        const outputHasContent = normalized.experience.length > 0 || !!normalized.summary?.trim();
+                        return !sourceHasContent || outputHasContent;
+                    } catch {
+                        return false;
+                    }
+                },
             });
 
             console.log(`[Tailor] Connected via ${model}, collecting stream...`);
@@ -121,85 +120,68 @@ Return the aggressively tailored resume JSON conforming strictly to the schema w
                 const repaired = jsonrepair(jsonText);
                 raw = JSON.parse(repaired);
             }
-            tailoredResume = normalizeResumeFromLLM(raw);
+
+            let candidateResume = raw;
+            if (raw && typeof raw === 'object' && 'tailoredResume' in (raw as Record<string, unknown>)) {
+                const wrapped = raw as Record<string, unknown>;
+                candidateResume = wrapped.tailoredResume;
+                rawAtsSummary = wrapped.atsAlignmentSummary;
+                if (!jdKeywords && wrapped.jdKeywords) {
+                    try {
+                        jdKeywords = normalizeAnalyzeJDFromLLM(wrapped.jdKeywords);
+                    } catch {
+                        // Extraction came back malformed — proceed without it rather
+                        // than fail the whole tailor response over a secondary field.
+                    }
+                }
+            } else if (raw && typeof raw === 'object') {
+                const record = raw as Record<string, unknown>;
+                if ('atsAlignmentSummary' in record) {
+                    rawAtsSummary = record.atsAlignmentSummary;
+                }
+                if (!jdKeywords && 'jdKeywords' in record && record.jdKeywords) {
+                    try {
+                        jdKeywords = normalizeAnalyzeJDFromLLM(record.jdKeywords);
+                    } catch {
+                    }
+                }
+            }
+
+            tailoredResume = normalizeResumeFromLLM(candidateResume);
         } catch (llmError: unknown) {
+            // Surface this as a real failure instead of silently returning the
+            // untouched original resume as a fake "200 success" — the caller (Step 3)
+            // needs to know tailoring didn't actually happen so it can show its
+            // error state and offer a retry, rather than presenting stale content
+            // as if it were freshly tailored.
             console.error('LLM Tailoring Failed:', llmError);
-            tailoredResume = JSON.parse(JSON.stringify(resumeData));
+            const message = llmError instanceof Error ? llmError.message : 'AI tailoring request failed';
+            return NextResponse.json(
+                { error: 'AI tailoring failed. Please retry.', details: message },
+                { status: 502 }
+            );
         }
 
         // Run post-generation AI Fact Validation against ground truth source evidence
         const factCheck = validateAndCleanTailoredResume(resumeData, tailoredResume);
-        if (isOptimizeOnly) {
-            tailoredResume = factCheck.cleanedResume;
-        } else if (jdKeywords) {
-            // In Aggressive JD Tailoring mode, guarantee that the resume satisfies the 90-95%+ ATS score target:
+        tailoredResume = factCheck.cleanedResume;
+
+        if (!isOptimizeOnly && jdKeywords) {
+            // In JD alignment mode, compute realistic alignment score based on verified
+            // overlap — no artificial floor. This used to clamp to a 0.70-0.98 band
+            // regardless of matchRatio, which meant a 0%-match resume still reported
+            // 70% "confidence." Report the real ratio instead (capped only for sanity).
             const reqSkills = jdKeywords.required_skills || [];
-            const prefSkills = jdKeywords.preferred_skills || [];
-            const responsibilities = jdKeywords.responsibilities || [];
-            const buzzwords = jdKeywords.buzzwords || [];
-
-            // 1. Ensure skills contains all required and preferred skills
-            if (!tailoredResume.skills || tailoredResume.skills.length === 0) {
-                tailoredResume.skills = [
-                    { category: 'Core Technologies & Stack', items: [...reqSkills, ...prefSkills].slice(0, 15).join(', ') }
-                ];
-            } else {
-                const existingText = tailoredResume.skills.map(s => `${s.category} ${s.items}`).join(' ').toLowerCase();
-                const missingReq = reqSkills.filter(s => !existingText.includes(s.toLowerCase()));
-                const missingPref = prefSkills.filter(s => !existingText.includes(s.toLowerCase()));
-
-                if (missingReq.length > 0 || missingPref.length > 0) {
-                    const toAdd = [...missingReq, ...missingPref];
-                    const firstCat = tailoredResume.skills[0];
-                    if (firstCat) {
-                        firstCat.items = `${firstCat.items}, ${toAdd.join(', ')}`;
-                    } else {
-                        tailoredResume.skills.push({
-                            category: 'Core Technologies',
-                            items: toAdd.join(', ')
-                        });
-                    }
-                }
-            }
-
-            // 2. Ensure Tech Stack Summary reflects the primary required skills
-            if (reqSkills.length > 0) {
-                tailoredResume.techStackSummary = reqSkills.slice(0, 8).join(' • ');
-            }
-
-            // 3. Ensure Summary incorporates target focus and top buzzwords
-            if (tailoredResume.summary) {
-                const summaryLower = tailoredResume.summary.toLowerCase();
-                const missingBuzzwords = buzzwords.filter(b => !summaryLower.includes(b.toLowerCase())).slice(0, 4);
-                if (missingBuzzwords.length > 0) {
-                    tailoredResume.summary = `${tailoredResume.summary.replace(/\.?$/, '.')} Proven track record driving ${missingBuzzwords.join(', ')} across modern engineering environments.`;
-                }
-            }
-
-            // 4. Ensure Experience Bullets incorporate target responsibilities
-            if (tailoredResume.experience && tailoredResume.experience.length > 0 && responsibilities.length > 0) {
-                const exp = tailoredResume.experience[0];
-                if (exp && Array.isArray(exp.bullets)) {
-                    const bulletsText = exp.bullets.join(' ').toLowerCase();
-                    const missingResp = responsibilities.filter(r => {
-                        const words = r.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-                        return !words.some(w => bulletsText.includes(w));
-                    });
-
-                    if (missingResp.length > 0) {
-                        const topResp = missingResp[0];
-                        const actionBullet = `${topResp.replace(/^(Architect|Build|Lead|Develop|Drive|Scale|Manage|Create|Optimize)\w*/i, (m) => `${m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()}ed`)} to improve system reliability and delivery velocity.`;
-                        if (exp.bullets.length < 5) {
-                            exp.bullets.unshift(actionBullet);
-                        } else {
-                            exp.bullets[0] = actionBullet;
-                        }
-                    }
-                }
-            }
-
-            tailoredResume.confidenceScore = 0.95;
+            const resumeText = JSON.stringify(tailoredResume).toLowerCase();
+            const matchedSkills = reqSkills.filter(s => resumeText.includes(s.toLowerCase()));
+            const matchRatio = reqSkills.length > 0 ? matchedSkills.length / reqSkills.length : null;
+            tailoredResume.confidenceScore = matchRatio === null
+                ? (tailoredResume.confidenceScore || undefined)
+                : Math.max(0, Math.min(0.98, matchRatio));
         }
+        // Optimize mode has no JD to score alignment against — leave confidenceScore
+        // as whatever (if anything) the model itself reported, rather than fabricating
+        // a fixed 0.92. The UI already shows an honest "no JD" state when it's absent.
 
         // Build comprehensive transparent audit trail comparing source to tailored
         const sectionsModified: string[] = [];
@@ -297,7 +279,9 @@ Return the aggressively tailored resume JSON conforming strictly to the schema w
             resumeEvidence: string;
         }> = [];
 
-        (jdKeywords?.required_skills || []).slice(0, 8).forEach(skill => {
+        const isCleanKw = (str: string) => Boolean(str && typeof str === 'string' && !/^\[object\b/i.test(str) && !/\[object\s+object\]/i.test(str));
+
+        (jdKeywords?.required_skills || []).filter(isCleanKw).slice(0, 8).forEach(skill => {
             const hasExact = allResumeText.includes(skill.toLowerCase());
             jdAlignmentMap.push({
                 requirement: skill,
@@ -309,7 +293,7 @@ Return the aggressively tailored resume JSON conforming strictly to the schema w
             });
         });
 
-        (jdKeywords?.responsibilities || []).slice(0, 5).forEach(resp => {
+        (jdKeywords?.responsibilities || []).filter(isCleanKw).slice(0, 5).forEach(resp => {
             const words = resp.toLowerCase().split(/\s+/).filter(w => w.length > 3);
             const matchCount = words.filter(w => allResumeText.includes(w)).length;
             const status = matchCount >= Math.min(2, words.length) ? 'matched' : matchCount > 0 ? 'partially_matched' : 'missing';
@@ -323,6 +307,64 @@ Return the aggressively tailored resume JSON conforming strictly to the schema w
             });
         });
 
+        // Compute ATS Alignment Summary for Aggressive Alignment Mode
+        const matchedRequirements: string[] = [];
+        const partiallyMatchedRequirements: string[] = [];
+        const unsupportedRequirements: string[] = [];
+        const incorporatedKeywords: string[] = [];
+
+        if (jdKeywords) {
+            (jdKeywords.required_skills || []).filter(isCleanKw).forEach(skill => {
+                const sLower = skill.toLowerCase();
+                if (allResumeText.includes(sLower)) {
+                    matchedRequirements.push(skill);
+                } else {
+                    const words = sLower.split(/[\s/]+/).filter(w => w.length > 2);
+                    const anyWord = words.some(w => allResumeText.includes(w));
+                    if (anyWord) {
+                        partiallyMatchedRequirements.push(skill);
+                    } else {
+                        unsupportedRequirements.push(skill);
+                    }
+                }
+            });
+
+            (jdKeywords.preferred_skills || []).filter(isCleanKw).forEach(skill => {
+                const sLower = skill.toLowerCase();
+                if (allResumeText.includes(sLower)) {
+                    matchedRequirements.push(skill);
+                } else {
+                    unsupportedRequirements.push(skill);
+                }
+            });
+
+            (jdKeywords.buzzwords || []).filter(isCleanKw).forEach(kw => {
+                if (allResumeText.includes(kw.toLowerCase())) {
+                    incorporatedKeywords.push(kw);
+                }
+            });
+        }
+
+        const totalReqs = (matchedRequirements.length + partiallyMatchedRequirements.length + unsupportedRequirements.length) || 1;
+        const calculatedScore = Math.round(
+            ((matchedRequirements.length * 1.0 + partiallyMatchedRequirements.length * 0.5) / totalReqs) * 100
+        );
+        // No artificial floor here — this used to clamp to a minimum of 70-85 regardless
+        // of actual computed match, which meant the "ATS Alignment Summary" could never
+        // honestly report low coverage even when it existed.
+        const overallScore = Math.min(99, Math.max(0, rawAtsSummary?.overallScore || calculatedScore));
+
+        const sanitizeSummaryArray = (arr?: string[]) =>
+            Array.from(new Set((arr || []).filter(isCleanKw)));
+
+        const atsAlignmentSummary = {
+            overallScore,
+            matchedRequirements: sanitizeSummaryArray(rawAtsSummary?.matchedRequirements?.length ? rawAtsSummary.matchedRequirements : matchedRequirements),
+            partiallyMatchedRequirements: sanitizeSummaryArray(rawAtsSummary?.partiallyMatchedRequirements?.length ? rawAtsSummary.partiallyMatchedRequirements : partiallyMatchedRequirements),
+            unsupportedRequirements: sanitizeSummaryArray(rawAtsSummary?.unsupportedRequirements?.length ? rawAtsSummary.unsupportedRequirements : unsupportedRequirements),
+            incorporatedKeywords: sanitizeSummaryArray(rawAtsSummary?.incorporatedKeywords?.length ? rawAtsSummary.incorporatedKeywords : incorporatedKeywords),
+        };
+
         // Generate Typst
         const typstCode = generateTypst(tailoredResume, template, theme);
 
@@ -330,6 +372,11 @@ Return the aggressively tailored resume JSON conforming strictly to the schema w
             tailoredResume,
             typstCode,
             confidenceScore: tailoredResume.confidenceScore || 0,
+            // Only present when extracted in this same completion (caller sent raw
+            // `jd` instead of pre-extracted jdKeywords) — lets the client score
+            // against it without a separate analyze-jd round trip.
+            jdKeywords: !requestJdKeywords && jdKeywords ? jdKeywords : undefined,
+            atsAlignmentSummary,
             factCheckReport: {
                 passed: factCheck.passed,
                 issuesCount: factCheck.issues.length,

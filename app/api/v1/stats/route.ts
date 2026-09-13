@@ -16,6 +16,7 @@ export async function GET() {
         });
     } catch {
         return NextResponse.json({
+            usersCount: 0,
             resumesCompiled: 0,
             bulletsTailored: 0,
             activeTemplates: 48,

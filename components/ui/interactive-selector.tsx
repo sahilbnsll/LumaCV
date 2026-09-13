@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 import { TemplateType } from '@/lib/resume-schema';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 
 export interface ArchetypeOption {
     id: TemplateType;
@@ -127,10 +127,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
             onSelect(selected.id);
         } else {
             setTemplate(selected.id);
-            toast.success(`Typesetting switched to ${selected.title}`, {
-                description: `${selected.archetype} layout compiled into vector preview.`,
-                duration: 2500,
-            });
+            notify.templateChanged(selected.title);
         }
     }, [onSelect, setTemplate]);
 
@@ -157,7 +154,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                 <div
                     role="tablist"
                     aria-label="Typst Archetype Selector"
-                    className="w-full flex items-stretch gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-none p-1.5 rounded-2xl bg-muted/30 dark:bg-[#111317]/80 border border-border/80"
+                    className="w-full flex items-stretch gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-none p-1.5 rounded-2xl bg-muted/40 border border-border"
                 >
                     {TYPST_ARCHETYPES.map((option, index) => {
                         const isActive = activeIndex === index;
@@ -197,7 +194,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
 
                                 {/* Top Badges */}
                                 <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10 pointer-events-none">
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-background/90 dark:bg-[#181a20]/90 text-foreground backdrop-blur-md border border-border/60 shadow-xs">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-background/90 text-foreground backdrop-blur-md border border-border/60 shadow-xs">
                                         <span className={cn("h-1.5 w-1.5 rounded-full", option.accentDot)} />
                                         <span className="font-mono">{option.tag}</span>
                                     </span>
@@ -217,7 +214,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                                             className={cn(
                                                 "w-8 h-8 flex items-center justify-center rounded-lg backdrop-blur-md border shrink-0",
                                                 isActive
-                                                    ? "bg-background/90 dark:bg-[#1a1d24]/90 border-border"
+                                                    ? "bg-background/90 border-border"
                                                     : "bg-black/50 border-white/15"
                                             )}
                                         >
@@ -277,7 +274,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
             <div
                 role="tablist"
                 aria-label="Typst Archetype Selector"
-                className="hidden sm:flex w-full h-full min-h-[240px] max-h-[290px] items-stretch gap-1.5 sm:gap-2 overflow-hidden rounded-2xl p-1.5 sm:p-2 bg-muted/40 dark:bg-[#111317]/80 border border-border/80 shadow-inner"
+                className="hidden sm:flex w-full h-full min-h-[240px] max-h-[290px] items-stretch gap-1.5 sm:gap-2 overflow-hidden rounded-2xl p-1.5 sm:p-2 bg-muted/40 border border-border shadow-inner"
             >
                 {TYPST_ARCHETYPES.map((option, index) => {
                     const isActive = activeIndex === index;
@@ -338,7 +335,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                             {/* Top Badge: Selection Status */}
                             <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10 pointer-events-none">
                                 {isActive && (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-background/85 dark:bg-[#181a20]/90 text-foreground backdrop-blur-md border border-border/60 shadow-xs animate-in fade-in duration-300">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-background/85 text-foreground backdrop-blur-md border border-border/60 shadow-xs animate-in fade-in duration-300">
                                         <span className={cn("h-1.5 w-1.5 rounded-full", option.accentDot)} />
                                         <span className="hidden sm:inline font-mono">{option.tag}</span>
                                         <span className="sm:hidden font-mono">{option.title.split(' ')[0]}</span>
@@ -361,7 +358,7 @@ export const InteractiveSelector: React.FC<InteractiveSelectorProps> = ({
                                         className={cn(
                                             "min-w-[34px] max-w-[34px] h-[34px] sm:min-w-[40px] sm:max-w-[40px] sm:h-[40px] flex items-center justify-center rounded-xl backdrop-blur-md border transition-all duration-300 shrink-0",
                                             isActive
-                                                ? "bg-background/90 dark:bg-[#1a1d24]/90 border-border shadow-md"
+                                                ? "bg-background/90 border-border shadow-md"
                                                 : "bg-black/50 border-white/15"
                                         )}
                                     >

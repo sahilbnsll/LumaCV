@@ -94,3 +94,7 @@ gemini.md
 task.md
 walkthrough.md
 implementation_plan.md
+
+# Supabase temporary CLI cache
+supabase/.temp/
+.temp/

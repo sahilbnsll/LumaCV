@@ -1,195 +1,204 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './auth-provider';
-import { toast } from 'sonner';
-import { ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ThemeToggle } from './theme-toggle';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from '@/components/ui/dialog';
-import { Pattern } from '@/components/ui/v-tabs-13';
-import { cn } from '@/lib/utils';
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+} from '@/components/ui/dropdown-menu';
+import {
+    User,
+    LayoutDashboard,
+    FileCode2,
+    Briefcase,
+    Target,
+    Palette,
+    Settings,
+    KeyRound,
+    LogOut,
+    ChevronDown,
+} from 'lucide-react';
+import { notify } from '@/lib/notify';
 
 export function UserMenu() {
     const { user, signOut } = useAuth();
     const router = useRouter();
-    const [open, setOpen] = useState(false);
-    const [settingsOpen, setSettingsOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, []);
+    if (!user) {
+        return (
+            <Link
+                href="/login"
+                className="group relative flex items-center gap-1.5 rounded-full border border-border/80 hover:border-primary/50 bg-background hover:bg-muted/50 py-1.5 px-3 transition-all duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                title="Sign in to your account"
+                aria-label="Sign in"
+            >
+                <div className="h-6 w-6 rounded-full bg-muted/60 border border-border text-muted-foreground flex items-center justify-center text-xs transition-colors group-hover:bg-primary/10 group-hover:text-primary shrink-0">
+                    <User className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                    Sign In
+                </span>
+            </Link>
+        );
+    }
 
-    if (!user) return null;
-
-    const email = user.email || 'sahilbansal.sb24@gmail.com';
-    const fullName = user.user_metadata?.full_name || (email ? email.split('@')[0].replace('.', ' ') : 'Sahil Bansal');
+    const email = user.email || '';
+    const fullName =
+        user.user_metadata?.full_name ||
+        (email ? email.split('@')[0].replace(/[._]/g, ' ') : 'User');
     const initials = (fullName || 'U')
         .split(' ')
+        .filter(Boolean)
         .map((n: string) => n[0])
         .join('')
         .slice(0, 2)
         .toUpperCase();
 
+    const handleSignOut = async () => {
+        try {
+            await signOut();
+            notify.info('Signed out', 'You have been signed out of your account.');
+            router.push('/');
+        } catch (error) {
+            console.error('Sign out failed:', error);
+        }
+    };
+
     return (
-        <>
-            <div className="relative" ref={menuRef}>
-                {/* Minimal, compact Avatar trigger in header */}
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
                 <button
-                    onClick={() => setOpen(!open)}
-                    className="group relative flex items-center gap-2 rounded-full border border-border/80 hover:border-border bg-background hover:bg-muted/50 p-1 pr-2.5 transition-all duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-                    aria-expanded={open}
-                    aria-haspopup="true"
-                    aria-label="Profile menu"
+                    type="button"
+                    className="group relative flex items-center gap-2 rounded-full border border-border/80 hover:border-primary/50 bg-background hover:bg-muted/50 p-1 pr-2.5 transition-all duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer select-none"
+                    aria-label="User Account Menu"
                 >
-                    {/* Clean Minimalist Monogram Avatar (No neon colors) */}
-                    <div className="h-7 w-7 rounded-full bg-muted/80 border border-border flex items-center justify-center font-semibold text-[11px] text-foreground transition-colors group-hover:bg-muted shrink-0">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-semibold text-[11px] transition-colors group-hover:bg-primary/20 shrink-0">
                         {initials}
                     </div>
-
-                    <ChevronDown
-                        className={cn(
-                            "h-3 w-3 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
-                            open && "rotate-180 text-foreground"
-                        )}
-                        strokeWidth={2}
-                    />
+                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors hidden sm:inline max-w-[110px] truncate">
+                        {fullName.split(' ')[0]}
+                    </span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground/70 group-hover:text-foreground transition-colors shrink-0" />
                 </button>
+            </DropdownMenuTrigger>
 
-                {/* Minimalist Dropdown Menu (No icons, clean & simple) */}
-                <AnimatePresence>
-                    {open && (
-                        <motion.div
-                            role="menu"
-                            aria-label="User options"
-                            initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                            className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-border/80 bg-popover/95 p-2 shadow-xl backdrop-blur-xl z-50 text-xs text-foreground"
-                        >
-                            {/* User Header */}
-                            <div className="px-3 py-2.5 mb-1 rounded-xl bg-muted/40 border border-border/40">
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="font-semibold text-xs text-foreground truncate capitalize">{fullName}</p>
-                                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-border/60 shrink-0">
-                                        Free
-                                    </span>
-                                </div>
-                                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{email}</p>
-                            </div>
-
-                            {/* Clean Text-Only Items (No icons) */}
-                            <div className="space-y-0.5 py-1">
-                                <Link
-                                    href="/dashboard"
-                                    onClick={() => setOpen(false)}
-                                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                                >
-                                    <span>My Resumes</span>
-                                </Link>
-
-                                <Link
-                                    href="/builder"
-                                    onClick={() => setOpen(false)}
-                                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                                >
-                                    <span>Resume Builder</span>
-                                    <span className="text-[10px] font-medium text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded border border-border/40">
-                                        48 Presets
-                                    </span>
-                                </Link>
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setOpen(false);
-                                        setSettingsOpen(true);
-                                    }}
-                                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer text-left"
-                                >
-                                    <span>Account Settings</span>
-                                </button>
-
-                                <Link
-                                    href="/support"
-                                    onClick={() => setOpen(false)}
-                                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                                >
-                                    <span>Support LumaCV</span>
-                                </Link>
-
-                                <div className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-muted-foreground">
-                                    <span className="font-medium text-xs">Engine</span>
-                                    <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">
-                                        Typst Native
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Theme Appearance */}
-                            <div className="border-t border-border/50 my-1 pt-1.5 px-3 flex items-center justify-between text-muted-foreground">
-                                <span className="text-[11px] font-medium">Appearance</span>
-                                <ThemeToggle />
-                            </div>
-
-                            {/* Sign Out (Clean red text, no icon) */}
-                            <div className="border-t border-border/50 pt-1">
-                                <button
-                                    onClick={async () => {
-                                        setOpen(false);
-                                        await signOut();
-                                        router.push('/');
-                                        toast.success("Signed out successfully.");
-                                    }}
-                                    className="flex w-full items-center justify-start rounded-xl px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                                >
-                                    <span>Sign Out</span>
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-
-            {/* Interactive Settings Modal tailored exclusively for LumaCV */}
-            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <DialogContent className="max-w-3xl sm:max-w-4xl w-[95vw] p-0 overflow-hidden border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl">
-                    <DialogHeader className="p-5 pb-2 border-b border-border/40">
-                        <DialogTitle className="font-display text-lg font-bold text-foreground">
-                            Account & Studio Settings
-                        </DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground">
-                            Configure your AI keys, Typst compilation defaults, credentials, and feedback.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="p-4 sm:p-6">
-                        <Pattern onClose={() => setSettingsOpen(false)} />
+            <DropdownMenuContent
+                align="end"
+                className="w-56 p-1.5 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-md shadow-xl text-foreground"
+            >
+                {/* User Identity Header — plain text, no status pill/badge clutter */}
+                <DropdownMenuLabel className="px-2.5 py-2">
+                    <div className="flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                            {initials}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-xs text-foreground truncate capitalize">
+                                {fullName}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground truncate font-mono">
+                                {email || 'Local User'}
+                            </span>
+                        </div>
                     </div>
-                </DialogContent>
-            </Dialog>
-        </>
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator className="my-1 border-border/40" />
+
+                {/* Workspace Navigation — one neutral icon weight, no per-item rainbow colors */}
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <LayoutDashboard className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>My Resumes</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/editor"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <FileCode2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Resume Editor</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/applications"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Applications</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/ats"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>ATS Checker</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/templates"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Templates</span>
+                        <DropdownMenuShortcut className="text-[10px] text-muted-foreground font-mono">52</DropdownMenuShortcut>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1 border-border/40" />
+
+                {/* Preferences & Settings */}
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/profile?tab=profile"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Settings</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                    <Link
+                        href="/profile?tab=api-keys"
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg cursor-pointer hover:bg-muted"
+                    >
+                        <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>API Keys</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1 border-border/40" />
+
+                {/* Sign Out */}
+                <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer transition-colors"
+                >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>Sign Out</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
+

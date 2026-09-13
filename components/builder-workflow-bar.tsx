@@ -1,38 +1,49 @@
 "use client";
 
+import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { ResumeDataSchema } from '@/lib/resume-schema';
 import { WizardStepper } from './wizard-stepper';
 import { Button } from '@/components/ui/button';
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import {
     ArrowLeft,
     ArrowRight,
     RotateCcw
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 
 export function BuilderWorkflowBar() {
     const step = useAppStore((s) => s.step);
     const setStep = useAppStore((s) => s.setStep);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     const handleStep1Next = () => {
-        const currentJd = useAppStore.getState().jd;
-        if (!currentJd.trim()) {
-            toast.error('Please paste a target job description or click "Try Sample JD"');
-            return;
-        }
         setStep(2);
     };
 
     const handleStep2Next = () => {
         const currentResumeData = useAppStore.getState().resumeData;
         if (!currentResumeData) {
-            toast.error('Add resume details first — upload a PDF on step 1 or fill the form and save.');
+            notify.error('Resume details required', 'Upload a PDF or save your changes');
             return;
         }
         const parsed = ResumeDataSchema.safeParse(currentResumeData);
         if (!parsed.success) {
-            toast.error('Some required fields are missing. Please verify errors in the form.');
+            notify.error('Missing required fields', 'Please fix errors in the form');
+            return;
+        }
+        const currentJd = useAppStore.getState().jd;
+        if (!currentJd.trim()) {
+            notify.info('Direct preview', 'Opening Studio without AI tailoring');
+            setStep(4);
             return;
         }
         setStep(3);
@@ -40,15 +51,14 @@ export function BuilderWorkflowBar() {
 
 
     const handleReset = () => {
-        if (confirm('Start over? Current form entries and tailored draft will be reset.')) {
-            useAppStore.getState().reset();
-            toast.info('Draft session reset');
-        }
+        useAppStore.getState().reset();
+        notify.info('Session reset', 'Draft cleared');
+        setShowResetConfirm(false);
     };
 
     return (
-        <div className="sticky top-14 z-30 glass-nav py-2.5 px-4 transition-all">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 max-w-7xl mx-auto">
+        <div className="sticky top-14 z-40 glass-nav py-2.5 px-4 transition-all">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 max-w-marketing mx-auto">
                 {/* Stepper (Left) */}
                 <div className="flex-1">
                     <WizardStepper />
@@ -102,7 +112,7 @@ export function BuilderWorkflowBar() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleReset}
+                        onClick={() => setShowResetConfirm(true)}
                         className="text-muted-foreground/60 hover:text-destructive text-xs h-8 px-2.5 rounded-xl hover:bg-destructive/10 transition-colors cursor-pointer"
                         title="Reset session draft"
                     >
@@ -111,6 +121,38 @@ export function BuilderWorkflowBar() {
                     </Button>
                 </div>
             </div>
+
+            <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-base font-bold text-destructive">Start Over?</DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground">
+                            Current form entries and any tailored draft will be reset. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="pt-2 gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowResetConfirm(false)}
+                            className="h-8 text-xs"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleReset}
+                            className="h-8 text-xs font-semibold"
+                        >
+                            Reset Draft
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

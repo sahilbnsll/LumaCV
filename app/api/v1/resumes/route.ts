@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
             templateId = 'modern',
             resumeData,
             typstCode,
-            atsScore = 0,
+            atsScore,
             targetJobTitle,
             targetJobCompany,
         } = body;
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
             template_id: templateId,
             resume_data: resumeData,
             typst_code: typstCode,
-            ats_score: atsScore,
+            ats_score: typeof atsScore === 'number' && atsScore > 0 ? atsScore : null,
             target_job_title: targetJobTitle,
             target_job_company: targetJobCompany,
             updated_at: new Date().toISOString(),

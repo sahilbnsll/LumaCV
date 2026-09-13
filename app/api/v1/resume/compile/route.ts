@@ -33,8 +33,15 @@ export async function POST(req: NextRequest) {
 
         const { resumeData, template, theme, typstCode } = validatedInput.data;
 
-        // Allow public demo page preview without login; require authentication for custom builder compilations
-        const isPublicDemo = resumeData?.personalInfo?.name === 'Alex Morgan';
+        // Allow public demo page preview without login; require authentication for custom builder compilations.
+        // NOTE: this check only matches the current demo persona's exact name/email, so it's a soft allowance,
+        // not a security boundary — anyone can bypass the login requirement by naming their submitted resume
+        // "Alex Morgan", but they're still bound by the IP rate limit above like every other caller. If this
+        // needs to be a hard boundary later, replace it with an explicit signal from the /demo page rather
+        // than sniffing submitted body content.
+        const isPublicDemo =
+            resumeData?.personalInfo?.name === 'Alex Morgan' &&
+            resumeData?.personalInfo?.email === 'alex@example.com';
         if (!isPublicDemo) {
             const auth = await requireUser();
             if (auth.response) return auth.response;

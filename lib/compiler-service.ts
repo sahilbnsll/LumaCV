@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { ResumeData, TemplateType } from './resume-schema';
-import { normalizeTemplateName, resumeDataToTypstData } from './typst-generator';
+import { normalizeTemplateName, resumeDataToTypstData, generateTypst } from './typst-generator';
 
 export type CompileAttempt = {
   provider: string;
@@ -139,84 +139,54 @@ export async function compileTypst(options: CompileTypstOptions): Promise<Provid
   const theme = options.theme && options.theme !== 'none' ? options.theme : 'none';
 
   try {
-    if (options.typstCode && options.typstCode.trim()) {
-      // Compile custom Typst markup via stdin to avoid needing writable source files inside --root
-      const args = ['compile', '--root', typstDir];
-      if (process.platform === 'win32') {
-        args.push('--font-path', 'C:\\Windows\\Fonts');
-      }
-      args.push('-', outputPdfPath);
+    const codeToCompile =
+      options.typstCode && options.typstCode.trim()
+        ? options.typstCode
+        : options.resumeData
+        ? generateTypst(options.resumeData, template as any, theme)
+        : '';
 
-      await new Promise<void>((resolve, reject) => {
-        const child = spawn(cmd, args, { timeout: 15000 });
-        let stderr = '';
-
-        child.stderr.on('data', (chunk) => {
-          stderr += chunk.toString();
-        });
-
-        child.on('error', (err) => {
-          reject(new ProviderError(err.message, { retryable: false }));
-        });
-
-        child.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            console.error('[Typst Stdin Error]:', stderr);
-            reject(
-              new ProviderError(stderr || `Typst process exited with code ${code}`, {
-                retryable: false,
-              })
-            );
-          }
-        });
-
-        child.stdin.write(options.typstCode);
-        child.stdin.end();
-      });
-    } else if (options.resumeData) {
-      // Compile structured data using in-memory JSON argument (--input data_json)
-      const typstData = resumeDataToTypstData(options.resumeData);
-      const jsonStr = JSON.stringify(typstData);
-
-      const mainTypPath = path.join(typstDir, 'main.typ');
-      const args = [
-        'compile',
-        '--root',
-        typstDir,
-        '--input',
-        `data_json=${jsonStr}`,
-        '--input',
-        `template=${template}`,
-        '--input',
-        `theme=${theme}`,
-      ];
-
-      if (process.platform === 'win32') {
-        args.push('--font-path', 'C:\\Windows\\Fonts');
-      }
-
-      args.push(mainTypPath, outputPdfPath);
-
-      await new Promise<void>((resolve, reject) => {
-        execFile(cmd, args, { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-          if (error) {
-            console.error('[Typst Compile Error]:', stderr || error.message);
-            return reject(
-              new ProviderError(stderr || error.message || 'Typst compilation failed', {
-                retryable: false,
-              })
-            );
-          }
-          resolve();
-        });
-      });
-    } else {
+    if (!codeToCompile) {
       throw new ProviderError('Neither resumeData nor typstCode was provided for compilation.', {
         retryable: false,
       });
     }
+
+    // Compile Typst markup via stdin: avoids Windows CLI arg limits, quote mangling, and writable file requirements
+    const args = ['compile', '--root', typstDir];
+    if (process.platform === 'win32') {
+      args.push('--font-path', 'C:\\Windows\\Fonts');
+    }
+    args.push('-', outputPdfPath);
+
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(cmd, args, { timeout: 15000 });
+      let stderr = '';
+
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString();
+      });
+
+      child.on('error', (err) => {
+        reject(new ProviderError(err.message, { retryable: false }));
+      });
+
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          console.error('[Typst Stdin Error]:', stderr);
+          reject(
+            new ProviderError(stderr || `Typst process exited with code ${code}`, {
+              retryable: false,
+            })
+          );
+        }
+      });
+
+      child.stdin.write(codeToCompile);
+      child.stdin.end();
+    });
 
     const pdfBuffer = await fs.readFile(outputPdfPath);
     const arrayBuffer = pdfBuffer.buffer.slice(

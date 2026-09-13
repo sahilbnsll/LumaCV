@@ -236,8 +236,65 @@
     line(length: 100%, stroke: 0.6pt + p.ink)
   }
 
-  // Purpose-specific section ordering.
-  if mode == "impact" or mode == "metrics" {
+  // Section ordering: honors user's custom sectionOrder if provided; otherwise falls back to mode-specific ordering.
+  let has-custom-order = "sectionOrder" in data and type(data.sectionOrder) == array and data.sectionOrder.len() > 0
+
+  if has-custom-order {
+    let default-order = (
+      "summary", "techStackSummary", "skills", "keyMetrics", "experience",
+      "internships", "education", "projects", "certifications", "achievements",
+      "openSource", "publications", "leadership", "volunteering", "conferences",
+      "languages", "interests", "products", "devopsContributions", "securityContributions",
+      "additionalInfo", "customSections"
+    )
+    let active-order = ()
+    for k in data.sectionOrder {
+      if not active-order.contains(k) { active-order.push(k) }
+    }
+    for k in default-order {
+      if not active-order.contains(k) { active-order.push(k) }
+    }
+
+    for sec in active-order {
+      if sec == "summary" and summary != "" {
+        section("Profile", text(fill: p.ink)[#summary], p.accent)
+      } else if sec == "techStackSummary" and "techStackSummary" in data and data.techStackSummary != "" {
+        section("Tech Stack", text(fill: p.ink)[#data.techStackSummary], p.accent)
+      } else if sec == "skills" and "skills" in data and data.skills.len() > 0 {
+        section("Core Skills", render-skills(data, p.accent), p.accent)
+      } else if sec == "keyMetrics" and "keyMetrics" in data and data.keyMetrics.len() > 0 {
+        section("Key Metrics", {
+          for (i, m) in data.keyMetrics.enumerate() {
+            if i > 0 { v(0.25em) }
+            [#text(weight: "bold")[#m.label]: #text(fill: p.accent)[#m.value]#if "context" in m and m.context != "" [ — #text(size: 8.2pt, fill: p.muted)[#m.context]]]
+          }
+        }, p.accent)
+      } else if sec == "experience" and "experience" in data and data.experience.len() > 0 {
+        section("Experience", render-experience(data, p.accent), p.accent)
+      } else if sec == "internships" and "internships" in data and data.internships.len() > 0 {
+        section("Internships", render-experience((experience: data.internships), p.accent), p.accent)
+      } else if sec == "projects" and "projects" in data and data.projects.len() > 0 {
+        section("Selected Projects", render-projects(data, p.accent), p.accent)
+      } else if sec == "education" and "education" in data and data.education.len() > 0 {
+        section("Education", render-education(data), p.accent)
+      } else if sec == "certifications" and "certifications" in data and data.certifications.len() > 0 {
+        section("Certifications", render-certifications(data), p.accent)
+      } else if sec == "achievements" and "achievements" in data and data.achievements.len() > 0 {
+        section("Achievements", {
+          for (i, a) in data.achievements.enumerate() {
+            if i > 0 { v(0.25em) }
+            text(size: 8.6pt, weight: "bold")[#a.title]
+            if "awarder" in a and a.awarder != "" { text(size: 8pt, fill: p.muted)[ · #a.awarder] }
+            if "date" in a and a.date != "" { text(size: 8pt, fill: p.muted)[ · #a.date] }
+          }
+        }, p.accent)
+      } else if sec == "customSections" and "customSections" in data and data.customSections.len() > 0 {
+        for cs in data.customSections {
+          section(cs.title, bullets(cs.items), p.accent)
+        }
+      }
+    }
+  } else if mode == "impact" or mode == "metrics" {
     if summary != "" { section("Profile", text(fill: p.ink)[#summary], p.accent, rule: "double") }
     if mode == "impact" { section("Core Strengths", render-skills(data, p.accent), p.accent, rule: "short") }
     section("Experience", render-experience(data, p.accent), p.accent, rule: "short")

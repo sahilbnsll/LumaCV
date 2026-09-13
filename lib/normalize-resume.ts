@@ -2,7 +2,21 @@ import { DEFAULT_SECTION_ORDER, ResumeData, ResumeDataSchema } from '@/lib/resum
 
 function str(v: unknown): string {
     if (v === null || v === undefined) return '';
-    return String(v).trim();
+    if (typeof v === 'string') {
+        const trimmed = v.trim();
+        return /^\[object\b/i.test(trimmed) || /\[object\s+object\]/i.test(trimmed) ? '' : trimmed;
+    }
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v).trim();
+    if (typeof v === 'object') {
+        const o = v as Record<string, unknown>;
+        const cand = o.text ?? o.name ?? o.value ?? o.title ?? o.description ?? o.item ?? o.skill;
+        if (typeof cand === 'string') {
+            const trimmed = cand.trim();
+            return /^\[object\b/i.test(trimmed) || /\[object\s+object\]/i.test(trimmed) ? '' : trimmed;
+        }
+        return '';
+    }
+    return '';
 }
 
 function mapArray<T>(raw: unknown, mapper: (item: Record<string, unknown>) => T | null): T[] {
@@ -32,6 +46,10 @@ function mapStringList(raw: unknown): string[] {
     return raw.map(str).filter(Boolean);
 }
 
+function makeId(prefix: string): string {
+    return `${prefix}_${Math.random().toString(36).substring(2, 9)}_${Date.now().toString(36)}`;
+}
+
 function mapExperienceArray(raw: unknown, fallbackTitle: string, fallbackOrg: string): ResumeData['experience'] {
     return mapArray(raw, (o) => {
         let bullets = (Array.isArray(o.bullets) ? o.bullets.map(str) : []).filter(Boolean);
@@ -39,13 +57,25 @@ function mapExperienceArray(raw: unknown, fallbackTitle: string, fallbackOrg: st
             const detail = str(o.description ?? o.summary ?? o.impact);
             if (detail) bullets = [detail];
         }
-        if (bullets.length === 0) bullets = ['Please review and add impact details.'];
+
+        const title = str(o.title ?? o.role ?? o.position);
+        const company = str(o.company ?? o.organization ?? o.employer);
+        if (!title && !company && bullets.length === 0) return null;
 
         return {
-            title: str(o.title ?? o.role ?? o.position) || fallbackTitle,
-            company: str(o.company ?? o.organization ?? o.employer) || fallbackOrg,
+            id: str(o.id) || makeId('exp'),
+            title: title || fallbackTitle,
+            company: company || fallbackOrg,
             location: str(o.location) || undefined,
-            dates: str(o.dates ?? o.period ?? o.date ?? o.duration) || 'Dates',
+            startDate: str(o.startDate) || undefined,
+            endDate: str(o.endDate) || undefined,
+            dates: str(o.dates ?? o.period ?? o.date ?? o.duration) || '',
+            description: str(o.description) || undefined,
+            technologies: str(o.technologies ?? o.techStack) || undefined,
+            companyUrl: str(o.companyUrl ?? o.url ?? o.website) || undefined,
+            impact: str(o.impact) || undefined,
+            impactBullets: (Array.isArray(o.impactBullets) ? o.impactBullets.map(str) : []).filter(Boolean),
+            highlights: (Array.isArray(o.highlights) ? o.highlights.map(str) : []).filter(Boolean),
             bullets,
         };
     });
@@ -72,7 +102,7 @@ export function normalizeResumeFromLLM(raw: unknown): ResumeData {
         (profile) => typeof profile === 'object' && profile !== null && /linkedin/i.test(str((profile as Record<string, unknown>).network))
     ) as Record<string, unknown> | undefined;
 
-    const name = firstNonEmpty(pi.name) ?? 'Unknown';
+    const name = firstNonEmpty(pi.name) ?? 'Your Name';
     const title = firstNonEmpty(pi.title, pi.label);
     const tagline = firstNonEmpty(pi.tagline, pi.headline);
     const location = firstNonEmpty(
@@ -93,12 +123,7 @@ export function normalizeResumeFromLLM(raw: unknown): ResumeData {
     const github = firstNonEmpty(pi.github, githubProfile?.url);
     const portfolio = firstNonEmpty(pi.portfolio, pi.website, pi.url);
 
-    let summary = str(base.summary ?? base.profile ?? base.objective);
-    if (summary.length < 10) {
-        summary = summary.length > 0
-            ? `${summary} Please review and expand this summary.`
-            : 'Professional background summarized from your resume. Please review and edit.';
-    }
+    const summary = str(base.summary ?? base.profile ?? base.objective);
 
     let techStackSummary = firstNonEmpty(base.techStackSummary, base.techSummary, base.stack);
     if (!techStackSummary && Array.isArray(base.skills) && base.skills.length > 0) {
@@ -113,54 +138,61 @@ export function normalizeResumeFromLLM(raw: unknown): ResumeData {
             .join(' | ');
     }
 
-    let skills = mapArray(base.skills, (o) => {
+    const skills = mapArray(base.skills, (o) => {
         const keywords = Array.isArray(o.keywords) ? o.keywords.map(str).filter(Boolean).join(', ') : '';
+        const cat = str(o.category ?? o.name);
+        const rawItems = Array.isArray(o.items)
+            ? o.items.map(str).filter(Boolean).join(', ')
+            : str(o.items);
+        const itms = rawItems || keywords;
+        if (!cat && !itms) return null;
         return {
-            category: str(o.category ?? o.name) || 'General',
-            items: str(o.items) || keywords || 'See resume for details',
+            id: str(o.id) || makeId('skill'),
+            category: cat || 'General',
+            items: itms,
         };
     });
-    if (skills.length === 0) skills = [{ category: 'Skills', items: 'See resume text for details.' }];
 
-    let experience = mapExperienceArray(base.experience ?? base.work, 'Position', 'Company');
-    if (experience.length === 0) {
-        experience = [{
-            title: 'Experience',
-            company: 'See resume',
-            location: undefined,
-            dates: 'Dates',
-            bullets: ['Details could not be structured automatically. Please review and edit.'],
-        }];
-    }
-
+    const experience = mapExperienceArray(base.experience ?? base.work, 'Position', 'Company');
     const internships = mapExperienceArray(base.internships, 'Intern', 'Organization');
 
-    let education = mapArray(base.education, (ed) => ({
-        institution: str(ed.institution ?? ed.school ?? ed.university ?? ed.college ?? ed.name) || 'Institution',
-        degree: str(ed.degree ?? ed.studyType ?? ed.program) || 'Degree',
-        fieldOfStudy: str(ed.fieldOfStudy ?? ed.major ?? ed.field) || undefined,
-        location: str(ed.location) || undefined,
-        dates: str(ed.dates ?? ed.period ?? [str(ed.startDate), str(ed.endDate)].filter(Boolean).join(' - ') ?? ed.year ?? ed.graduationDate) || 'Dates',
-        gpa: str(ed.gpa ?? ed.score) || undefined,
-        coursework: str(ed.coursework ?? ed.relevantCoursework) || undefined,
-        honors: str(ed.honors ?? ed.awards) || undefined,
-    }));
-    if (education.length === 0) {
-        education = [{ institution: 'Institution', degree: 'Degree', fieldOfStudy: undefined, location: undefined, dates: 'Dates', gpa: undefined, coursework: undefined, honors: undefined }];
-    }
+    const education = mapArray(base.education, (ed) => {
+        const inst = str(ed.institution ?? ed.school ?? ed.university ?? ed.college ?? ed.name);
+        const deg = str(ed.degree ?? ed.studyType ?? ed.program);
+        if (!inst && !deg) return null;
+        return {
+            id: str(ed.id) || makeId('edu'),
+            institution: inst || 'Institution',
+            degree: deg || 'Degree',
+            fieldOfStudy: str(ed.fieldOfStudy ?? ed.major ?? ed.field) || undefined,
+            location: str(ed.location) || undefined,
+            startDate: str(ed.startDate) || undefined,
+            endDate: str(ed.endDate) || undefined,
+            dates: str(ed.dates ?? ed.period ?? [str(ed.startDate), str(ed.endDate)].filter(Boolean).join(' - ') ?? ed.year ?? ed.graduationDate) || '',
+            gpa: str(ed.gpa ?? ed.score) || undefined,
+            coursework: str(ed.coursework ?? ed.relevantCoursework) || undefined,
+            honors: str(ed.honors ?? ed.awards) || undefined,
+        };
+    });
 
     const projects = mapArray(base.projects, (o) => ({
+        id: str(o.id) || makeId('proj'),
         name: str(o.name ?? o.title) || 'Project',
         description: str(o.description ?? o.summary) || undefined,
         techStack: str(o.techStack ?? o.technologies ?? o.stack) || undefined,
         role: str(o.role ?? o.contribution) || undefined,
+        startDate: str(o.startDate) || undefined,
+        endDate: str(o.endDate) || undefined,
         dates: str(o.dates ?? o.period ?? o.date) || undefined,
         impact: str(o.impact ?? o.result) || undefined,
+        impactBullets: (Array.isArray(o.impactBullets) ? o.impactBullets.map(str) : []).filter(Boolean),
         link: str(o.link ?? o.url ?? o.website) || undefined,
         bullets: (Array.isArray(o.bullets) ? o.bullets.map(str) : []).filter(Boolean),
+        highlights: (Array.isArray(o.highlights) ? o.highlights.map(str) : []).filter(Boolean),
     }));
 
     const certifications = mapArray(base.certifications ?? base.certificates, (o) => ({
+        id: str(o.id) || makeId('cert'),
         name: str(o.name ?? o.title ?? o._rawString) || 'Certification',
         issuer: str(o.issuer ?? o.organization ?? o.authority) || undefined,
         date: str(o.date ?? o.issueDate ?? o.year) || undefined,
@@ -170,6 +202,7 @@ export function normalizeResumeFromLLM(raw: unknown): ResumeData {
     }));
 
     const achievements = mapArray(base.achievements ?? base.awards, (o) => ({
+        id: str(o.id) || makeId('ach'),
         name: str(o.name ?? o.title ?? o._rawString) || 'Achievement',
         context: str(o.context ?? o.organization ?? o.event) || undefined,
         date: str(o.date ?? o.year) || undefined,

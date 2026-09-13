@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Angry, Check, Frown, Laugh, Loader2, Smile, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 
 const feedback = [
   { happiness: 4, emoji: Laugh, color: 'text-emerald-500 dark:text-emerald-400', label: 'Loved it' },
@@ -77,7 +77,7 @@ export const FeedbackCard = ({
       animate={happiness ? { borderRadius: '1rem' } : { borderRadius: '2rem' }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className={cn(
-        'w-fit overflow-hidden border border-border/80 bg-card/95 p-1.5 shadow-lg backdrop-blur-md transition-colors dark:border-white/10 dark:bg-[#111317]/95',
+        'w-fit overflow-hidden border border-border bg-card/95 p-1.5 shadow-lg backdrop-blur-md transition-colors',
         className
       )}
     >
@@ -159,7 +159,7 @@ export const FeedbackCard = ({
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[10px] text-muted-foreground">
-                  Logged directly to roadmap
+                  Your feedback shapes what we build next
                 </span>
 
                 <button
@@ -272,10 +272,10 @@ const useSubmitFeedback = () => {
       if (!res.ok) throw new Error('Submission failed');
 
       setRequestState(true);
-      toast.success('Thank you! Your feedback has been received.');
+      notify.success('Feedback received', 'Thank you for your feedback');
     } catch (err) {
       setError(err);
-      toast.error('Could not submit feedback. Please try again.');
+      notify.error("Couldn't submit feedback", 'Please try again later');
       setRequestState(false);
     } finally {
       setLoadingState(false);

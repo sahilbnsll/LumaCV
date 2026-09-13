@@ -40,7 +40,8 @@ export function estimateResumeVolume(data: ResumeData): number {
         volume += (edu.institution?.length ?? 0) + (edu.degree?.length ?? 0) + (edu.fieldOfStudy?.length ?? 0) + (edu.dates?.length ?? 0) + 48;
     }
     for (const project of projects) {
-        volume += (project.name?.length ?? 0) + (project.description?.length ?? 0) + (project.techStack?.length ?? 0) + (project.impact?.length ?? 0) + project.bullets.join(' ').length + 64;
+        const bulletsLength = [...(project.bullets || []), ...(project.highlights || []), ...(project.impactBullets || [])].join(' ').length;
+        volume += (project.name?.length ?? 0) + (project.description?.length ?? 0) + (project.techStack?.length ?? 0) + (project.impact?.length ?? 0) + bulletsLength + 64;
     }
     for (const cert of certifications) {
         volume += (cert.name?.length ?? 0) + (cert.issuer?.length ?? 0) + (cert.credentialId?.length ?? 0) + 32;

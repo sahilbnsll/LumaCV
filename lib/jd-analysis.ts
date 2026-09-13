@@ -1,5 +1,5 @@
 import { generateStream, collectStream, extractJsonObjectFromAssistantText } from '@/lib/llm-client';
-import { getPromptTemplate } from '@/lib/prompt-cache';
+import { buildJDAnalyzePrompt } from '@/lib/prompts';
 import { jsonrepair } from 'jsonrepair';
 import { normalizeAnalyzeJDFromLLM } from '@/lib/normalize-jd';
 import type { AnalyzeJDResponse } from '@/lib/resume-schema';
@@ -14,8 +14,7 @@ export async function analyzeJobDescription(
     userKeys?: UserApiKeys
 ): Promise<AnalyzeJDResponse> {
     const cleanJd = jdText.trim().substring(0, 14000);
-    const promptTemplate = await getPromptTemplate('jd-analyze.txt');
-    const prompt = promptTemplate.replace('{{JD_TEXT}}', cleanJd);
+    const prompt = buildJDAnalyzePrompt(cleanJd);
 
     console.log(`[AnalyzeJD-Core] Dispatching job analysis to LLM pipeline...`);
     const { textStream, model } = await generateStream(prompt, undefined, 'light', {

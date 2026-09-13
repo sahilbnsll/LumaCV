@@ -9,6 +9,7 @@ interface AnimatedCounterProps {
     className?: string;
     suffix?: string;
     prefix?: string;
+    formatCommas?: boolean;
 }
 
 export function AnimatedCounter({
@@ -16,6 +17,7 @@ export function AnimatedCounter({
     className = '',
     suffix = '',
     prefix = '',
+    formatCommas = true,
 }: AnimatedCounterProps) {
     const ref = useRef<HTMLSpanElement>(null);
     const motionValue = useMotionValue(0);
@@ -25,26 +27,31 @@ export function AnimatedCounter({
     });
     const isInView = useInView(ref, { once: true, margin: '0px' });
 
+    const formatNumber = (num: number) => {
+        const rounded = Math.round(num);
+        return formatCommas ? rounded.toLocaleString('en-US') : String(rounded);
+    };
+
     useEffect(() => {
         if (isInView) {
             motionValue.set(value);
         } else if (ref.current) {
-            ref.current.textContent = `${prefix}${value}${suffix}`;
+            ref.current.textContent = `${prefix}${formatNumber(value)}${suffix}`;
         }
-    }, [motionValue, isInView, value, prefix, suffix]);
+    }, [motionValue, isInView, value, prefix, suffix, formatCommas]);
 
     useEffect(() => {
         const unsubscribe = springValue.on('change', (latest) => {
             if (ref.current) {
-                ref.current.textContent = `${prefix}${Math.round(latest)}${suffix}`;
+                ref.current.textContent = `${prefix}${formatNumber(latest)}${suffix}`;
             }
         });
         return () => unsubscribe();
-    }, [springValue, prefix, suffix]);
+    }, [springValue, prefix, suffix, formatCommas]);
 
     return (
         <span ref={ref} className={`tabular-nums font-mono ${className}`}>
-            {prefix}{value}{suffix}
+            {prefix}{formatNumber(value)}{suffix}
         </span>
     );
 }

@@ -17,6 +17,7 @@ export type MatchBreakdownEntry = {
 
 export type MatchScoreResponse = {
     score: number;
+    isCalculated?: boolean;
     breakdown: Record<MatchCategoryKey, MatchBreakdownEntry>;
     gapAnalysis?: {
         scoreReason: string;

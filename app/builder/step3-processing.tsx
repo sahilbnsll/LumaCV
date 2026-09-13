@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 import { resumeDataToPlainText } from '@/lib/resume-plaintext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
@@ -64,9 +64,9 @@ const PIPELINE_STAGES: Stage[] = [
     {
         id: 'checking',
         stepNumber: '04',
-        title: 'Factual Integrity & Accuracy Audit',
+        title: 'Confirming Factual Accuracy',
         shortTitle: 'Factual Consistency Audit',
-        subtitle: 'Auditing all claims against your source background — guaranteeing zero fabricated dates or skills.',
+        subtitle: 'The tailoring step above already ran every claim through a fact-validation pass against your source background — confirming the result now.',
         tag: 'ACCURACY AUDIT',
         icon: ShieldCheck,
     },
@@ -84,15 +84,12 @@ const PIPELINE_STAGES: Stage[] = [
 export function Step3Processing() {
     const router = useRouter();
     const setStep = useAppStore((s) => s.setStep);
-    const jd = useAppStore((s) => s.jd);
-    const resumeData = useAppStore((s) => s.resumeData);
+    const setResumeData = useAppStore((s) => s.setResumeData);
+    const setPreTailorSnapshot = useAppStore((s) => s.setPreTailorSnapshot);
     const setAnalysis = useAppStore((s) => s.setAnalysis);
     const setGeneratedResume = useAppStore((s) => s.setGeneratedResume);
     const setOriginalScore = useAppStore((s) => s.setOriginalScore);
     const setTailoredScore = useAppStore((s) => s.setTailoredScore);
-    const template = useAppStore((s) => s.template);
-    const theme = useAppStore((s) => s.theme);
-    const tailorMode = useAppStore((s) => s.tailorMode);
 
     const [currentStageIndex, setCurrentStageIndex] = useState(0);
     const [completedStages, setCompletedStages] = useState<string[]>([]);
@@ -110,6 +107,19 @@ export function Step3Processing() {
         let isCancelled = false;
 
         const executeTailoringPipeline = async () => {
+            // Read straight from the store instead of the reactive `jd`/`resumeData`
+            // selectors above: this effect's own success path calls `setResumeData(...)`,
+            // and if `resumeData` were a dependency of this effect, that write would
+            // re-trigger the whole pipeline (a self-firing loop, re-running /tailor
+            // forever and resetting stage progress mid-flight). Reading via getState()
+            // lets the effect depend only on `retryTrigger`.
+            const initialState = useAppStore.getState();
+            const jd = initialState.jd;
+            const resumeData = initialState.resumeData;
+            const template = initialState.template;
+            const theme = initialState.theme;
+            const tailorMode = initialState.tailorMode;
+
             if (!jd || !resumeData) {
                 router.push('/builder');
                 return;
@@ -117,58 +127,40 @@ export function Step3Processing() {
 
             const startTime = Date.now();
             trackEvent('tailoring_started', { template, theme });
+            // Capture the true pre-AI baseline once, so Step 4 can show a real
+            // before/after diff instead of comparing tailored data against itself.
+            setPreTailorSnapshot(resumeData);
 
             try {
-                // Stage 1: Analyzing Job Description
+                // Stages 1 & 2 (JD requirement analysis + experience mapping) no longer
+                // make their own network calls — the single /tailor request below does
+                // that extraction itself in the same completion, cutting this pipeline
+                // from 2 AI calls down to 1. These stay as brief UI checkpoints so the
+                // progress view still reads as distinct steps.
                 setCurrentStageIndex(0);
-                const analyzeRes = await fetch('/api/v1/resume/analyze-jd', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        ...getCustomKeyHeaders()
-                    },
-                    body: JSON.stringify({ jd }),
-                });
-
-                if (!analyzeRes.ok) throw new Error('Failed to extract target role keywords');
-                const analysisData = await analyzeRes.json();
+                await new Promise(resolve => setTimeout(resolve, 300));
                 if (isCancelled) return;
-                setAnalysis(analysisData);
                 setCompletedStages(prev => [...prev, 'analyzing']);
 
-                // Stage 2: Semantic Mapping & Baseline Score
                 setCurrentStageIndex(1);
-                try {
-                    const origText = resumeDataToPlainText(resumeData);
-                    const origScoreRes = await fetch('/api/v1/resume/score', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ resumeText: origText, jdKeywords: analysisData }),
-                    });
-                    if (origScoreRes.ok && !isCancelled) {
-                        setOriginalScore(await origScoreRes.json());
-                    }
-                } catch {
-                    // Non-critical baseline
-                }
-                if (isCancelled) return;
-                setCompletedStages(prev => [...prev, 'mapping']);
 
-                // Stage 3: Optimizing terminology & impact metrics
-                setCurrentStageIndex(2);
+                // Stage 3: the one real AI call — tailors the resume AND extracts JD
+                // keywords together (raw `jd` text in, no pre-extracted jdKeywords).
                 const generateRes = await fetch('/api/v1/resume/tailor', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         ...getCustomKeyHeaders()
                     },
-                    body: JSON.stringify({ resumeData, jdKeywords: analysisData, template, theme, tailorMode }),
+                    body: JSON.stringify({ resumeData, jd, template, theme, tailorMode }),
                 });
 
                 if (!generateRes.ok) throw new Error('Failed to tailor experience bullets');
                 const generatedData = await generateRes.json();
                 if (isCancelled) return;
-                setCompletedStages(prev => [...prev, 'optimizing']);
+                const extractedJdKeywords = generatedData.jdKeywords || null;
+                if (extractedJdKeywords) setAnalysis(extractedJdKeywords);
+                setCompletedStages(prev => [...prev, 'mapping', 'optimizing']);
 
                 // Stage 4: Checking for unsupported claims
                 setCurrentStageIndex(3);
@@ -179,21 +171,47 @@ export function Step3Processing() {
                 // Stage 5: Preparing your resume document
                 setCurrentStageIndex(4);
                 const docCode = generatedData.typstCode || '';
-                setGeneratedResume(generatedData.tailoredResume, docCode, generatedData.confidenceScore, generatedData.auditTrail);
+                setResumeData(generatedData.tailoredResume);
+                setGeneratedResume(
+                    generatedData.tailoredResume,
+                    docCode,
+                    generatedData.confidenceScore,
+                    generatedData.auditTrail,
+                    generatedData.atsAlignmentSummary
+                );
 
-                // Final score compute
-                try {
+                // Baseline (pre-tailor) and final (post-tailor) scores are both cheap,
+                // non-AI heuristic calls — run them together now that we have
+                // jdKeywords, instead of gating one behind a separate earlier AI call.
+                if (extractedJdKeywords) {
+                    const origText = resumeDataToPlainText(resumeData);
                     const tailoredText = resumeDataToPlainText(generatedData.tailoredResume);
-                    const tailScoreRes = await fetch('/api/v1/resume/score', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ resumeText: tailoredText, jdKeywords: analysisData }),
-                    });
-                    if (tailScoreRes.ok && !isCancelled) {
-                        setTailoredScore(await tailScoreRes.json());
+                    const [origScoreRes, tailScoreRes] = await Promise.allSettled([
+                        fetch('/api/v1/resume/score', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ resumeText: origText, jdKeywords: extractedJdKeywords }),
+                        }),
+                        fetch('/api/v1/resume/score', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                resumeData: generatedData.tailoredResume,
+                                resumeText: tailoredText,
+                                jdKeywords: extractedJdKeywords,
+                            }),
+                        }),
+                    ]);
+                    if (!isCancelled) {
+                        if (origScoreRes.status === 'fulfilled' && origScoreRes.value.ok) {
+                            setOriginalScore(await origScoreRes.value.json());
+                        }
+                        if (tailScoreRes.status === 'fulfilled' && tailScoreRes.value.ok) {
+                            setTailoredScore(await tailScoreRes.value.json());
+                        } else {
+                            console.warn('Scoring API did not return a usable score');
+                        }
                     }
-                } catch {
-                    // Non-critical
                 }
                 if (isCancelled) return;
                 setCompletedStages(prev => [...prev, 'preparing']);
@@ -214,7 +232,7 @@ export function Step3Processing() {
                 console.error('Pipeline error:', error);
                 const msg = error instanceof Error ? error.message : 'Unknown error during tailoring';
                 setErrorMessage(msg);
-                toast.error(msg);
+                notify.error('Optimization failed', msg);
                 trackEvent('tailoring_failed', { error: msg });
             }
         };
@@ -224,7 +242,7 @@ export function Step3Processing() {
         return () => {
             isCancelled = true;
         };
-    }, [jd, resumeData, template, theme, tailorMode, retryTrigger, router, setAnalysis, setGeneratedResume, setOriginalScore, setTailoredScore, setStep]);
+    }, [retryTrigger, router, setAnalysis, setGeneratedResume, setOriginalScore, setTailoredScore, setStep, setPreTailorSnapshot, setResumeData]);
 
     const activeStage = PIPELINE_STAGES[currentStageIndex];
 
@@ -273,7 +291,7 @@ export function Step3Processing() {
                                 transition={{ duration: 0.25 }}
                                 className="space-y-1.5"
                             >
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-muted/60 dark:bg-white/5 border border-border/60 dark:border-white/10 text-[10px] font-mono font-medium text-muted-foreground">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] font-mono font-medium text-muted-foreground">
                                     <span>STAGE {activeStage?.stepNumber} / 05</span>
                                     <span>•</span>
                                     <span className="text-primary font-semibold">{activeStage?.tag}</span>
@@ -294,7 +312,7 @@ export function Step3Processing() {
                 {/* Precision Progress Bar */}
                 {!errorMessage && (
                     <div className="space-y-2 pt-2">
-                        <div className="h-2 w-full rounded-full bg-muted/60 dark:bg-white/5 overflow-hidden relative border border-border/40 dark:border-white/10 p-0.5">
+                        <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden relative border border-border/40 p-0.5">
                             <motion.div
                                 className="h-full bg-gradient-to-r from-primary via-cyan-400 to-primary rounded-full shadow-[0_0_12px_rgba(56,189,248,0.5)]"
                                 initial={{ width: "15%" }}
@@ -331,10 +349,10 @@ export function Step3Processing() {
                                 key={stage.id}
                                 className={`flex items-center justify-between gap-3.5 rounded-xl px-3.5 py-2.5 transition-all text-xs border ${
                                     isCurrent
-                                        ? 'bg-primary/[0.08] dark:bg-primary/[0.12] border-primary/40 shadow-xs ring-1 ring-primary/25'
+                                        ? 'bg-primary/[0.08] border-primary/40 shadow-xs ring-1 ring-primary/25'
                                         : isDone
-                                            ? 'bg-emerald-500/[0.04] dark:bg-emerald-500/[0.05] border-emerald-500/20'
-                                            : 'bg-muted/10 dark:bg-white/[0.01] border-border/40 dark:border-white/5 opacity-40'
+                                            ? 'bg-emerald-500/[0.04] border-emerald-500/20'
+                                            : 'bg-muted/10 border-border/40 opacity-40'
                                 }`}
                             >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -344,7 +362,7 @@ export function Step3Processing() {
                                             ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400'
                                             : isCurrent
                                                 ? 'bg-primary/20 border border-primary/40 text-primary'
-                                                : 'bg-muted/40 dark:bg-white/5 border border-border/60 text-muted-foreground'
+                                                : 'bg-muted/40 border border-border/60 text-muted-foreground'
                                     }`}>
                                         {isDone ? (
                                             <Check className="h-4 w-4 stroke-[3]" />
@@ -402,7 +420,7 @@ export function Step3Processing() {
                             variant="outline"
                             size="sm"
                             onClick={() => setStep(2)}
-                            className="h-9 text-xs rounded-xl border-border/70 dark:border-white/10 gap-1.5"
+                            className="h-9 text-xs rounded-xl border-border gap-1.5"
                         >
                             Back to Details
                         </Button>

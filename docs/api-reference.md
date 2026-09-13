@@ -25,34 +25,35 @@ Compiles structured JSON resume data or raw Typst source markup into a native ve
 ```json
 {
   "resumeData": {
-    "personal": {
+    "personalInfo": {
       "name": "Jane Doe",
-      "headline": "Senior Distributed Systems Engineer",
-      "contact": {
-        "email": "jane@example.com",
-        "phone": "+1 (555) 019-2834",
-        "location": "San Francisco, CA",
-        "linkedin": "linkedin.com/in/janedoe",
-        "github": "github.com/janedoe",
-        "website": "janedoe.dev"
-      }
+      "title": "Senior Distributed Systems Engineer",
+      "email": "jane@example.com",
+      "phone": "+1 (555) 019-2834",
+      "location": "San Francisco, CA",
+      "linkedin": "linkedin.com/in/janedoe",
+      "github": "github.com/janedoe",
+      "portfolio": "janedoe.dev"
     },
     "summary": "Distributed systems engineer with 7+ years building high-throughput microservices...",
-    "experience": [...],
-    "education": [...],
-    "skills": [...],
-    "projects": [...]
+    "experience": [],
+    "education": [],
+    "skills": [],
+    "projects": []
   },
   "template": "modern",
-  "themeColor": "cobalt",
-  "typstSource": "..." // Optional: raw Typst markup override
+  "theme": "cobalt",
+  "typstCode": "..." // Optional: raw Typst markup override, skips resumeData->Typst generation
 }
 ```
 
 #### Supported Templates (`template`)
-`modern` | `classic` | `engineering` | `compact` | `two_column` | `ats_safe`
+52 templates across Classic/ATS-Optimized, Modern & Tech, and Executive &
+Advisory families — the authoritative list is `TemplateTypeSchema` in
+[`lib/resume-schema.ts`](../lib/resume-schema.ts) (e.g. `modern`, `classic`,
+`engineering`, `compact`, `two_column`, `ats_safe`, `terminal`, `executive`, `mono`, ...).
 
-#### Supported Themes (`themeColor`)
+#### Supported Themes (`theme`)
 `none` | `navy` | `cobalt` | `emerald` | `burgundy` | `teal` | `slate` | `black`
 
 #### Response
@@ -65,7 +66,9 @@ Compiles structured JSON resume data or raw Typst source markup into a native ve
 ## 2. Resume Parsing
 
 ### `POST /api/v1/resume/parse`
-Parses raw resume text extracted by the client-side `pdfjs-dist` parser into normalized, typed `ResumeData`.
+Parses raw resume text — extracted client-side via `lib/document-parser.ts`
+(PDF via `pdfjs-dist`, DOCX via `mammoth`, or plain text/markdown read
+directly) — into normalized, typed `ResumeData`.
 
 - **Runtime**: Edge / Node.js
 - **Rate Limit**: 10 requests / minute
@@ -84,42 +87,34 @@ Parses raw resume text extracted by the client-side `pdfjs-dist` parser into nor
 #### Request Body
 ```json
 {
-  "text": "Extracted text content from resume PDF..."
+  "extractedText": "Extracted text content from the resume file..."
 }
 ```
 
 #### Response
-```json
-{
-  "success": true,
-  "data": {
-    "personal": {
-      "name": "Jane Doe",
-      "headline": "Staff Software Engineer",
-      "contact": {
-        "email": "jane@example.com",
-        "phone": "+1 555-019-2834",
-        "location": "San Francisco, CA",
-        "linkedin": "linkedin.com/in/janedoe",
-        "github": "github.com/janedoe",
-        "website": "https://janedoe.dev"
-      }
-    },
-    "summary": "...",
-    "experience": [...],
-    "education": [...],
-    "skills": [...],
-    "projects": [...]
-  }
-}
+Returns the `ResumeData` object directly (not wrapped) — `personalInfo` (flat
+`name`/`title`/`tagline`/`location`/`phone`/`email`/`linkedin`/`github`/`portfolio`),
+`summary`, `experience`, `education`, `skills`, `projects`, plus optional
+sections (`certifications`, `achievements`, `internships`, etc.).
+
+If the model's output doesn't contain a real name, contact info, or any
+experience/education/skills entries — e.g. a scanned/image PDF with no
+extractable text, or every configured provider returning unusable output —
+this returns `422` with `{ "error": "Could not read this resume", "details": "..." }`
+instead of silently handing back a blank resume as a fake success.
 ```
 
 ---
 
 ## 3. Job Description Analysis
 
-### `POST /api/v1/resume/analyze-jd` & `POST /api/v1/jd/analyze`
-Extracts technical competencies, required qualifications, leadership markers, seniority indicators, and ATS keywords from a job posting. Both endpoints delegate to the unified `lib/jd-analysis.ts` engine.
+### `POST /api/v1/resume/analyze-jd`
+Extracts required/preferred skills, core responsibilities, industry buzzwords,
+and seniority level from a job posting, via `lib/jd-analysis.ts`. Used
+standalone by the ATS Checker; the Step 3 tailoring pipeline instead extracts
+this in the same completion as `/resume/tailor` (see below) to avoid a second
+AI call. (A duplicate `/api/v1/jd/analyze` route existed with zero callers —
+removed.)
 
 - **Rate Limit**: 20 requests / minute
 - **Timeout**: 45 seconds
@@ -133,26 +128,18 @@ Extracts technical competencies, required qualifications, leadership markers, se
 #### Request Body
 ```json
 {
-  "jobDescription": "We are seeking a Senior Backend Engineer proficient in Go, Kubernetes, and PostgreSQL to lead platform infrastructure..."
+  "jd": "We are seeking a Senior Backend Engineer proficient in Go, Kubernetes, and PostgreSQL to lead platform infrastructure..."
 }
 ```
 
 #### Response
 ```json
 {
-  "success": true,
-  "analysis": {
-    "roleTitle": "Senior Backend Engineer",
-    "company": "CloudScale Inc.",
-    "requiredSkills": ["Go", "Kubernetes", "PostgreSQL", "Distributed Systems"],
-    "preferredSkills": ["eBPF", "Kafka", "Terraform"],
-    "seniorityLevel": "Senior",
-    "coreResponsibilities": [
-      "Design high-throughput microservices in Go",
-      "Manage multi-cluster Kubernetes deployments"
-    ],
-    "atsKeywords": ["Go", "Kubernetes", "PostgreSQL", "Microservices", "Latency"]
-  }
+  "required_skills": ["Go", "Kubernetes", "PostgreSQL"],
+  "preferred_skills": ["eBPF", "Kafka", "Terraform"],
+  "responsibilities": ["Design high-throughput microservices in Go", "Manage multi-cluster Kubernetes deployments"],
+  "buzzwords": ["Microservices", "Distributed Systems"],
+  "seniority_level": "senior"
 }
 ```
 
@@ -169,83 +156,25 @@ Tailors experience bullets, projects, and summaries to match job descriptions (M
 #### Request Body
 ```json
 {
-  "resumeData": { ... },
-  "jobAnalysis": { ... }, // Optional in Mode 1 (optimize)
-  "mode": "tailor" | "optimize",
-  "options": {
-    "tone": "impact_driven",
-    "preserveMetrics": true,
-    "strictFactuality": true
-  }
+  "resumeData": { "...": "full ResumeData object" },
+  "jdKeywords": { "...": "AnalyzeJDResponse, optional — pre-extracted via /resume/analyze-jd" },
+  "jd": "raw job description text — optional, alternative to jdKeywords; the model extracts structured keywords itself in this same completion instead of requiring a separate call",
+  "tailorMode": "tailor" | "optimize",
+  "template": "modern",
+  "theme": "none"
 }
 ```
+`tailorMode: "optimize"` is 100% fact-preserving polish with no JD; `"tailor"`
+is aggressive JD alignment ("bend the wording, not the facts"). Pass either
+`jdKeywords` (already extracted) or raw `jd` text (extracted server-side) —
+never both is required.
 
 #### Response Body
-```json
-{
-  "success": true,
-  "tailoredResume": { ... },
-  "auditTrail": {
-    "bulletDiffs": [
-      {
-        "id": "diff-0",
-        "experienceId": "exp-1",
-        "bulletIndex": 0,
-        "company": "Tech Corp",
-        "role": "Senior Engineer",
-        "original": "Worked on microservices using Go and AWS ECS.",
-        "tailored": "Architected resilient Go microservices serving 45k QPS, containerized and deployed across AWS ECS clusters with 99.99% uptime.",
-        "keywordsInjected": ["Go", "microservices", "resilient", "AWS ECS", "uptime"],
-        "accepted": true
-      }
-    ],
-    "skillsRationale": [
-      {
-        "skill": "Go",
-        "category": "Backend",
-        "source": "direct",
-        "rationale": "Direct match for target backend microservices requirement; strengthened bullet action verbs."
-      },
-      {
-        "skill": "Kubernetes",
-        "category": "DevOps",
-        "source": "transferable",
-        "rationale": "Demonstrated expertise in Docker/ECS container orchestration directly transfers to required K8s control plane tooling."
-      }
-    ],
-    "jdEvidenceMap": [
-      {
-        "requirement": "Production experience with Go microservices",
-        "category": "required",
-        "evidenceBullets": [
-          "Architected resilient Go microservices serving 45k QPS..."
-        ],
-        "status": "fully_met"
-      }
-    ],
-    "scoreGapAnalysis": {
-      "currentScore": 92,
-      "maxPossibleScore": 100,
-      "explanation": "Resume matches 100% of required technical competencies and 4/5 core responsibilities. Missing Kafka streaming experience accounts for remaining 8-point gap.",
-      "remainingGaps": [
-        {
-          "requirement": "Apache Kafka event streaming",
-          "category": "preferred",
-          "reason": "Job description prefers Kafka experience, but applicant background emphasizes Redis and RabbitMQ messaging.",
-          "scoreImpact": -8,
-          "recommendation": "If you have hands-on experience with Kafka or distributed event streaming, add a project bullet highlighting partition management or throughput metrics."
-        }
-      ]
-    },
-    "evidenceSafetyVerdict": {
-      "passed": true,
-      "fabricationDetected": false,
-      "unsupportedClaims": [],
-      "verificationNote": "Zero unverified employers, degrees, or dates detected. All enhancements derived from existing source context."
-    }
-  }
-}
-```
+See [`docs/ai-pipeline.md`](./ai-pipeline.md#3-prompt-architecture--contracts)
+for the full, current `TailorResponse` shape (`tailoredResume`, `typstCode`,
+`confidenceScore`, `atsAlignmentSummary`, `factCheckReport`, `auditTrail` with
+`bulletChanges`/`jdAlignmentMap`/`safetyIndicator`) — kept in one place to
+avoid this reference drifting out of sync with the schema again.
 
 ---
 
@@ -257,72 +186,60 @@ Calculates a deterministic ATS score evaluating hard skills, core responsibiliti
 - **Runtime**: Edge Runtime (Sub-50ms)
 - **Rate Limit**: 60 requests / minute
 
+Purely deterministic string/keyword matching against `jdKeywords` — no AI call,
+which is why this can run on the Edge runtime in well under 50ms and why it's
+called twice per Step 3 tailoring run (baseline + tailored) at effectively no
+cost.
+
 #### Request Body
 ```json
 {
-  "resumeData": { ... },
-  "jobAnalysis": { ... }
+  "resumeData": { "...": "optional — either this or resumeText" },
+  "resumeText": "plain-text resume — optional, either this or resumeData",
+  "jdKeywords": { "required_skills": [], "preferred_skills": [], "responsibilities": [], "buzzwords": [] }
 }
 ```
 
 #### Response Body
 ```json
 {
-  "overallScore": 94,
-  "categoryScores": {
-    "hardSkills": 96,
-    "coreResponsibilities": 92,
-    "keywordDensity": 95,
-    "formattingCompliance": 100
-  },
-  "matchedKeywords": ["Go", "Kubernetes", "PostgreSQL", "Docker", "REST"],
-  "missingKeywords": ["Kafka"],
-  "partiallyMatchedKeywords": ["Distributed Systems"],
-  "breakdown": [
-    { "category": "Hard Skills", "score": 96, "weight": 0.40 },
-    { "category": "Core Responsibilities", "score": 92, "weight": 0.30 },
-    { "category": "Keyword Density", "score": 95, "weight": 0.15 },
-    { "category": "Formatting & Structure", "score": 100, "weight": 0.15 }
-  ],
-  "gapAnalysis": {
-    "currentScore": 94,
-    "explanation": "High alignment across core competencies. Gap is driven by optional secondary requirements.",
-    "remainingGaps": [
-      {
-        "requirement": "Kafka",
-        "category": "preferred",
-        "reason": "Not found in technical skills matrix or project bullets.",
-        "scoreImpact": -6
-      }
-    ]
-  },
-  "densityInsights": {
-    "totalWords": 482,
-    "keywordRatio": 0.082,
-    "verdict": "Optimal (7% - 11% target density)"
+  "score": 0.87,
+  "isCalculated": true,
+  "breakdown": {
+    "required_skills": { "matched": ["Go", "Kubernetes"], "missing": ["Kafka"], "ratio": 0.8, "weightPercent": 40, "weightedContribution": 0.32 },
+    "preferred_skills": { "matched": [], "missing": ["Terraform"], "ratio": 0, "weightPercent": 20, "weightedContribution": 0 },
+    "responsibilities": { "matched": ["..."], "missing": [], "ratio": 1, "weightPercent": 25, "weightedContribution": 0.25 },
+    "buzzwords": { "matched": ["CI/CD"], "missing": [], "ratio": 1, "weightPercent": 15, "weightedContribution": 0.15 }
   }
 }
 ```
+`isCalculated: false` (with `score: 0`) means no JD keywords were provided at
+all — the UI shows an explicit "no target job description" state rather than
+a fabricated 0% or 100% score. Weights are renormalized across only the
+categories that actually have keywords, so an empty `preferred_skills` array
+never silently caps the achievable score.
 
 ---
 
 ## 6. User Feedback Service
 
 ### `POST /api/v1/feedback`
-Submits user bug reports, feature suggestions, or general feedback. Dispatches transactional email via Resend to the project owner (`connect@sahilbansal.net`) and records the feedback record.
-
-- **Rate Limit**: 5 requests / minute
-- **Timeout**: 10 seconds
+Submits user bug reports, feature suggestions, or general feedback. Best-effort
+writes to a Supabase `feedback` table (if configured) and a local JSON file
+(dev only — silently skipped on read-only serverless filesystems), then
+dispatches a transactional email via Resend to the project owner. No
+authentication or rate limiting — anyone can submit.
 
 #### Request Body
 ```json
 {
+  "name": "Optional display name",
+  "email": "user@example.com",
+  "company": "Optional",
+  "rating": 5,
   "type": "issue" | "feature" | "general",
-  "message": "Encountered a minor margin overflow on the Two-Column template when adding 6 bullet points...",
-  "email": "user@example.com", // Optional
-  "rating": 5, // Optional: 1-5 rating
-  "page": "/builder",
-  "userAgent": "Mozilla/5.0..."
+  "message": "Required — the only mandatory field",
+  "page": "/builder"
 }
 ```
 
@@ -330,9 +247,8 @@ Submits user bug reports, feature suggestions, or general feedback. Dispatches t
 ```json
 {
   "success": true,
-  "emailSent": true,
-  "id": "fbk_1725638291000",
-  "message": "Feedback received successfully. Thank you!"
+  "delivered": true,
+  "message": "Thank you! Your feedback has been received."
 }
 ```
 
@@ -341,18 +257,19 @@ Submits user bug reports, feature suggestions, or general feedback. Dispatches t
 ## 7. Platform Diagnostics & Health
 
 ### `GET /api/v1/stats`
-Returns privacy-safe aggregated platform compilation counts, engine version, and uptime telemetry.
-
-- **Rate Limit**: 60 requests / minute
-- **Cache**: `s-maxage=60, stale-while-revalidate=300`
+Returns privacy-safe aggregated platform counters shown on the homepage (user
+count, resumes compiled, bullets tailored). Reads Redis first (if configured),
+falls back to Supabase `platform_stats`/`user_resumes`, then a local JSON file
+— takes the max across all three so a metric never regresses if one source
+lags. Explicitly `no-store` (not cached) — no auth required.
 
 #### Response
 ```json
 {
-  "totalCompiles": 18450,
-  "averageCompileMs": 26.8,
+  "usersCount": 1240,
+  "resumesCompiled": 18450,
+  "bulletsTailored": 9310,
   "activeTemplates": 48,
-  "p95CompileMs": 41.2,
-  "engineVersion": "typst-0.12.0"
+  "factCheckAccuracy": 100
 }
 ```

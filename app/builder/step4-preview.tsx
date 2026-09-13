@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { PdfPreview } from '@/components/pdf-preview';
 import { ResumeForm } from '@/components/resume-form';
 import { TemplateSelector } from '@/components/template-selector';
+import { SectionOrderEditor } from '@/components/section-order-editor';
 import { useAuth } from '@/components/auth-provider';
 import { saveLocalResume, SavedResume } from '@/lib/user-resumes-store';
 import { trackEvent } from '@/lib/analytics';
 import { formatSaveStatus, ProjectSaveStatus } from '@/lib/project-store';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 import {
     ArrowLeft,
@@ -31,25 +33,33 @@ import {
     Copy,
     CheckCheck,
     LayoutGrid,
+    Loader2,
+    Edit3,
+    BarChart3,
+    Layers,
+    HelpCircle,
+    AlertCircle,
+    ChevronDown,
 } from 'lucide-react';
 
-
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { generateTypst } from '@/lib/typst-generator';
 import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 import { cn } from '@/lib/utils';
-import type { MatchCategoryKey, MatchBreakdownEntry } from '@/lib/match-score-types';
+import type { MatchCategoryKey, MatchBreakdownEntry, MatchScoreResponse } from '@/lib/match-score-types';
 import { getTemplateFitCopy, getTemplateFitLevel } from '@/lib/typst-layout';
 import { AnimatedCounter } from '@/components/animated-counter';
 import { VersionHistoryDrawer } from '@/components/version-history-drawer';
 import { ColorPaletteSelector } from '@/components/color-palette-selector';
-import { ScoreGapAnalysis } from '@/components/builder/score-gap-analysis';
+import { ScoreGapAnalysis, type ScoreStatus } from '@/components/builder/score-gap-analysis';
 import { SkillsRationaleList } from '@/components/builder/skills-rationale-list';
 import { JdEvidenceMap } from '@/components/builder/jd-evidence-map';
 import { BulletDiffViewer } from '@/components/builder/bullet-diff-viewer';
-
-
+import { CompactResumeEditor } from '@/components/compact-resume-editor';
+import { resumeDataToPlainText } from '@/lib/resume-plaintext';
+import { exportResume, ExportFormatType } from '@/lib/resume-export';
 
 const CATEGORY_LABEL: Record<MatchCategoryKey, string> = {
     required_skills: 'Required Skills',
@@ -93,11 +103,9 @@ function BreakdownBar({
                     )}
                 </div>
             </div>
-
             <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
                 <div className={cn('h-full rounded-full transition-all duration-500', colorClass)} style={{ width: `${after.ratio}%` }} />
             </div>
-
             <div className="flex justify-between text-[10px] text-muted-foreground pt-0.5">
                 <span>Weight: {weight}% of total score</span>
                 <span>{after.matched?.length || 0} matched in resume</span>
@@ -109,32 +117,67 @@ function BreakdownBar({
 export function Step4Preview() {
     const setStep = useAppStore((s) => s.setStep);
     const resumeData = useAppStore((s) => s.resumeData);
+    const preTailorSnapshot = useAppStore((s) => s.preTailorSnapshot);
+    const setBulletText = useAppStore((s) => s.setBulletText);
     const generatedResume = useAppStore((s) => s.generatedResume);
     const setGeneratedResume = useAppStore((s) => s.setGeneratedResume);
     const template = useAppStore((s) => s.template);
     const theme = useAppStore((s) => s.theme);
     const originalScore = useAppStore((s) => s.originalScore);
     const tailoredScore = useAppStore((s) => s.tailoredScore);
+    const setTailoredScore = useAppStore((s) => s.setTailoredScore);
     const jdAnalysis = useAppStore((s) => s.jdAnalysis);
+    const editorMode = useAppStore((s) => s.editorMode);
+    const setEditorMode = useAppStore((s) => s.setEditorMode);
 
     const { user } = useAuth();
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'analysis' | 'diff' | 'keywords'>('analysis');
-    const [sheetOpen, setSheetOpen] = useState(false);
+
+    // Right-panel tab state — 'analysis' | 'diff' | 'keywords' | 'edit'
+    const [activeTab, setActiveTab] = useState<'analysis' | 'diff' | 'keywords' | 'edit'>('analysis');
     const [designSheetOpen, setDesignSheetOpen] = useState(false);
     const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
 
+    // Save state
+    const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<ProjectSaveStatus>('idle');
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
-    // AI Bullet changes tracking state (allows reverting/keeping individual bullets)
+    // Download & Export state
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [exportMenuOpen, setExportMenuOpen] = useState(false);
+    const [exportingFormat, setExportingFormat] = useState<ExportFormatType | null>(null);
+    const exportMenuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+                setExportMenuOpen(false);
+            }
+        };
+        if (exportMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [exportMenuOpen]);
+
+    // Bullet diff tracking — reverting/re-accepting a bullet here actually rewrites
+    // the canonical resumeData (via setBulletText), not just this tab's own display,
+    // so the exported/saved resume reflects what the diff viewer shows.
     const [revertedBullets, setRevertedBullets] = useState<Record<string, boolean>>({});
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-    const handleToggleRevert = useCallback((idx: number) => {
-        setRevertedBullets(prev => ({ ...prev, [idx]: !prev[idx] }));
-    }, []);
+    const handleToggleRevert = useCallback((item: { index: number; original: string; tailored: string }) => {
+        setRevertedBullets((prev) => {
+            const next = !prev[item.index];
+            const expIdx = Math.floor(item.index / 100);
+            const bulletIdx = item.index % 100;
+            setBulletText(expIdx, bulletIdx, next ? item.original : item.tailored);
+            return { ...prev, [item.index]: next };
+        });
+    }, [setBulletText]);
 
     const handleCopyBullet = (text: string, index: number) => {
         navigator.clipboard.writeText(text);
@@ -145,43 +188,140 @@ export function Step4Preview() {
 
     const confidenceScore = generatedResume?.confidenceScore || 0;
 
-    // Analytics: Log when review is reached
+    // Analytics
     useEffect(() => {
         trackEvent('review_reached', { template, theme, score: afterScoreNumber });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Synchronize Typst generation on template/theme changes
+    const jd = useAppStore((s) => s.jd);
+
+    const [scoreStatus, setScoreStatus] = useState<ScoreStatus>(() => {
+        const currentJd = useAppStore.getState().jd;
+        const currentAnalysis = useAppStore.getState().jdAnalysis;
+        if (!currentJd && !currentAnalysis) return 'no_jd';
+        const ts = useAppStore.getState().tailoredScore;
+        if (ts?.isCalculated) return 'calculated';
+        return 'calculating';
+    });
+
+    // Re-generate Typst only when typst actually differs
     useEffect(() => {
         if (!resumeData) return;
         const prev = useAppStore.getState().generatedResume;
         const newTypst = generateTypst(resumeData, template, theme);
-        setGeneratedResume(resumeData, newTypst, prev?.confidenceScore ?? 0, prev?.auditTrail);
+        if (newTypst !== prev?.typst) {
+            setGeneratedResume(resumeData, newTypst, prev?.confidenceScore ?? 0, prev?.auditTrail, prev?.atsAlignmentSummary);
+        }
         trackEvent('template_selected', { template, theme });
     }, [template, theme, resumeData, setGeneratedResume]);
 
-    const handleSheetOpenChange = (open: boolean) => {
-        if (!open && resumeData) {
-            const newTypst = generateTypst(resumeData, template, theme);
-            setGeneratedResume(resumeData, newTypst, confidenceScore, generatedResume?.auditTrail);
+    // Recalculate score function
+    const recalculateScore = useCallback(async () => {
+        const state = useAppStore.getState();
+        const currentResume = state.resumeData;
+        const currentJd = state.jd;
+        const currentJdAnalysis = state.jdAnalysis;
+
+        if (!currentResume) return;
+        if (!currentJd && !currentJdAnalysis) {
+            setScoreStatus('no_jd');
+            return;
         }
-        setSheetOpen(open);
-    };
+
+        setScoreStatus('calculating');
+
+        try {
+            const tailoredText = resumeDataToPlainText(currentResume);
+            const res = await fetch('/api/v1/resume/score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    resumeData: currentResume,
+                    resumeText: tailoredText,
+                    jdKeywords: currentJdAnalysis || {
+                        required_skills: [],
+                        preferred_skills: [],
+                        responsibilities: [],
+                        buzzwords: [],
+                    },
+                }),
+            });
+
+            if (res.ok) {
+                const data: MatchScoreResponse = await res.json();
+                setTailoredScore(data);
+                setScoreStatus(data.isCalculated ? 'calculated' : 'no_jd');
+            } else {
+                console.warn('Scoring endpoint returned non-OK:', res.status);
+                setScoreStatus('error');
+            }
+        } catch (err) {
+            console.error('Score calculation error:', err);
+            setScoreStatus('error');
+        }
+    }, [setTailoredScore]);
+
+    // Recalculate on manual edit
+    const initialMountRef = useRef(true);
+    useEffect(() => {
+        if (initialMountRef.current) {
+            initialMountRef.current = false;
+            const hasCorruptedScore =
+                tailoredScore?.gapAnalysis?.scoreReason?.includes('[object Object]') ||
+                tailoredScore?.gapAnalysis?.remainingGaps?.some(g => String(g?.missingItem || '').includes('[object Object]'));
+
+            if (tailoredScore?.isCalculated && !hasCorruptedScore) {
+                setScoreStatus('calculated');
+            } else if (!jd && !jdAnalysis) {
+                setScoreStatus('no_jd');
+            } else {
+                recalculateScore();
+            }
+            return;
+        }
+
+        if (!jd && !jdAnalysis) {
+            setScoreStatus('no_jd');
+            return;
+        }
+
+        setScoreStatus('calculating');
+        const timer = setTimeout(() => {
+            recalculateScore();
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [resumeData, jd, jdAnalysis, recalculateScore]);
+
+    // Sync editorMode with tab
+    useEffect(() => {
+        if (activeTab === 'edit') setEditorMode('edit');
+        else setEditorMode('optimize');
+    }, [activeTab, setEditorMode]);
 
     const beforeScore = originalScore?.score ?? 0;
-    const rawAfterScore = tailoredScore?.score ?? confidenceScore;
+    const rawAfterScore = tailoredScore?.score ?? (scoreStatus === 'calculated' ? confidenceScore : 0);
     const afterScoreNumber = Math.round(rawAfterScore * 100);
     const improvement = Math.round((rawAfterScore - beforeScore) * 100);
 
-    const currentData = useMemo(() => generatedResume?.data ?? resumeData, [generatedResume?.data, resumeData]);
-    const templateFit = useMemo(() => currentData ? getTemplateFitLevel(currentData, template) : null, [currentData, template]);
-    const templateFitCopy = useMemo(() => templateFit ? getTemplateFitCopy(templateFit) : null, [templateFit]);
+    const currentData = useMemo(
+        () => generatedResume?.data ?? resumeData,
+        [generatedResume?.data, resumeData]
+    );
+    const templateFit = useMemo(
+        () => (currentData ? getTemplateFitLevel(currentData, template) : null),
+        [currentData, template]
+    );
+    const templateFitCopy = useMemo(
+        () => (templateFit ? getTemplateFitCopy(templateFit) : null),
+        [templateFit]
+    );
 
-    // Save resume to dashboard with complete state snapshot ONLY when user explicitly clicks Save
+    // ── Save to dashboard ──────────────────────────────────────────────────
     const handleSaveToDashboard = async () => {
         if (!currentData) return;
 
-        // Strictly require authentication to save resumes to account history
         if (!user) {
             toast.error('Please sign in to save resumes to your account.', {
                 action: {
@@ -197,15 +337,18 @@ export function Step4Preview() {
 
         const currentJd = useAppStore.getState().jd;
         const resumeId = `res-${Date.now()}`;
-        const targetTitle = jdAnalysis?.seniority_level ? `${jdAnalysis.seniority_level} Professional` : 'Executive Profile';
+        const targetTitle = jdAnalysis?.seniority_level
+            ? `${jdAnalysis.seniority_level} Professional`
+            : 'Executive Profile';
         const targetCompany = '';
         const candidateName = currentData?.personalInfo.name?.trim();
         const candidateRole = currentData?.personalInfo.title?.trim();
-        const title = candidateRole && candidateName
-            ? `${candidateName} — ${candidateRole}`
-            : candidateName
-                ? `${candidateName} — ${targetTitle}`
-                : targetTitle;
+        const title =
+            candidateRole && candidateName
+                ? `${candidateName} — ${candidateRole}`
+                : candidateName
+                    ? `${candidateName} — ${targetTitle}`
+                    : targetTitle;
         const nowIso = new Date().toISOString();
 
         const savedItem: SavedResume = {
@@ -229,7 +372,6 @@ export function Step4Preview() {
             updatedAt: nowIso,
         };
 
-        // Save strictly for this authenticated user
         saveLocalResume(savedItem, user.id);
 
         try {
@@ -249,8 +391,8 @@ export function Step4Preview() {
                             tailoredScore,
                             template,
                             theme,
-                            lastStep: 4
-                        }
+                            lastStep: 4,
+                        },
                     },
                     typstCode: generatedResume?.typst || '',
                     atsScore: afterScoreNumber,
@@ -258,23 +400,24 @@ export function Step4Preview() {
                     targetJobCompany: targetCompany,
                 }),
             });
+            setSaveStatus('saved');
+            setLastSavedAt(nowIso);
+            notify.saved('Saved to My Resumes');
         } catch {
-            // local fallback handled
+            setSaveStatus('error');
+            notify.error("Couldn't save changes", 'Local backup preserved', {
+                retry: handleSaveToDashboard,
+            });
+        } finally {
+            setIsSaving(false);
+            trackEvent('project_saved', { template, theme, score: afterScoreNumber });
         }
-
-        setIsSaving(false);
-        setSaveStatus('saved');
-        setLastSavedAt(nowIso);
-        toast.success('Resume saved to My Resumes!');
-        trackEvent('project_saved', { template, theme, score: afterScoreNumber });
     };
 
-
-
-    // Download PDF directly
-    const handleDownloadPdf = async () => {
+    // ── Multi-Format Resume Export ─────────────────────────────────────────
+    const handleExportFormat = async (fmt: ExportFormatType) => {
         if (!user) {
-            toast.error('Please sign in to download your tailored resume.', {
+            notify.error('Sign in required', 'Please sign in to download your tailored resume', {
                 action: {
                     label: 'Sign In',
                     onClick: () => router.push('/login?redirect=/builder'),
@@ -282,135 +425,76 @@ export function Step4Preview() {
             });
             return;
         }
-        trackEvent('pdf_downloaded', { template, theme });
-        const toastId = toast.loading('Compiling pixel-perfect PDF...');
+
+        if (!currentData) {
+            notify.error('No resume data', 'Please build or select a resume first');
+            return;
+        }
+
+        setIsDownloading(true);
+        setExportingFormat(fmt);
 
         try {
-            const res = await fetch('/api/v1/resume/compile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    resumeData: currentData,
-                    template,
-                    theme,
-                    typstCode: generatedResume?.typst,
-                }),
+            await exportResume({
+                resumeData: currentData,
+                format: fmt,
+                template,
+                theme: { color: theme },
+                typstCode: generatedResume?.typst,
+                customFilename: `${(currentData.personalInfo?.name || 'Resume').toLowerCase().replace(/\s+/g, '-')}-tailored`,
             });
-            if (!res.ok) throw new Error('Compile failed');
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const name = (currentData?.personalInfo.name || 'Resume').replace(/[^a-z0-9_-]/gi, '_');
-            a.download = `${name}_Tailored.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            toast.success('Downloaded ATS-safe PDF', { id: toastId });
-        } catch {
-            toast.error('Download failed', { id: toastId });
+            trackEvent('resume_exported', { format: fmt, template, theme });
+        } finally {
+            setIsDownloading(false);
+            setExportingFormat(null);
+            setExportMenuOpen(false);
         }
     };
 
-    // Download .typ source directly
-    const handleDownloadSource = () => {
-        if (!user) {
-            toast.error('Please sign in to export markup source.', {
-                action: {
-                    label: 'Sign In',
-                    onClick: () => router.push('/login?redirect=/builder'),
-                },
-            });
-            return;
-        }
-        trackEvent('source_exported', { template });
-        const typCode = generatedResume?.typst || '';
+    const handleDownloadPdf = () => handleExportFormat('pdf');
+    const handleDownloadSource = () => handleExportFormat('typ');
 
-        if (!typCode) {
-            toast.error('Source code not ready yet');
-            return;
-        }
-        const blob = new Blob([typCode], { type: 'text/plain;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'resume.typ';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        toast.success('Downloaded markup source');
-    };
-
-    // Collect explainable bullets (Before vs After comparison for EVERY changed bullet)
+    // ── Explainable bullet diffs ───────────────────────────────────────────
+    // Built from the server's auditTrail.bulletChanges — a stable snapshot of what
+    // actually changed, captured once at generation time. This is deliberately NOT
+    // derived by re-comparing currentData against resumeData on every render: once
+    // preTailorSnapshot and currentData were decoupled (so Step 4 could show a real
+    // before/after), a live positional diff would also make entries disappear the
+    // moment a bullet was reverted back to its original text.
     const explainableBullets = useMemo(() => {
-        if (!currentData?.experience) return [];
-        const auditBulletMap = new Map<string, any>();
-        if (generatedResume?.auditTrail?.bulletChanges) {
-            generatedResume.auditTrail.bulletChanges.forEach((bc: any) => {
-                auditBulletMap.set(bc.original, bc);
-            });
-        }
+        const changes = generatedResume?.auditTrail?.bulletChanges;
+        if (!changes?.length || !preTailorSnapshot?.experience) return [];
 
-        const list: {
-            role: string;
-            company: string;
-            original: string;
-            tailored: string;
-            index: number;
-            reason?: string;
-            changeType?: string;
-            evidenceSafety?: string;
-        }[] = [];
-        
-        currentData.experience.forEach((exp, expIdx) => {
-            const originalExp = resumeData?.experience?.[expIdx];
-            exp.bullets.forEach((bullet, bIdx) => {
-                const origBullet = originalExp?.bullets?.[bIdx] || bullet;
-                const audit = auditBulletMap.get(origBullet);
-
-                // Include if changed or if in audit trail
-                if (origBullet !== bullet || audit) {
-                    list.push({
-                        role: exp.title,
-                        company: exp.company,
-                        original: origBullet,
-                        tailored: bullet,
-                        index: expIdx * 100 + bIdx,
-                        reason: audit?.reason || 'Aligned terminology with target JD responsibility and metric outcomes.',
-                        changeType: audit?.changeType || 'jd_alignment',
-                        evidenceSafety: audit?.evidenceSafety || '100% verified against original candidate responsibilities.',
-                    });
-                }
-            });
-        });
-
-        // If no differences found yet (e.g. fresh load without changes), provide top experience bullets for inspection
-        if (list.length === 0 && currentData.experience[0]) {
-            currentData.experience.forEach((exp, expIdx) => {
-                exp.bullets.forEach((b, bIdx) => {
-                    list.push({
-                        role: exp.title,
-                        company: exp.company,
-                        original: b,
-                        tailored: b,
-                        index: expIdx * 100 + bIdx,
-                        reason: 'Verified candidate achievement bullet.',
-                        changeType: 'action_verb',
-                        evidenceSafety: '100% verified against source resume history.',
-                    });
+        return changes
+            .map((bc) => {
+                let expIdx = -1;
+                let bIdx = -1;
+                preTailorSnapshot.experience!.some((exp, ei) => {
+                    if (exp.title !== bc.role || exp.company !== bc.company) return false;
+                    const found = exp.bullets.findIndex((b) => b === bc.original);
+                    if (found === -1) return false;
+                    expIdx = ei;
+                    bIdx = found;
+                    return true;
                 });
-            });
-        }
-
-        return list;
-    }, [currentData, resumeData, generatedResume]);
+                return {
+                    role: bc.role,
+                    company: bc.company,
+                    original: bc.original,
+                    tailored: bc.tailored,
+                    index: expIdx * 100 + bIdx,
+                    reason: bc.reason,
+                    changeType: bc.changeType,
+                    evidenceSafety: bc.evidenceSafety,
+                };
+            })
+            .filter((item) => item.index >= 0);
+    }, [generatedResume?.auditTrail?.bulletChanges, preTailorSnapshot]);
 
     return (
         <div className="space-y-4">
-            {/* Unified Workspace Action Bar (Single Bar - No Duplicates) */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3.5 sm:p-5 glass-card shadow-lg">
+            {/* ── Unified Action Bar ── */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3.5 sm:p-5 glass-card shadow-lg relative z-20">
                 <div className="flex items-center gap-2.5 sm:gap-3.5">
                     <Button
                         variant="ghost"
@@ -422,14 +506,19 @@ export function Step4Preview() {
                         <span className="hidden sm:inline font-medium">Edit Experience</span>
                     </Button>
 
-                    <div className="h-5 w-[1px] bg-border/60 dark:bg-white/10 hidden sm:block" />
+                    <div className="h-5 w-[1px] bg-border hidden sm:block" />
 
                     <div>
                         <div className="flex items-center gap-2">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                                 Step 04 • Studio
                             </span>
-                            {templateFitCopy && (
+                            {editorMode === 'edit' && (
+                                <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-semibold hidden md:inline">
+                                    Manual Edit Mode
+                                </span>
+                            )}
+                            {templateFitCopy && editorMode !== 'edit' && (
                                 <span className="rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-semibold hidden md:inline">
                                     {templateFitCopy.label}
                                 </span>
@@ -447,8 +536,25 @@ export function Step4Preview() {
                                 <>
                                     <span>•</span>
                                     <span className="inline-flex items-center gap-1.5 font-medium">
-                                        <span className={cn("h-1.5 w-1.5 rounded-full", saveStatus === 'saving' ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
-                                        <span className={saveStatus === 'saving' ? "text-amber-500" : "text-muted-foreground"}>
+                                        <span
+                                            className={cn(
+                                                'h-1.5 w-1.5 rounded-full',
+                                                saveStatus === 'saving'
+                                                    ? 'bg-amber-500 animate-pulse'
+                                                    : saveStatus === 'error'
+                                                        ? 'bg-rose-500'
+                                                        : 'bg-emerald-500'
+                                            )}
+                                        />
+                                        <span
+                                            className={cn(
+                                                saveStatus === 'saving'
+                                                    ? 'text-amber-500'
+                                                    : saveStatus === 'error'
+                                                        ? 'text-rose-500'
+                                                        : 'text-muted-foreground'
+                                            )}
+                                        >
                                             {formatSaveStatus(lastSavedAt, saveStatus)}
                                         </span>
                                     </span>
@@ -463,86 +569,178 @@ export function Step4Preview() {
                     </div>
                 </div>
 
-                {/* 1-Click Action Cluster */}
+                {/* Action Cluster */}
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* 1-Click Template Selector Trigger */}
+                    {/* Templates */}
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setDesignSheetOpen(true)}
-                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 hover:border-primary/50 gap-1.5 cursor-pointer shadow-xs transition-all"
+                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border bg-background/50 hover:bg-muted/40 hover:border-primary/50 gap-1.5 cursor-pointer shadow-xs transition-all"
                     >
                         <LayoutGrid className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                         <span>Templates</span>
                     </Button>
 
-                    {/* Edit Form Sheet Trigger */}
-                    <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 gap-1.5 cursor-pointer shadow-xs transition-all">
-                                <PenLine className="h-3.5 w-3.5" strokeWidth={2} />
-                                <span>Edit Fields</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right" className="w-full max-w-[400px] sm:max-w-[540px] overflow-y-auto border-border/70 dark:border-white/10 bg-background/95 dark:bg-[#0e1014]/95 backdrop-blur-xl">
-                            <SheetHeader className="mb-6">
-                                <SheetTitle className="font-display font-bold">Edit Structured Details</SheetTitle>
-                                <SheetDescription className="text-xs">Direct edits immediately re-render in the compiled resume.</SheetDescription>
-                            </SheetHeader>
-                            <ResumeForm />
-                        </SheetContent>
-                    </Sheet>
+                    {/* Edit Resume tab switcher */}
+                    <Button
+                        variant={activeTab === 'edit' ? 'secondary' : 'outline'}
+                        size="sm"
+                        onClick={() => setActiveTab(activeTab === 'edit' ? 'analysis' : 'edit')}
+                        className={cn(
+                            'h-9 px-3 rounded-xl text-xs font-semibold gap-1.5 cursor-pointer shadow-xs transition-all',
+                            activeTab === 'edit'
+                                ? 'border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                                : 'border-border bg-background/50 hover:bg-muted/40'
+                        )}
+                        title="Switch to manual edit mode"
+                    >
+                        <Edit3 className="h-3.5 w-3.5" strokeWidth={2} />
+                        <span>{activeTab === 'edit' ? 'Exit Edit' : 'Edit Resume'}</span>
+                    </Button>
 
                     {/* Version History */}
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setHistoryDrawerOpen(true)}
-                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 gap-1.5 hidden sm:flex cursor-pointer shadow-xs transition-all"
+                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border bg-background/50 hover:bg-muted/40 gap-1.5 hidden sm:flex cursor-pointer shadow-xs transition-all"
                         title="Snapshot timeline & rollback"
                     >
                         <History className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                         <span>History</span>
                     </Button>
 
-                    {/* Save to Dashboard (Explicit user click only) */}
+                    {/* Save */}
                     <Button
                         variant={saveStatus === 'saved' ? 'secondary' : 'outline'}
                         size="sm"
                         onClick={handleSaveToDashboard}
                         disabled={isSaving}
                         className={cn(
-                            "h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:border-primary/50 hover:bg-muted/40 gap-1.5 cursor-pointer transition-all shadow-xs",
-                            saveStatus === 'saved' && "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                            'h-9 px-3 rounded-xl text-xs font-semibold border-border bg-background/50 hover:border-primary/50 hover:bg-muted/40 gap-1.5 cursor-pointer transition-all shadow-xs',
+                            saveStatus === 'saved' && 'border-emerald-500/30 text-emerald-500 bg-emerald-500/10',
+                            saveStatus === 'error' && 'border-rose-500/30 text-rose-500 bg-rose-500/10'
                         )}
                         title="Save this tailored resume to My Resumes"
                     >
-                        <Bookmark className={cn("h-3.5 w-3.5", saveStatus === 'saved' ? "text-emerald-500 fill-emerald-500/30" : "text-primary")} strokeWidth={2} />
-                        <span>{isSaving ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Save Resume'}</span>
+                        {isSaving ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Bookmark
+                                className={cn(
+                                    'h-3.5 w-3.5',
+                                    saveStatus === 'saved' ? 'text-emerald-500 fill-emerald-500/30' : 'text-primary'
+                                )}
+                                strokeWidth={2}
+                            />
+                        )}
+                        <span>
+                            {isSaving ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : saveStatus === 'error' ? 'Retry Save' : 'Save Resume'}
+                        </span>
                     </Button>
 
-                    {/* Export Markup */}
+                    {/* Export Source */}
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={handleDownloadSource}
-                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border/70 dark:border-white/10 bg-background/50 hover:bg-muted/40 gap-1.5 hidden md:flex cursor-pointer shadow-xs transition-all"
+                        className="h-9 px-3 rounded-xl text-xs font-semibold border-border bg-background/50 hover:bg-muted/40 gap-1.5 hidden md:flex cursor-pointer shadow-xs transition-all"
                         title="Download markup source (.typ)"
                     >
                         <FileCode2 className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                         <span>Source</span>
                     </Button>
 
-                    {/* Download PDF */}
-                    <Button
-                        size="sm"
-                        onClick={handleDownloadPdf}
-                        className="h-9 px-3 sm:px-4 rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 hover:shadow-primary/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                        <Download className="h-3.5 w-3.5" strokeWidth={2} />
-                        <span className="hidden sm:inline">Download PDF</span>
-                        <span className="sm:hidden">PDF</span>
-                    </Button>
+                    {/* Multi-Format Export Split Button */}
+                    <div ref={exportMenuRef} className="relative inline-flex items-center rounded-xl shadow-xs">
+                        <Button
+                            size="sm"
+                            onClick={() => handleExportFormat('pdf')}
+                            disabled={isDownloading}
+                            className="h-9 px-3 sm:px-4 rounded-l-xl rounded-r-none text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 border-r border-primary-foreground/20 cursor-pointer disabled:opacity-70"
+                        >
+                            {isDownloading && exportingFormat === 'pdf' ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                            ) : (
+                                <Download className="h-3.5 w-3.5" strokeWidth={2} />
+                            )}
+                            <span className="hidden sm:inline">{isDownloading && exportingFormat === 'pdf' ? 'Compiling…' : 'Download PDF'}</span>
+                            <span className="sm:hidden">PDF</span>
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                            disabled={isDownloading}
+                            className="h-9 px-2 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-l-none rounded-r-xl cursor-pointer"
+                            title="Export in other formats (Word, Markdown, JSON, Typst)"
+                        >
+                            <ChevronDown className="h-3.5 w-3.5" />
+                        </Button>
+
+                        {exportMenuOpen && (
+                            <div className="absolute right-0 top-11 z-50 p-1.5 rounded-xl border border-border bg-popover/98 backdrop-blur-2xl shadow-xl w-56 text-xs text-foreground space-y-0.5">
+                                <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/40">
+                                    Download Resume As
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleExportFormat('pdf')}
+                                    className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted font-medium cursor-pointer text-left transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-red-400 shrink-0" />
+                                        <span>Vector PDF (Typst)</span>
+                                    </div>
+                                    <span className="text-[10px] text-red-500 font-mono font-semibold">.pdf</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleExportFormat('docx')}
+                                    className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted font-medium cursor-pointer text-left transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+                                        <span>Word Document</span>
+                                    </div>
+                                    <span className="text-[10px] text-amber-500 font-mono font-semibold">.docx</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleExportFormat('md')}
+                                    className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted font-medium cursor-pointer text-left transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+                                        <span>Plaintext Markdown</span>
+                                    </div>
+                                    <span className="text-[10px] text-emerald-500 font-mono font-semibold">.md</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleExportFormat('json')}
+                                    className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted font-medium cursor-pointer text-left transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
+                                        <span>JSON Resume Data</span>
+                                    </div>
+                                    <span className="text-[10px] text-blue-500 font-mono font-semibold">.json</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleExportFormat('typ')}
+                                    className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted font-medium cursor-pointer text-left transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-purple-400 shrink-0" />
+                                        <span>Typst Source Code</span>
+                                    </div>
+                                    <span className="text-[10px] text-purple-500 font-mono font-semibold">.typ</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -563,235 +761,279 @@ export function Step4Preview() {
                 />
             )}
 
-            {/* Template Selection Drawer */}
+            {/* Template Selection Sheet */}
             <Sheet open={designSheetOpen} onOpenChange={setDesignSheetOpen}>
-                <SheetContent side="bottom" className="h-[88vh] max-h-[680px] flex flex-col overflow-hidden sm:max-w-5xl mx-auto rounded-t-3xl border-t border-border/70 dark:border-white/10 bg-background/95 dark:bg-[#0e1014]/95 backdrop-blur-2xl p-4 sm:p-5">
+                <SheetContent
+                    side="bottom"
+                    className="h-[88vh] max-h-[680px] flex flex-col overflow-hidden sm:max-w-5xl mx-auto rounded-t-3xl border-t border-border bg-background/95 backdrop-blur-2xl p-4 sm:p-5"
+                >
                     <SheetHeader className="shrink-0 mb-2 text-left">
                         <SheetTitle className="text-base sm:text-lg font-bold font-display flex items-center gap-2 text-foreground">
                             <LayoutGrid className="h-4 w-4 text-primary" />
                             Select Resume Template
                         </SheetTitle>
                         <SheetDescription className="text-xs text-muted-foreground">
-                            Choose from 48 curated Typst layout archetypes. Changes recompile instantly into your vector PDF.
+                            Choose from 52 curated Typst layout archetypes. Changes recompile instantly into your vector PDF.
                         </SheetDescription>
                     </SheetHeader>
                     <TemplateSelector />
                 </SheetContent>
             </Sheet>
 
-            {/* Main Split Workspace */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* 1. LEFT WORKSPACE (60% Desktop): Document Preview as Primary Visual Focus */}
-                <div className="lg:col-span-7 space-y-3">
-                    <ColorPaletteSelector />
-                    <PdfPreview />
-
-                    {templateFitCopy && (
-                        <div className="rounded-xl border border-border/70 dark:border-white/10 bg-card/60 dark:bg-[#0e1014]/60 px-4 py-2.5 text-xs flex items-center justify-between text-muted-foreground backdrop-blur-md">
-                            <span>Fit estimate: <strong className="text-foreground">{templateFitCopy.label}</strong></span>
-                            <span className="text-[11px] font-mono">{templateFitCopy.detail}</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* 2. RIGHT WORKSPACE (40% Desktop): Rich Intelligence & Insights Tabs */}
-                <div className="lg:col-span-5 glass-card p-4 sm:p-5 shadow-xl space-y-4">
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analysis' | 'diff' | 'keywords')} className="w-full">
-                        <TabsList className="grid grid-cols-3 h-9 bg-muted/40 dark:bg-[#15181e] p-1 rounded-xl text-xs border border-border/50 dark:border-white/5">
-                            <TabsTrigger value="analysis" className="text-[11px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm px-1 sm:px-3">
-                                <span className="hidden sm:inline">Match & Quality</span>
-                                <span className="sm:hidden">Match</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="keywords" className="text-[11px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm px-1 sm:px-3">
-                                <span className="hidden sm:inline">Skills & Keywords</span>
-                                <span className="sm:hidden">Skills</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="diff" className="text-[11px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background dark:data-[state=active]:bg-[#20242e] data-[state=active]:shadow-sm px-1 sm:px-3">
-                                <span className="hidden sm:inline">AI Bullet Diffs</span>
-                                <span className="sm:hidden">Diffs</span>
-                            </TabsTrigger>
-                        </TabsList>
-
-                            {/* TAB 1: Match Score & Quality Insights */}
-                        <TabsContent value="analysis" className="space-y-4 mt-4">
-                            {/* Precision Score Instrument */}
-                            <div className="relative rounded-2xl border border-border/70 dark:border-white/10 bg-gradient-to-br from-muted/30 via-background to-muted/20 dark:from-[#13161c] dark:to-[#0a0c10] p-4 sm:p-5 shadow-sm overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-                                <div className="flex items-center gap-5 relative z-10">
-                                    {/* Circular Progress Gauge */}
-                                    <div className="relative h-20 w-20 shrink-0 flex items-center justify-center">
-                                        <svg className="h-full w-full -rotate-90" viewBox="0 0 80 80">
-                                            <circle
-                                                cx="40"
-                                                cy="40"
-                                                r="34"
-                                                className="text-muted/30 dark:text-white/10 stroke-current"
-                                                strokeWidth="6"
-                                                fill="transparent"
-                                            />
-                                            <circle
-                                                cx="40"
-                                                cy="40"
-                                                r="34"
-                                                className="text-primary stroke-current transition-all duration-1000 ease-out"
-                                                strokeWidth="6"
-                                                strokeLinecap="round"
-                                                strokeDasharray="213.6"
-                                                strokeDashoffset={213.6 * (1 - Math.min(Math.max(afterScoreNumber, 0), 100) / 100)}
-                                                fill="transparent"
-                                            />
-                                        </svg>
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <AnimatedCounter
-                                                value={afterScoreNumber}
-                                                className="text-2xl font-bold font-display text-foreground leading-none"
-                                            />
-                                            <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider mt-0.5">ATS</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1 flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs uppercase tracking-wider text-muted-foreground font-mono font-semibold">
-                                                Alignment Score
-                                            </span>
-                                            {improvement > 0 && (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-emerald-500 border border-emerald-500/20">
-                                                    <TrendingUp className="h-3 w-3" />
-                                                    +{improvement} pts
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            Evaluated across 4 diagnostic competency pillars against JD requirements.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Transparent Score Explanation & Remaining Gaps */}
-                            <ScoreGapAnalysis
-                                scoreNumber={afterScoreNumber}
-                                scoreResponse={tailoredScore}
-                            />
-
-                            {/* 4 Category Breakdown Bars */}
-                            {tailoredScore?.breakdown && (
-                                <div className="space-y-2">
-                                    {(['required_skills', 'responsibilities', 'preferred_skills', 'buzzwords'] as MatchCategoryKey[]).map((catKey) => (
-                                        <BreakdownBar
-                                            key={catKey}
-                                            catKey={catKey}
-                                            after={tailoredScore.breakdown[catKey]}
-                                            before={originalScore?.breakdown?.[catKey]}
-                                        />
-                                    ))}
+            {/* ── Main Split Workspace ── */}
+            {(() => {
+                const isEditTab = activeTab === 'edit';
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                        {/* LEFT: Live Resume Preview (Sticky on desktop while editing) */}
+                        <div
+                            className={cn(
+                                "space-y-3 transition-all order-1 lg:order-1",
+                                isEditTab
+                                    ? "lg:col-span-5 xl:col-span-5 lg:sticky lg:top-4"
+                                    : "lg:col-span-7"
+                            )}
+                        >
+                            <ColorPaletteSelector />
+                            <PdfPreview />
+                            {templateFitCopy && (
+                                <div className="rounded-xl border border-border bg-card/60 px-4 py-2.5 text-xs flex items-center justify-between text-muted-foreground backdrop-blur-md">
+                                    <span>
+                                        Fit estimate: <strong className="text-foreground">{templateFitCopy.label}</strong>
+                                    </span>
+                                    <span className="text-[11px] font-mono">{templateFitCopy.detail}</span>
                                 </div>
                             )}
+                        </div>
 
-                            {/* Strongest vs Weakest Sections Diagnostics */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {/* Strongest Sections */}
-                                <div className="rounded-xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-3.5 space-y-2 text-xs">
-                                    <span className="font-semibold text-foreground flex items-center gap-1.5">
-                                        <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-                                        Strongest Sections
-                                    </span>
-                                    <ul className="space-y-1.5 text-[11px] text-muted-foreground">
-                                        {(tailoredScore?.diagnostics?.strongestSections || ['Work Experience', 'Technical Skills']).map((sec, i) => (
-                                            <li key={i} className="flex items-center gap-1.5">
-                                                <Check className="h-3 w-3 text-emerald-500 shrink-0" />
-                                                <span className="font-medium text-foreground">{sec}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {/* Weakest Sections & Actionable Fix */}
-                                <div className="rounded-xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-3.5 space-y-2 text-xs">
-                                    <span className="font-semibold text-foreground flex items-center gap-1.5">
-                                        <Target className="h-3.5 w-3.5 text-amber-500" />
-                                        Actionable Recommendations
-                                    </span>
-                                    <div className="text-[11px] text-muted-foreground space-y-1">
-                                        {tailoredScore?.diagnostics?.weakestSections?.[0] ? (
-                                            <div>
-                                                <strong className="text-foreground">{tailoredScore.diagnostics.weakestSections[0].section}:</strong>
-                                                <p className="text-[10px] mt-0.5 leading-relaxed">{tailoredScore.diagnostics.weakestSections[0].action}</p>
-                                            </div>
-                                        ) : (
-                                            <p className="text-[10px] leading-relaxed">Prepare to discuss high-impact quantified achievements during your technical interviews.</p>
+                        {/* RIGHT: Analysis & Edit Hub Column (Section Navigator + Editor Controls) */}
+                        <div
+                            className={cn(
+                                "glass-card p-4 sm:p-5 shadow-xl space-y-4 transition-all order-2 lg:order-2",
+                                isEditTab
+                                    ? "lg:col-span-7 xl:col-span-7"
+                                    : "lg:col-span-5"
+                            )}
+                        >
+                            <Tabs
+                                value={activeTab}
+                                onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+                                className="w-full"
+                            >
+                                <TabsList className="grid grid-cols-4 h-9 bg-muted/50 p-1 rounded-xl text-xs border border-border/50">
+                                    <TabsTrigger
+                                        value="analysis"
+                                        className="text-[10px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs px-1 sm:px-2"
+                                    >
+                                        <BarChart3 className="h-3 w-3 sm:mr-1" />
+                                        <span className="hidden sm:inline">Match</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="keywords"
+                                        className="text-[10px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs px-1 sm:px-2"
+                                    >
+                                        <Sparkles className="h-3 w-3 sm:mr-1" />
+                                        <span className="hidden sm:inline">Skills</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="diff"
+                                        className="text-[10px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs px-1 sm:px-2"
+                                    >
+                                        <Layers className="h-3 w-3 sm:mr-1" />
+                                        <span className="hidden sm:inline">Diffs</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="edit"
+                                        className={cn(
+                                            'text-[10px] sm:text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs px-1 sm:px-2',
+                                            activeTab === 'edit' && 'data-[state=active]:text-amber-600 dark:text-amber-400'
                                         )}
-                                    </div>
-                                </div>
-                            </div>
+                                    >
+                                        <Edit3 className="h-3 w-3 sm:mr-1" />
+                                        <span className="hidden sm:inline">Edit</span>
+                                    </TabsTrigger>
+                                </TabsList>
 
-                            {/* ATS Quality, Layout & Safety Diagnostics */}
-                            <div className="rounded-xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-4 space-y-2.5 text-xs">
-                                <span className="font-semibold text-foreground flex items-center gap-2">
-                                    <FileCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                    ATS Quality & Layout Diagnostics
-                                </span>
-
-                                <div className="space-y-2.5 text-[11px] text-muted-foreground">
-                                    <div className="flex items-start gap-2">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                                        <div>
-                                            <strong className="text-foreground">ATS Machine Readability Verified</strong>
-                                            <p className="text-[10px] text-muted-foreground">Strict linear text hierarchy with standard headings.</p>
+                                {/* ── TAB 1: Match Score & Quality ── */}
+                                <TabsContent value="analysis" className="space-y-4 mt-4">
+                                    <div className="relative rounded-2xl border border-border bg-gradient-to-br from-muted/30 via-background to-muted/20 p-4 sm:p-5 shadow-xs overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+                                        <div className="flex items-center gap-5 relative z-10">
+                                            <div className="relative h-20 w-20 shrink-0 flex items-center justify-center">
+                                                {scoreStatus === 'calculating' ? (
+                                                    <div className="flex flex-col items-center justify-center text-primary animate-pulse">
+                                                        <Loader2 className="h-6 w-6 animate-spin mb-1" />
+                                                        <span className="text-[9px] font-mono text-muted-foreground uppercase">Scoring</span>
+                                                    </div>
+                                                ) : scoreStatus === 'no_jd' ? (
+                                                    <div className="flex flex-col items-center justify-center text-muted-foreground text-center">
+                                                        <HelpCircle className="h-6 w-6 text-muted-foreground/60 mb-1" />
+                                                        <span className="text-[8px] font-mono text-muted-foreground uppercase">No JD</span>
+                                                    </div>
+                                                ) : scoreStatus === 'error' ? (
+                                                    <div className="flex flex-col items-center justify-center text-rose-500 text-center">
+                                                        <AlertCircle className="h-6 w-6 text-rose-500 mb-1" />
+                                                        <span className="text-[8px] font-mono text-rose-500 uppercase">Error</span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <svg className="h-full w-full -rotate-90" viewBox="0 0 80 80">
+                                                            <circle cx="40" cy="40" r="34" className="text-muted/30 dark:text-white/10 stroke-current" strokeWidth="6" fill="transparent" />
+                                                            <circle
+                                                                cx="40" cy="40" r="34"
+                                                                className="text-primary stroke-current transition-all duration-1000 ease-out"
+                                                                strokeWidth="6" strokeLinecap="round"
+                                                                strokeDasharray="213.6"
+                                                                strokeDashoffset={213.6 * (1 - Math.min(Math.max(afterScoreNumber, 0), 100) / 100)}
+                                                                fill="transparent"
+                                                            />
+                                                        </svg>
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                            <AnimatedCounter value={afterScoreNumber} className="text-2xl font-bold font-display text-foreground leading-none" />
+                                                            <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider mt-0.5">ATS</span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="space-y-1 flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-mono font-semibold">
+                                                        {scoreStatus === 'no_jd'
+                                                            ? 'Standalone Profile'
+                                                            : scoreStatus === 'calculating'
+                                                                ? 'Calculating Alignment'
+                                                                : scoreStatus === 'error'
+                                                                    ? 'Score Offline'
+                                                                    : 'Alignment Score'}
+                                                    </span>
+                                                    {scoreStatus === 'calculated' && improvement > 0 && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-emerald-500 border border-emerald-500/20">
+                                                            <TrendingUp className="h-3 w-3" />
+                                                            +{improvement} pts
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                                    {scoreStatus === 'no_jd'
+                                                        ? 'Resume edited in standalone mode. Add a target JD to evaluate ATS keyword match.'
+                                                        : scoreStatus === 'calculating'
+                                                            ? 'Scanning updated content against target job description requirements...'
+                                                            : scoreStatus === 'error'
+                                                                ? 'Could not connect to scoring service. Your resume content is safe.'
+                                                                : 'Evaluated across 4 diagnostic competency pillars against JD requirements.'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-start gap-2">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                                        <div>
-                                            <strong className="text-foreground">Single-Page Typographic Fit</strong>
-                                            <p className="text-[10px] text-muted-foreground">Layout balances margins cleanly without trailing page spillover.</p>
-                                        </div>
-                                    </div>
+                                    <ScoreGapAnalysis
+                                        scoreNumber={afterScoreNumber}
+                                        scoreResponse={tailoredScore}
+                                        scoreStatus={scoreStatus}
+                                        onRetry={recalculateScore}
+                                    />
 
-                                    <div className="flex items-start gap-2">
-                                        <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                                        <div>
-                                            <strong className="text-foreground">Factual Truth & Evidence Safety</strong>
-                                            <p className="text-[10px] text-muted-foreground">Candidate employers, degrees, and timelines are 100% authentic with zero unsupported claims.</p>
-                                        </div>
-                                    </div>
-
-                                    {tailoredScore?.diagnostics?.keywordDensity && (
-                                        <div className="pt-2 border-t border-border/40 dark:border-white/5 flex items-center justify-between text-[10px]">
-                                            <span className="font-mono text-muted-foreground">Keyword Density / Relevance:</span>
-                                            <span className="font-mono font-semibold text-emerald-500">
-                                                {tailoredScore.diagnostics.keywordDensity.rating.toUpperCase()} ({tailoredScore.diagnostics.keywordDensity.score}%)
-                                            </span>
+                                    {scoreStatus === 'calculated' && tailoredScore?.breakdown && (
+                                        <div className="space-y-2">
+                                            {(['required_skills', 'responsibilities', 'preferred_skills', 'buzzwords'] as MatchCategoryKey[]).map((catKey) => (
+                                                <BreakdownBar
+                                                    key={catKey}
+                                                    catKey={catKey}
+                                                    after={tailoredScore.breakdown[catKey]}
+                                                    before={originalScore?.breakdown?.[catKey]}
+                                                />
+                                            ))}
                                         </div>
                                     )}
-                                </div>
-                            </div>
-                        </TabsContent>
 
-                        {/* TAB 2: Skills & Keywords Coverage + Technical Rationale */}
-                        <TabsContent value="keywords" className="space-y-4 mt-4">
-                            <SkillsRationaleList
-                                auditTrailSkills={generatedResume?.auditTrail?.skillsAdded}
-                                tailoredScore={tailoredScore}
-                            />
-                            <JdEvidenceMap
-                                alignmentMap={generatedResume?.auditTrail?.jdAlignmentMap}
-                            />
-                        </TabsContent>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="rounded-xl border border-border bg-muted/30 p-3.5 space-y-2 text-xs">
+                                            <span className="font-semibold text-foreground flex items-center gap-1.5">
+                                                <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+                                                Strongest Sections
+                                            </span>
+                                            <ul className="space-y-1.5 text-[11px] text-muted-foreground">
+                                                {(tailoredScore?.diagnostics?.strongestSections || ['Work Experience', 'Technical Skills']).map((sec, i) => (
+                                                    <li key={i} className="flex items-center gap-1.5">
+                                                        <Check className="h-3 w-3 text-emerald-500 shrink-0" />
+                                                        <span className="font-medium text-foreground">{sec}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
 
-                        {/* TAB 3: Explainable AI Bullet Diffs (EVERY Changed Bullet) */}
-                        <TabsContent value="diff" className="space-y-3 mt-4">
-                            <BulletDiffViewer
-                                bullets={explainableBullets}
-                                revertedBullets={revertedBullets}
-                                onToggleRevert={handleToggleRevert}
-                            />
-                        </TabsContent>
-                    </Tabs>
-                </div>
-            </div>
+                                        <div className="rounded-xl border border-border bg-muted/30 p-3.5 space-y-2 text-xs">
+                                            <span className="font-semibold text-foreground flex items-center gap-1.5">
+                                                <Target className="h-3.5 w-3.5 text-amber-500" />
+                                                Areas for Expansion
+                                            </span>
+                                            <ul className="space-y-1.5 text-[11px] text-muted-foreground">
+                                                {(tailoredScore?.diagnostics?.weakestSections || [
+                                                    { section: 'Projects', reason: 'Feature projects matching target stack' },
+                                                ]).slice(0, 2).map((w, i) => (
+                                                    <li key={i} className="space-y-0.5">
+                                                        <span className="font-medium text-foreground">{w.section}</span>
+                                                        <p className="text-[10px] text-muted-foreground">{w.reason}</p>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    {/* Verification trust badges */}
+                                    <div className="rounded-xl border border-border bg-card/40 p-3 space-y-2 text-xs">
+                                        <div className="flex items-start gap-2">
+                                            <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                                            <div>
+                                                <strong className="text-foreground">Factual Truth & Evidence Safety</strong>
+                                                <p className="text-[10px] text-muted-foreground">Candidate employers, degrees, and timelines are 100% authentic with zero unsupported claims.</p>
+                                            </div>
+                                        </div>
+                                        {tailoredScore?.diagnostics?.keywordDensity && (
+                                            <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px]">
+                                                <span className="font-mono text-muted-foreground">Keyword Density / Relevance:</span>
+                                                <span className="font-mono font-semibold text-emerald-500">
+                                                    {tailoredScore.diagnostics.keywordDensity.rating.toUpperCase()} ({tailoredScore.diagnostics.keywordDensity.score}%)
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </TabsContent>
+
+                                {/* ── TAB 2: Skills & Keywords ── */}
+                                <TabsContent value="keywords" className="space-y-4 mt-4">
+                                    <SkillsRationaleList
+                                        auditTrailSkills={generatedResume?.auditTrail?.skillsAdded}
+                                        tailoredScore={tailoredScore}
+                                        isScoring={scoreStatus === 'calculating'}
+                                    />
+                                    <JdEvidenceMap
+                                        alignmentMap={generatedResume?.auditTrail?.jdAlignmentMap}
+                                        atsSummary={generatedResume?.atsAlignmentSummary}
+                                    />
+                                </TabsContent>
+
+                                {/* ── TAB 3: AI Bullet Diffs ── */}
+                                <TabsContent value="diff" className="space-y-3 mt-4">
+                                    <BulletDiffViewer
+                                        bullets={explainableBullets}
+                                        revertedBullets={revertedBullets}
+                                        onToggleRevert={handleToggleRevert}
+                                    />
+                                </TabsContent>
+
+                                {/* ── TAB 4: Edit Resume (Compact, Non-Scrolling Layout) ── */}
+                                <TabsContent value="edit" className="mt-4">
+                                    <div className="space-y-4">
+                                        {/* Compact Resume Editor with Sticky Navigator */}
+                                        <CompactResumeEditor />
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 }

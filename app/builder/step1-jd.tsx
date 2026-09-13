@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import {
     FileText,
@@ -17,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/components/auth-provider';
 import { extractTextFromPdf } from '@/lib/pdf-parser';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
 import { getCustomKeyHeaders } from '@/lib/ai-keys';
@@ -61,13 +62,13 @@ export function Step1JD() {
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (!user) {
-            toast.error('Please sign in to upload and parse your resume');
+            notify.error('Sign in required', 'Please sign in to upload and parse your resume');
             return;
         }
         const file = acceptedFiles[0];
         if (!file) return;
         if (file.type !== 'application/pdf') {
-            toast.error('Only PDF documents are supported');
+            notify.error('Unsupported file', 'Only PDF documents are supported');
             return;
         }
 
@@ -83,7 +84,7 @@ export function Step1JD() {
 
             if (text.trim().length < 20) {
                 setParseStage('error');
-                toast.error('Could not extract text from this PDF. It might be scanned or protected.');
+                notify.error("Couldn't extract text", 'The PDF might be scanned or protected.');
                 return;
             }
 
@@ -92,29 +93,29 @@ export function Step1JD() {
 
             const response = await fetch('/api/v1/resume/parse', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    ...getCustomKeyHeaders()
+                    ...getCustomKeyHeaders(),
                 },
                 body: JSON.stringify({ extractedText: text }),
             });
 
-            const payload = await response.json().catch(() => ({}));
             if (!response.ok) {
-                const detail = typeof payload?.details === 'string' ? payload.details : typeof payload?.error === 'string' ? payload.error : 'Parse failed';
-                throw new Error(detail);
+                const errorBody = await response.json().catch(() => null);
+                throw new Error(errorBody?.details || errorBody?.error || 'Failed to parse resume');
             }
 
-            setResumeDataFromParse(payload);
+            const data = await response.json();
+            setResumeDataFromParse(data);
             setParseStage('success');
-            toast.success('Resume uploaded successfully');
+            notify.success('Resume uploaded', file.name);
             trackEvent('resume_uploaded', { fileName: file.name, fileSizeKb: (file.size / 1024).toFixed(0) });
 
         } catch (error) {
             console.error('Parse error:', error);
             setParseStage('error');
             const message = error instanceof Error ? error.message : 'Failed to parse resume';
-            toast.error(message);
+            notify.error("Couldn't parse resume", message);
         }
     }, [setFile, setExtractedText, setResumeDataFromParse, user]);
 
@@ -127,23 +128,23 @@ export function Step1JD() {
 
     const handleNext = () => {
         if (!user) {
-            toast.error('Please sign in to proceed to details review');
+            notify.error('Sign in required', 'Please sign in to proceed to details review');
             return;
         }
         if (!jd.trim()) {
-            toast.error('Please paste a target job description or click "Try Sample JD"');
-            return;
+            notify.info('Manual mode', 'Continuing without target job description');
+        } else {
+            trackEvent('jd_submitted', { wordCount, charCount: jd.length });
         }
         if (!resumeData && parseStage !== 'success') {
-            toast.info('No resume uploaded yet — you can fill your experience manually.');
+            notify.info('Manual mode', 'No resume uploaded yet — you can fill your experience directly');
         }
-        trackEvent('jd_submitted', { wordCount, charCount: jd.length });
         setStep(2);
     };
 
     const handleUseSampleJD = () => {
         setJD(SAMPLE_JD);
-        toast.info('Sample JD (Stripe Senior Full Stack Engineer) loaded!');
+        notify.info('Sample loaded', 'Stripe Senior Full Stack Engineer');
     };
 
     const wordCount = jd.trim() ? jd.trim().split(/\s+/).length : 0;
@@ -158,6 +159,23 @@ export function Step1JD() {
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
                     Paste the job description, then upload your resume PDF so we can tailor it to the role.
                 </p>
+            </div>
+
+            {/* Standalone Editor Link Banner */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 p-3.5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md text-xs">
+                <div className="flex items-center gap-2 text-foreground font-medium">
+                    <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">
+                        Don&apos;t have a target job description? Edit, format, and download your resume with zero AI rewriting.
+                    </span>
+                </div>
+                <Link
+                    href="/editor"
+                    className="shrink-0 inline-flex items-center gap-1 font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
+                    <span>Open Standalone Editor</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
             </div>
 
             {/* Split Input Grid */}
@@ -181,7 +199,7 @@ export function Step1JD() {
                                 variant="outline"
                                 size="sm"
                                 onClick={handleUseSampleJD}
-                                className="h-8 text-xs rounded-xl border-border/70 dark:border-white/10 hover:border-primary/40 hover:bg-muted/40 gap-1.5 cursor-pointer shrink-0 transition-all active:scale-95"
+                                className="h-8 text-xs rounded-xl border-border hover:border-primary/40 hover:bg-muted/40 gap-1.5 cursor-pointer shrink-0 transition-all active:scale-95"
                             >
                                 <Sparkles className="h-3.5 w-3.5 text-primary" />
                                 <span>Try Sample JD</span>
@@ -196,7 +214,7 @@ export function Step1JD() {
                                 placeholder="Paste the complete job description here, including responsibilities, requirements, and tech stack..."
                                 value={jd}
                                 onChange={(e) => setJD(e.target.value)}
-                                className="min-h-[360px] resize-none text-xs leading-relaxed bg-muted/20 dark:bg-black/30 border-border/60 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-primary font-mono rounded-xl p-3.5 transition-all"
+                                className="min-h-[360px] resize-none text-xs leading-relaxed bg-muted/20 border-border/60 focus-visible:ring-1 focus-visible:ring-primary font-mono rounded-xl p-3.5 transition-all"
                             />
 
                             <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
@@ -208,7 +226,7 @@ export function Step1JD() {
                         </div>
                     </div>
 
-                    <div className="pt-3 border-t border-border/40 dark:border-white/5 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <div className="pt-3 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                             <span>Zero Telemetry</span>
@@ -230,7 +248,7 @@ export function Step1JD() {
                                 </p>
                             </div>
 
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted dark:bg-white/5 text-muted-foreground border border-border/50 dark:border-white/10">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
                                 PDF Format
                             </span>
                         </div>
@@ -245,7 +263,7 @@ export function Step1JD() {
                                         ? 'border-primary/50 bg-primary/[0.03]'
                                         : parseStage === 'success' || resumeData
                                             ? 'border-emerald-500/40 bg-emerald-500/[0.03]'
-                                            : 'border-border/70 dark:border-white/10 hover:border-primary/50 hover:bg-muted/30 dark:hover:bg-white/[0.02]'
+                                            : 'border-border hover:border-primary/50 hover:bg-muted/30'
                             }`}
                         >
                             <input {...getInputProps()} />
@@ -286,7 +304,7 @@ export function Step1JD() {
                                         </div>
 
                                         {/* Extracted Details Pill Box */}
-                                        <div className="rounded-xl border border-border/70 dark:border-white/10 bg-background/80 dark:bg-black/30 p-3.5 text-xs text-left space-y-1.5 backdrop-blur-xs">
+                                        <div className="rounded-xl border border-border bg-background/80 p-3.5 text-xs text-left space-y-1.5 backdrop-blur-xs">
                                             <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Ingested Candidate:</div>
                                             <div className="font-display font-bold text-foreground text-sm truncate">
                                                 {resumeData?.personalInfo.name || 'Candidate Name'}
@@ -321,7 +339,7 @@ export function Step1JD() {
                                             </p>
                                         </div>
 
-                                        <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 dark:bg-white/[0.04] px-3 py-1 rounded-full border border-border/60 dark:border-white/10 font-mono">
+                                        <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 px-3 py-1 rounded-full border border-border/60 font-mono">
                                             <span>PDF only</span>
                                             <span>•</span>
                                             <span>Private by default</span>
@@ -332,7 +350,7 @@ export function Step1JD() {
                         </div>
                     </div>
 
-                    <div className="pt-3 border-t border-border/40 dark:border-white/5 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <div className="pt-3 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
                         <span>No PDF resume yet?</span>
                         <button
                             type="button"
@@ -346,20 +364,35 @@ export function Step1JD() {
             </div>
 
             {/* Bottom Nav Bar */}
-            <div className="flex items-center justify-between pt-6 border-t border-border/60 dark:border-white/10 gap-3">
-                <div className="text-xs font-mono text-muted-foreground shrink-0">
-                    Step 01 of 04
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border/60 gap-3">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="font-mono">Step 01 of 04</span>
+                    <span>•</span>
+                    <Link href="/editor" className="text-primary hover:underline font-medium">
+                        Open Standalone Editor (Zero AI/JD) &rarr;
+                    </Link>
                 </div>
 
-                <Button
-                    onClick={handleNext}
-                    size="sm"
-                    className="h-10 px-4 sm:px-6 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
-                >
-                    <span className="hidden sm:inline">Continue to Details Review</span>
-                    <span className="sm:hidden">Continue</span>
-                    <ArrowRight className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <Link href="/editor">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-10 px-4 text-xs font-medium border-border/80 hover:bg-muted/40 rounded-xl cursor-pointer"
+                            title="Skip AI and edit your resume directly in the manual editor"
+                        >
+                            Skip AI — Edit Resume Directly
+                        </Button>
+                    </Link>
+                    <Button
+                        onClick={handleNext}
+                        size="sm"
+                        className="h-10 px-5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                    >
+                        <span>Continue to Details Review</span>
+                        <ArrowRight className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
         </div>
     );

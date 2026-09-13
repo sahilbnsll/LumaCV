@@ -50,6 +50,10 @@
 #import "/templates/generated-executive.typ": render as render_generated_executive
 #import "/templates/generated-swiss.typ": render as render_swiss_alt
 #import "/templates/generated-timeline.typ": render as render_timeline_alt
+#import "/templates/onyx.typ": render as render_onyx
+#import "/templates/glalie.typ": render as render_glalie
+#import "/templates/azurill.typ": render as render_azurill
+#import "/templates/chikorita.typ": render as render_chikorita
 
 #let data-source = sys.inputs.at("data", default: "/resume.json")
 #let template = sys.inputs.at("template", default: "modern")
@@ -168,6 +172,14 @@ if tmpl-key == "impact" or tmpl-key == "impact" {
   render_swiss_alt(data, theme: chosen-theme)
 } else if tmpl-key == "timeline_alt" or tmpl-key == "timeline-alt" {
   render_timeline_alt(data, theme: chosen-theme)
+} else if tmpl-key == "onyx" {
+  render_onyx(data, theme: chosen-theme)
+} else if tmpl-key == "glalie" {
+  render_glalie(data, theme: chosen-theme)
+} else if tmpl-key == "azurill" {
+  render_azurill(data, theme: chosen-theme)
+} else if tmpl-key == "chikorita" {
+  render_chikorita(data, theme: chosen-theme)
 } else {
   render_modern(data, theme: chosen-theme)
 }

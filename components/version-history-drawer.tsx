@@ -6,7 +6,7 @@ import { History, X, Check, RotateCcw, Clock, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { ResumeData } from '@/lib/resume-schema';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 
 export interface VersionSnapshot {
     id: string;
@@ -63,7 +63,7 @@ export function VersionHistoryDrawer({
 
     const handleRestore = (ver: VersionSnapshot) => {
         onRestoreVersion(ver.resumeData, ver.label);
-        toast.success(`Restored "${ver.label}"`);
+        notify.info('Version restored', ver.label);
         onClose();
     };
 

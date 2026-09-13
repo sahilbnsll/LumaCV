@@ -13,23 +13,19 @@ interface SkillsRationaleListProps {
         reason: string;
     }>;
     tailoredScore: MatchScoreResponse | null;
+    /** Lets the empty state distinguish "still scoring" from "genuinely no matches". */
+    isScoring?: boolean;
 }
 
 export const SkillsRationaleList = React.memo(function SkillsRationaleList({
     auditTrailSkills,
     tailoredScore,
+    isScoring = false,
 }: SkillsRationaleListProps) {
-    const matchedKeywords = tailoredScore?.breakdown?.required_skills?.matched || [
-        'TypeScript',
-        'React',
-        'Next.js',
-        'PostgreSQL',
-        'APIs',
-        'Docker',
-        'AWS',
-    ];
-    const missingKeywords = tailoredScore?.breakdown?.required_skills?.missing || [];
-    const partiallyMatched = tailoredScore?.gapAnalysis?.partiallyMatched || [];
+    const isClean = (s?: string) => Boolean(s && !/^\[object\b/i.test(s) && !/\[object\s+object\]/i.test(s));
+    const matchedKeywords = (tailoredScore?.breakdown?.required_skills?.matched || []).filter(isClean);
+    const missingKeywords = (tailoredScore?.breakdown?.required_skills?.missing || []).filter(isClean);
+    const partiallyMatched = (tailoredScore?.gapAnalysis?.partiallyMatched || []).filter(pm => isClean(pm.requirement));
 
     return (
         <div className="space-y-4">
@@ -88,21 +84,29 @@ export const SkillsRationaleList = React.memo(function SkillsRationaleList({
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Direct Matched Keywords
                 </span>
-                <div className="flex flex-wrap gap-1.5">
-                    {matchedKeywords.map((k) => (
-                        <span
-                            key={k}
-                            className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-emerald-500"
-                        >
-                            {k}
-                        </span>
-                    ))}
-                </div>
+                {isScoring ? (
+                    <p className="text-[11px] text-muted-foreground">Calculating keyword matches…</p>
+                ) : matchedKeywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                        {matchedKeywords.map((k) => (
+                            <span
+                                key={k}
+                                className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-emerald-500"
+                            >
+                                {k}
+                            </span>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-[11px] text-muted-foreground">
+                        No required-skill keywords matched yet — add a job description to see this breakdown.
+                    </p>
+                )}
             </div>
 
             {/* Partially Matched Requirements */}
             {partiallyMatched.length > 0 && (
-                <div className="space-y-2 pt-3 border-t border-border/40 dark:border-white/5">
+                <div className="space-y-2 pt-3 border-t border-border/40">
                     <span className="text-[11px] font-semibold text-blue-500 flex items-center gap-1.5">
                         <Target className="h-3.5 w-3.5" />
                         Partially Matched / Transferable Concepts
@@ -125,7 +129,7 @@ export const SkillsRationaleList = React.memo(function SkillsRationaleList({
 
             {/* Missing Terms */}
             {missingKeywords.length > 0 ? (
-                <div className="space-y-2 pt-3 border-t border-border/40 dark:border-white/5">
+                <div className="space-y-2 pt-3 border-t border-border/40">
                     <span className="text-[11px] font-semibold text-muted-foreground">
                         Remaining Unmatched Terms
                     </span>
@@ -133,7 +137,7 @@ export const SkillsRationaleList = React.memo(function SkillsRationaleList({
                         {missingKeywords.map((k) => (
                             <span
                                 key={k}
-                                className="rounded-full border border-border/60 dark:border-white/10 bg-muted/40 dark:bg-white/5 px-2.5 py-0.5 text-[11px] font-mono text-muted-foreground"
+                                className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-[11px] font-mono text-muted-foreground"
                             >
                                 {k}
                             </span>
@@ -141,7 +145,7 @@ export const SkillsRationaleList = React.memo(function SkillsRationaleList({
                     </div>
                 </div>
             ) : (
-                <div className="pt-3 border-t border-border/40 dark:border-white/5 text-[11px] text-emerald-500 flex items-center gap-1.5 font-medium">
+                <div className="pt-3 border-t border-border/40 text-[11px] text-emerald-500 flex items-center gap-1.5 font-medium">
                     <Check className="h-3.5 w-3.5" />
                     <span>All primary required skills are represented in your resume.</span>
                 </div>

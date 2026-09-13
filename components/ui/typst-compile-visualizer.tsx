@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Cpu, Zap, ShieldCheck, FileText, CheckCircle2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,24 +24,27 @@ export function TypstCompileVisualizer({
   className,
 }: TypstCompileVisualizerProps) {
   const [phaseIndex, setPhaseIndex] = useState(0);
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(38);
+  const reducedMotion = useReducedMotion();
 
-  // Millisecond timer simulation for live telemetry feel
+  // Throttled millisecond timer simulation: updates at 120ms intervals to prevent 20+ re-renders/sec
   useEffect(() => {
+    if (reducedMotion) return;
     const start = performance.now();
     const interval = setInterval(() => {
       setElapsedMs(Math.round(performance.now() - start));
-    }, 45);
+    }, 120);
     return () => clearInterval(interval);
-  }, []);
+  }, [reducedMotion]);
 
-  // Cycle compilation micro-stages
+  // Cycle compilation micro-stages smoothly
   useEffect(() => {
+    if (reducedMotion) return;
     const cycleInterval = setInterval(() => {
       setPhaseIndex((prev) => (prev + 1) % COMPILATION_PHASES.length);
-    }, 450);
+    }, 520);
     return () => clearInterval(cycleInterval);
-  }, []);
+  }, [reducedMotion]);
 
   const activePhase = COMPILATION_PHASES[phaseIndex];
   const ActiveIcon = activePhase.icon;
@@ -54,7 +57,7 @@ export function TypstCompileVisualizer({
       transition={{ duration: 0.25 }}
       className={cn(
         "absolute inset-0 z-30 flex flex-col items-center justify-center p-4 overflow-hidden pointer-events-none",
-        "bg-slate-900/35 dark:bg-black/55 backdrop-blur-[4px]",
+        "bg-background/60 backdrop-blur-[4px]",
         className
       )}
     >
@@ -96,10 +99,10 @@ export function TypstCompileVisualizer({
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.95, y: -4, opacity: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 max-w-md w-full rounded-2xl border border-border/80 dark:border-white/15 bg-background/95 dark:bg-[#0f1117]/95 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.8)] backdrop-blur-2xl pointer-events-auto space-y-4"
+        className="relative z-10 max-w-md w-full rounded-2xl border border-border bg-card/95 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.8)] backdrop-blur-2xl pointer-events-auto space-y-4"
       >
         {/* Top Bar: Engine Status & Telemetry Counter */}
-        <div className="flex items-center justify-between border-b border-border/50 dark:border-white/10 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Copy, CheckCheck, Undo2, Check, Sparkles } from 'lucide-react';
+import { Copy, CheckCheck, Undo2, Check, Sparkles, FileCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 
 export interface ExplainableBullet {
     role: string;
@@ -19,7 +19,7 @@ export interface ExplainableBullet {
 interface BulletDiffViewerProps {
     bullets: ExplainableBullet[];
     revertedBullets: Record<string, boolean>;
-    onToggleRevert: (index: number) => void;
+    onToggleRevert: (bullet: ExplainableBullet) => void;
 }
 
 export const BulletDiffViewer = React.memo(function BulletDiffViewer({
@@ -32,7 +32,7 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
     const handleCopy = (text: string, index: number) => {
         navigator.clipboard.writeText(text);
         setCopiedIndex(index);
-        toast.success('Bullet copied to clipboard');
+        notify.copied('Bullet point');
         setTimeout(() => setCopiedIndex(null), 2000);
     };
 
@@ -51,6 +51,15 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
                 Transparent audit of every modified bullet. Accept the enhanced version or restore your original phrasing anytime.
             </p>
 
+            {bullets.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border/60 bg-muted/20 py-8 text-center">
+                    <FileCheck className="h-5 w-5 text-muted-foreground" />
+                    <p className="text-xs font-medium text-foreground">No bullet-level rewrites</p>
+                    <p className="max-w-xs text-[11px] text-muted-foreground leading-relaxed">
+                        Your original phrasing was already well-aligned, so nothing needed rewording.
+                    </p>
+                </div>
+            ) : (
             <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
                 {bullets.map((item) => {
                     const isReverted = revertedBullets[item.index];
@@ -59,9 +68,9 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
                     return (
                         <div
                             key={item.index}
-                            className="rounded-2xl border border-border/70 dark:border-white/10 bg-muted/20 dark:bg-[#13161c]/50 p-4 space-y-3 text-xs shadow-xs"
+                            className="rounded-2xl border border-border bg-muted/30 p-4 space-y-3 text-xs shadow-xs"
                         >
-                            <div className="flex items-center justify-between text-[11px] text-muted-foreground pb-2 border-b border-border/40 dark:border-white/5">
+                            <div className="flex items-center justify-between text-[11px] text-muted-foreground pb-2 border-b border-border/40">
                                 <span className="font-semibold text-foreground truncate max-w-[200px]">
                                     {item.role} • {item.company}
                                 </span>
@@ -81,7 +90,7 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => onToggleRevert(item.index)}
+                                        onClick={() => onToggleRevert(item)}
                                         className={cn(
                                             "text-[11px] font-mono px-2.5 py-0.5 rounded-full font-semibold transition-colors cursor-pointer flex items-center gap-1 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none",
                                             isReverted
@@ -107,7 +116,7 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
                             {/* Before vs After */}
                             <div className="space-y-2">
                                 {item.original !== item.tailored && (
-                                    <div className="p-3 rounded-xl bg-muted/40 dark:bg-white/[0.02] border border-border/40 dark:border-white/5 text-[11px] text-muted-foreground space-y-1">
+                                    <div className="p-3 rounded-xl bg-muted/40 border border-border/40 text-[11px] text-muted-foreground space-y-1">
                                         <span className="text-[10px] font-mono text-muted-foreground/80 uppercase tracking-wider block">
                                             Original Draft
                                         </span>
@@ -123,7 +132,7 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
                             </div>
 
                             {/* Why this changed & Evidence Safety */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/30 dark:border-white/5 text-[10px]">
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/30 text-[10px]">
                                 <div className="flex items-center gap-1.5 text-emerald-500">
                                     <Sparkles className="h-3 w-3" />
                                     <span>{item.reason || 'Enhanced action verb & metric focus'}</span>
@@ -136,6 +145,7 @@ export const BulletDiffViewer = React.memo(function BulletDiffViewer({
                     );
                 })}
             </div>
+            )}
         </div>
     );
 });

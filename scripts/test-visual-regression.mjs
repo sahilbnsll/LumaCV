@@ -3,8 +3,15 @@ import path from 'path';
 import fs from 'fs';
 import { generateTypst } from '../lib/typst-generator.ts';
 import { DEMO_RESUME_DATA } from '../lib/demo-data.ts';
+import { ALL_TEMPLATES } from '../lib/templates-data.ts';
 
-const templates = ['modern', 'classic', 'engineering', 'compact', 'two_column', 'ats_safe'];
+// Every registered template (52, not the original 6) — each has its own
+// distinct .typ layout file, so this must cover all of them, not just the
+// founding set. Themes are spot-checked against a handful of templates
+// rather than the full cross product (52 × 8 = 416 renders) since color
+// tokens are applied by shared theme logic, not per-template.
+const templates = ALL_TEMPLATES.map((t) => t.id);
+const themeSpotCheckTemplates = ['modern', 'executive', 'terminal'];
 const themes = ['none', 'navy', 'cobalt', 'emerald', 'burgundy', 'teal', 'slate', 'black'];
 
 const bin = path.resolve('./bin/typst.exe');
@@ -17,13 +24,14 @@ if (!fs.existsSync(outDir)) {
 
 async function runRegression() {
   console.log(`\n======================================================`);
-  console.log(`🚀 Starting Automated Visual Regression Audit (48 Combinations)`);
+  console.log(`🚀 Starting Automated Visual Regression Audit (${templates.length} templates × theme spot-check)`);
   console.log(`======================================================\n`);
 
   const results = [];
 
   for (const template of templates) {
-    for (const theme of themes) {
+    const templateThemes = themeSpotCheckTemplates.includes(template) ? themes : ['none'];
+    for (const theme of templateThemes) {
       const code = generateTypst(DEMO_RESUME_DATA, template, theme);
       const pngPattern = path.join(outDir, `${template}-${theme}-{n}.png`);
 

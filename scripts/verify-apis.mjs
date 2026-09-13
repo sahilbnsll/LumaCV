@@ -57,32 +57,13 @@ async function testApis(baseUrl) {
             method: 'POST',
             headers,
             body: JSON.stringify({
-                jobDescription: 'Seeking Senior Full Stack Engineer with React, TypeScript, and Go experience.'
+                jd: 'Seeking Senior Full Stack Engineer with React, TypeScript, and Go experience.'
             })
         });
         const jdData = await jdRes.json();
-        console.log(`✓ POST /api/v1/resume/analyze-jd: ${jdRes.status} (roleTitle: ${jdData.analysis?.roleTitle || (jdRes.status === 401 ? 'BYOK required' : 'ok')})`);
+        console.log(`✓ POST /api/v1/resume/analyze-jd: ${jdRes.status} (required_skills: ${jdData.required_skills?.length ?? (jdRes.status === 401 ? 'BYOK required' : 'n/a')})`);
     } catch (e) {
         console.error(`✗ POST /api/v1/resume/analyze-jd:`, e.message);
-    }
-
-    // 4. JD analyze legacy alias
-    try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (groqKey) headers['x-groq-api-key'] = groqKey;
-        if (geminiKey) headers['x-gemini-api-key'] = geminiKey;
-
-        const jdLegacyRes = await fetch(`${baseUrl}/api/v1/jd/analyze`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-                jobDescription: 'Seeking Senior Full Stack Engineer with React, TypeScript, and Go experience.'
-            })
-        });
-        const jdLegacyData = await jdLegacyRes.json();
-        console.log(`✓ POST /api/v1/jd/analyze: ${jdLegacyRes.status} (roleTitle: ${jdLegacyData.analysis?.roleTitle || (jdLegacyRes.status === 401 ? 'BYOK required' : 'ok')})`);
-    } catch (e) {
-        console.error(`✗ POST /api/v1/jd/analyze:`, e.message);
     }
 
     // 5. Auth / Resumes endpoint (checks 401 when unauthenticated)

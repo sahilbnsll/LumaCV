@@ -4,6 +4,7 @@ import { Redis } from '@upstash/redis';
 import { createClient } from '@supabase/supabase-js';
 
 export interface SystemStats {
+    usersCount: number;
     resumesCompiled: number;
     bulletsTailored: number;
     activeTemplates: number;
@@ -35,6 +36,45 @@ function getSupabaseAdmin() {
         return createClient(url, key, {
             auth: { persistSession: false, autoRefreshToken: false },
         });
+    } catch {
+        return null;
+    }
+}
+
+async function getSupabaseUsersCount(): Promise<number | null> {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return null;
+
+    try {
+        // 1. Check profiles table count
+        const { count: profilesCount, error: profilesError } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true });
+
+        if (!profilesError && typeof profilesCount === 'number') {
+            return profilesCount;
+        }
+
+        // 2. Check auth.admin.listUsers total if service role key is active
+        const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 1,
+        });
+
+        if (!authError && authData && typeof authData.total === 'number') {
+            return authData.total;
+        }
+
+        // 3. Fallback to unique author records
+        const { count: resumeAuthorsCount, error: resumesError } = await supabase
+            .from('user_resumes')
+            .select('user_id', { count: 'exact', head: true });
+
+        if (!resumesError && typeof resumeAuthorsCount === 'number') {
+            return resumeAuthorsCount;
+        }
+
+        return null;
     } catch {
         return null;
     }
@@ -127,11 +167,12 @@ async function incrementSupabaseStat(key: 'resumes_compiled' | 'bullets_tailored
     }
 }
 
-function readLocalStats(): { resumesCompiled: number; bulletsTailored: number } {
+function readLocalStats(): { usersCount: number; resumesCompiled: number; bulletsTailored: number } {
     try {
         if (fs.existsSync(STATS_FILE)) {
             const data = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
             return {
+                usersCount: Number(data.usersCount) || 0,
                 resumesCompiled: Number(data.resumesCompiled) || 0,
                 bulletsTailored: Number(data.bulletsTailored) || 0,
             };
@@ -139,10 +180,10 @@ function readLocalStats(): { resumesCompiled: number; bulletsTailored: number } 
     } catch {
         // Ignore read errors in serverless
     }
-    return { resumesCompiled: 0, bulletsTailored: 0 };
+    return { usersCount: 0, resumesCompiled: 0, bulletsTailored: 0 };
 }
 
-function writeLocalStats(stats: { resumesCompiled: number; bulletsTailored: number }) {
+function writeLocalStats(stats: { usersCount?: number; resumesCompiled: number; bulletsTailored: number }) {
     try {
         const dir = path.dirname(STATS_FILE);
         if (!fs.existsSync(dir)) {
@@ -162,31 +203,40 @@ export async function getSystemStats(): Promise<SystemStats> {
 
     let redisCompiled = 0;
     let redisTailored = 0;
+    let redisUsers = 0;
 
     const redis = getRedis();
     if (redis) {
         try {
-            const [compiled, tailored] = await Promise.all([
+            const [compiled, tailored, users] = await Promise.all([
                 redis.get<number>('global:resumes_compiled'),
                 redis.get<number>('global:bullets_tailored'),
+                redis.get<number>('global:users_count'),
             ]);
             redisCompiled = Number(compiled) || 0;
             redisTailored = Number(tailored) || 0;
+            redisUsers = Number(users) || 0;
         } catch {
             // Fallback to DB
         }
     }
 
-    const [sbStats, dbMetrics] = await Promise.all([
+    const [sbStats, dbMetrics, sbUsers] = await Promise.all([
         getSupabasePlatformStats(),
         getDbMetrics(),
+        getSupabaseUsersCount(),
     ]);
     const local = readLocalStats();
 
     const dbResumes = dbMetrics?.userResumesCount ?? 0;
     const dbBullets = dbMetrics?.bulletsCount ?? 0;
 
-    // Aggregated calculations reflecting real authentic platform metrics
+    const totalUsers = Math.max(
+        redisUsers,
+        sbUsers ?? 0,
+        local.usersCount ?? 0
+    );
+
     const totalCompiled = Math.max(
         redisCompiled,
         sbStats?.compiled ?? 0,
@@ -202,6 +252,7 @@ export async function getSystemStats(): Promise<SystemStats> {
     );
 
     const result: SystemStats = {
+        usersCount: totalUsers,
         resumesCompiled: totalCompiled,
         bulletsTailored: totalTailored,
         activeTemplates: 48,
@@ -215,6 +266,7 @@ export async function getSystemStats(): Promise<SystemStats> {
 
     // Keep local cache file updated if writable
     writeLocalStats({
+        usersCount: totalUsers,
         resumesCompiled: totalCompiled,
         bulletsTailored: totalTailored,
     });

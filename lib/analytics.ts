@@ -17,6 +17,7 @@ export type AnalyticsEventType =
     | 'template_selected'
     | 'theme_selected'
     | 'pdf_downloaded'
+    | 'resume_exported'
     | 'source_exported'
     | 'project_saved'
     | 'bullet_diff_toggled'

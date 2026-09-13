@@ -4,7 +4,7 @@ export interface FactValidationIssue {
     section: string;
     itemIndex: number;
     bulletIndex?: number;
-    issueType: 'unsupported_metric' | 'invented_company' | 'modified_date' | 'unsupported_credential';
+    issueType: 'unsupported_metric' | 'invented_company' | 'modified_date' | 'modified_title' | 'modified_url' | 'unsupported_credential' | 'formatting_bracket';
     originalText: string;
     tailoredText: string;
     reason: string;
@@ -21,12 +21,13 @@ export interface FactValidationResult {
 // Regex to identify quantitative metrics: percentages, currencies, multipliers, data volumes, SLAs
 const METRIC_REGEX = /\b(\$?\d+(?:,\d+)*(?:\.\d+)?%?|\d+(?:x|k|m|b|gb|tb|ms|s)?)\b/gi;
 
-function extractMetricsFromText(text: string): Set<string> {
+function extractMetricsFromText(text?: string): Set<string> {
     const metrics = new Set<string>();
+    if (!text) return metrics;
     const matches = text.match(METRIC_REGEX) || [];
     for (const m of matches) {
         const cleaned = m.trim().toLowerCase();
-        // Ignore standalone single digits or years like 2024, 2023 unless with currency or percent
+        // Ignore standalone single digits or years like 2024, 2023 unless accompanied by currency or percent
         if (/^(19|20)\d{2}$/.test(cleaned)) continue;
         if (/^\d$/.test(cleaned)) continue;
         metrics.add(cleaned);
@@ -53,6 +54,8 @@ function collectAllSourceMetrics(resume: ResumeData): Set<string> {
     (resume.projects || []).forEach(p => {
         scanText(p.description);
         (p.bullets || []).forEach(scanText);
+        (p.impactBullets || []).forEach(scanText);
+        (p.highlights || []).forEach(scanText);
     });
 
     (resume.internships || []).forEach(i => {
@@ -67,9 +70,16 @@ function collectAllSourceMetrics(resume: ResumeData): Set<string> {
     return allMetrics;
 }
 
+function cleanBulletText(text: string): string {
+    if (!text) return '';
+    // Strip raw brackets like [Highlight 1] or [Result] at the start of bullets
+    return text.replace(/^\[[^\]]+\]\s*:?\s*/i, '').trim();
+}
+
 /**
  * Validates tailored resume content against source resume evidence.
- * Reverts hallucinated metrics, restored dates, and enforces ground truth.
+ * Reverts hallucinated metrics, restored dates/companies/titles/URLs,
+ * and enforces complete ground truth protection.
  */
 export function validateAndCleanTailoredResume(
     source: ResumeData,
@@ -83,7 +93,7 @@ export function validateAndCleanTailoredResume(
     // Deep clone tailored resume to produce a cleaned version
     const cleaned: ResumeData = JSON.parse(JSON.stringify(tailored));
 
-    // 1. Lock personalInfo: always preserve source contact details
+    // 1. Lock personalInfo: always preserve candidate contact identity
     cleaned.personalInfo = {
         ...source.personalInfo,
         title: tailored.personalInfo?.title || source.personalInfo.title,
@@ -97,7 +107,7 @@ export function validateAndCleanTailoredResume(
 
             verifiedEmployersCount++;
 
-            // Lock company name and dates to source of truth
+            // Lock company name to source of truth
             if (exp.company !== srcExp.company) {
                 issues.push({
                     section: 'experience',
@@ -110,6 +120,7 @@ export function validateAndCleanTailoredResume(
                 exp.company = srcExp.company;
             }
 
+            // Lock dates to source of truth
             if (exp.dates !== srcExp.dates) {
                 issues.push({
                     section: 'experience',
@@ -122,10 +133,24 @@ export function validateAndCleanTailoredResume(
                 exp.dates = srcExp.dates;
             }
 
-            // Check each bullet for unsupported metrics
+            // Lock job title to source of truth if candidate provided one
+            if (srcExp.title && exp.title !== srcExp.title) {
+                issues.push({
+                    section: 'experience',
+                    itemIndex: expIdx,
+                    issueType: 'modified_title',
+                    originalText: srcExp.title,
+                    tailoredText: exp.title,
+                    reason: 'Job title was modified. Restored authentic job title.',
+                });
+                exp.title = srcExp.title;
+            }
+
+            // Check each bullet for unsupported metrics and clean bracket formatting
             exp.bullets = (exp.bullets || []).map((bullet, bIdx) => {
                 const srcBullet = srcExp.bullets?.[bIdx] || '';
-                const tailoredBulletMetrics = extractMetricsFromText(bullet);
+                const sanitized = cleanBulletText(bullet);
+                const tailoredBulletMetrics = extractMetricsFromText(sanitized);
 
                 for (const tm of Array.from(tailoredBulletMetrics)) {
                     if (sourceMetrics.has(tm)) {
@@ -141,10 +166,10 @@ export function validateAndCleanTailoredResume(
                             tailoredText: bullet,
                             reason: `Detected ungrounded metric "${tm}". Reverted to truthful phrasing from source resume.`,
                         });
-                        return srcBullet || bullet;
+                        return srcBullet || sanitized;
                     }
                 }
-                return bullet;
+                return sanitized;
             });
 
             return exp;
@@ -161,6 +186,9 @@ export function validateAndCleanTailoredResume(
             edu.institution = srcEdu.institution;
             edu.degree = srcEdu.degree;
             edu.dates = srcEdu.dates;
+            if (srcEdu.gpa) edu.gpa = srcEdu.gpa;
+            if (srcEdu.coursework) edu.coursework = srcEdu.coursework;
+            if (srcEdu.honors) edu.honors = srcEdu.honors;
             return edu;
         });
     }
@@ -171,11 +199,18 @@ export function validateAndCleanTailoredResume(
             const srcProj = source.projects[pIdx];
             if (!srcProj) return proj;
 
+            // Lock project metadata: name, dates, role, link
             proj.name = srcProj.name;
-            if (proj.bullets && srcProj.bullets) {
-                proj.bullets = proj.bullets.map((b, bIdx) => {
-                    const srcB = srcProj.bullets?.[bIdx] || '';
-                    const metrics = extractMetricsFromText(b);
+            if (srcProj.link) proj.link = srcProj.link;
+            if (srcProj.role) proj.role = srcProj.role;
+            if (srcProj.dates) proj.dates = srcProj.dates;
+
+            // Clean bullets
+            const validateBullets = (bullets: string[] = [], srcBullets: string[] = []): string[] => {
+                return bullets.map((b, bIdx) => {
+                    const srcB = srcBullets[bIdx] || '';
+                    const sanitized = cleanBulletText(b);
+                    const metrics = extractMetricsFromText(sanitized);
                     for (const m of Array.from(metrics)) {
                         if (!sourceMetrics.has(m)) {
                             issues.push({
@@ -187,13 +222,33 @@ export function validateAndCleanTailoredResume(
                                 tailoredText: b,
                                 reason: `Detected unsupported metric "${m}" in project bullet. Restored source phrasing.`,
                             });
-                            return srcB || b;
+                            return srcB || sanitized;
                         }
                     }
-                    return b;
+                    return sanitized;
                 });
-            }
+            };
+
+            if (proj.bullets) proj.bullets = validateBullets(proj.bullets, srcProj.bullets);
+            if (proj.highlights) proj.highlights = validateBullets(proj.highlights, srcProj.highlights);
+            if (proj.impactBullets) proj.impactBullets = validateBullets(proj.impactBullets, srcProj.impactBullets);
+
             return proj;
+        });
+    }
+
+    // 5. Validate Certifications
+    if (cleaned.certifications && source.certifications) {
+        cleaned.certifications = cleaned.certifications.map((cert, cIdx) => {
+            const srcCert = source.certifications[cIdx];
+            if (!srcCert) return cert;
+
+            cert.name = srcCert.name;
+            cert.issuer = srcCert.issuer;
+            cert.date = srcCert.date;
+            if (srcCert.credentialId) cert.credentialId = srcCert.credentialId;
+            if (srcCert.link) cert.link = srcCert.link;
+            return cert;
         });
     }
 

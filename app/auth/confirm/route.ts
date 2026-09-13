@@ -8,8 +8,8 @@ export async function GET(request: NextRequest) {
     const code = requestUrl.searchParams.get('code');
     const token_hash = requestUrl.searchParams.get('token_hash');
     const type = requestUrl.searchParams.get('type');
-    const nextParam = requestUrl.searchParams.get('next') ?? '/builder';
-    const safeNext = nextParam.startsWith('/') ? nextParam : '/builder';
+    const nextParam = requestUrl.searchParams.get('next') ?? '/dashboard';
+    const safeNext = nextParam.startsWith('/') ? nextParam : '/dashboard';
     const emailTypes = new Set(['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email']);
 
     const supabase = createSupabaseServerClient();

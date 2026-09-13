@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const steps = [
     { id: 1, number: '01', name: 'Upload & JD', shortName: 'Job' },
@@ -16,12 +17,14 @@ export function WizardStepper() {
     const currentStep = useAppStore((s) => s.step);
     const setStep = useAppStore((s) => s.setStep);
 
+    const resumeData = useAppStore((s) => s.resumeData);
+
     return (
         <nav aria-label="Resume studio workflow steps" className="flex items-center gap-1 sm:gap-2 max-w-full overflow-x-auto no-scrollbar py-1">
             {steps.map((step, index) => {
                 const isCompleted = currentStep > step.id;
                 const isCurrent = currentStep === step.id;
-                const isAccessible = step.id <= currentStep;
+                const isAccessible = step.id <= currentStep || Boolean(resumeData) || step.id <= 2;
 
                 return (
                     <div key={step.id} className="flex items-center shrink-0">
@@ -33,12 +36,13 @@ export function WizardStepper() {
                             onClick={() => {
                                 if (isAccessible && step.id !== currentStep) {
                                     setStep(step.id);
+                                    toast.info(`Step ${step.id}: ${step.name}`);
                                 }
                             }}
                             className={cn(
                                 "shrink-0 relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 transition-all text-xs group min-h-[36px] focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-hidden select-none",
-                                isCurrent && "bg-card/80 dark:bg-white/[0.07] border border-border/80 dark:border-white/15 shadow-sm font-semibold backdrop-blur-md",
-                                isCompleted && "hover:bg-muted/50 dark:hover:bg-white/[0.04] cursor-pointer text-foreground/90",
+                                isCurrent && "bg-card border border-border shadow-sm font-semibold",
+                                isCompleted && "hover:bg-muted/50 cursor-pointer text-foreground/90",
                                 !isAccessible && "cursor-not-allowed opacity-35"
                             )}
                             title={isCompleted ? `Return to Step ${step.id}: ${step.name}` : undefined}
@@ -51,7 +55,7 @@ export function WizardStepper() {
                                         ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400"
                                         : isCurrent
                                             ? "bg-primary text-primary-foreground shadow-xs shadow-primary/40 ring-2 ring-primary/25"
-                                            : "border border-border/70 dark:border-white/10 bg-muted/30 text-muted-foreground"
+                                            : "border border-border bg-muted/30 text-muted-foreground"
                                 )}
                             >
                                 {isCompleted ? (

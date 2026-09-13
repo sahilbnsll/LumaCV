@@ -126,4 +126,4 @@ Run Section 1 of [`supabase/schema.sql`](../supabase/schema.sql) in your Supabas
 **Cause**: The requested resume has extensive experience bullets exceeding standard single-pass token output windows.
 
 **Resolution**:
-LumaCV automatically routes responses through `jsonrepair` before Zod schema validation. If parsing persists in failing, switch to a larger context model (e.g. `gemini-2.5-pro` or `gpt-4o`) via the model selector in settings.
+LumaCV automatically routes responses through `jsonrepair` before Zod schema validation, and fails over to the next configured provider if a model's output is empty or unusable. If parsing persists in failing across every configured provider, switch to a larger-context BYOK model (e.g. `gpt-4o`) via the model selector in settings.

@@ -105,16 +105,16 @@ export default function ProfileDropdown({
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                "flex items-center rounded-2xl border border-zinc-200/70 bg-white dark:bg-zinc-900/90 dark:border-zinc-800/80 transition-all duration-200 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60 hover:shadow-sm focus:outline-none cursor-pointer",
+                "flex items-center rounded-2xl border border-border bg-card transition-all duration-200 hover:bg-muted/70 hover:border-border hover:shadow-xs focus:outline-none cursor-pointer",
                 compact ? "gap-2.5 px-3 py-1.5" : "gap-4 sm:gap-6 px-3.5 py-2"
               )}
               type="button"
             >
               <div className="flex-1 text-left">
-                <div className="font-semibold text-xs sm:text-sm text-zinc-900 leading-tight tracking-tight dark:text-zinc-100">
+                <div className="font-semibold text-xs sm:text-sm text-foreground leading-tight tracking-tight">
                   {data.name}
                 </div>
-                <div className="text-[11px] text-zinc-500 leading-tight tracking-tight dark:text-zinc-400 truncate max-w-[140px] sm:max-w-[180px]">
+                <div className="text-[11px] text-muted-foreground leading-tight tracking-tight truncate max-w-[140px] sm:max-w-[180px]">
                   {data.email}
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function ProfileDropdown({
               {/* Gradient Ring Avatar */}
               <div className="relative shrink-0">
                 <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-sm">
-                  <div className="h-full w-full overflow-hidden rounded-full bg-white dark:bg-zinc-900 flex items-center justify-center">
+                  <div className="h-full w-full overflow-hidden rounded-full bg-card flex items-center justify-center">
                     {data.avatar && !imageError ? (
                       <Image
                         alt={data.name}
@@ -175,7 +175,7 @@ export default function ProfileDropdown({
 
           <DropdownMenuContent
             align="end"
-            className="w-72 origin-top-right rounded-2xl border border-zinc-200/70 bg-white/95 p-2 shadow-2xl shadow-zinc-900/10 backdrop-blur-md dark:border-zinc-800/70 dark:bg-zinc-900/95 dark:shadow-black/40 z-50 animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+            className="w-72 origin-top-right rounded-2xl border border-border bg-popover/98 p-2 shadow-2xl backdrop-blur-md z-50 animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
             sideOffset={8}
           >
             {/* Header with pill badge */}
@@ -197,7 +197,7 @@ export default function ProfileDropdown({
                   <div className="flex flex-1 items-center justify-between w-full">
                     <div className="flex items-center gap-2.5">
                       {item.icon}
-                      <span className="font-medium text-xs text-zinc-900 dark:text-zinc-100 group-hover:text-foreground">
+                      <span className="font-medium text-xs text-foreground group-hover:text-foreground">
                         {item.label}
                       </span>
                     </div>
@@ -222,7 +222,7 @@ export default function ProfileDropdown({
                   <DropdownMenuItem asChild key={item.label}>
                     {item.href ? (
                       <Link
-                        className="group flex cursor-pointer items-center rounded-xl border border-transparent px-3 py-2.5 transition-all duration-150 hover:border-zinc-200/70 hover:bg-zinc-100/90 dark:hover:border-zinc-700/50 dark:hover:bg-zinc-800/60"
+                        className="group flex cursor-pointer items-center rounded-xl border border-transparent px-3 py-2.5 transition-all duration-150 hover:bg-muted text-foreground"
                         href={item.href}
                         onClick={item.onClick}
                       >
@@ -231,7 +231,7 @@ export default function ProfileDropdown({
                     ) : (
                       <button
                         type="button"
-                        className="group flex w-full cursor-pointer items-center rounded-xl border border-transparent px-3 py-2.5 transition-all duration-150 hover:border-zinc-200/70 hover:bg-zinc-100/90 dark:hover:border-zinc-700/50 dark:hover:bg-zinc-800/60 text-left"
+                        className="group flex w-full cursor-pointer items-center rounded-xl border border-transparent px-3 py-2.5 transition-all duration-150 hover:bg-muted text-foreground text-left"
                         onClick={item.onClick}
                       >
                         {content}
@@ -242,7 +242,7 @@ export default function ProfileDropdown({
               })}
             </div>
 
-            <DropdownMenuSeparator className="my-2 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-zinc-800" />
+            <DropdownMenuSeparator className="my-2 bg-border" />
 
             {/* Sign Out */}
             {onSignOut && (

@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
-import { AppFooter } from '@/components/app-footer';
+import { EditorialFooter } from '@/components/landing/editorial-footer';
 import { useAuth } from '@/components/auth-provider';
 import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { LumaLogo } from '@/components/luma-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 
 export default function ResetPasswordPage() {
     const { supabase } = useAuth();
@@ -23,15 +23,15 @@ export default function ResetPasswordPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password.length < 6) {
-            toast.error('Password must be at least 6 characters long');
+            notify.error('Password too short', 'Password must be at least 6 characters');
             return;
         }
         if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
+            notify.error('Password mismatch', 'Passwords do not match');
             return;
         }
         if (!supabase) {
-            toast.error('Auth service unavailable in current session');
+            notify.error('Auth unavailable', 'Auth service unavailable in current session');
             return;
         }
 
@@ -41,10 +41,10 @@ export default function ResetPasswordPage() {
                 password,
             });
             if (error) throw error;
-            toast.success('Password updated successfully!');
+            notify.success('Password updated');
             router.push('/dashboard');
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Failed to update password');
+            notify.error("Couldn't update password", err instanceof Error ? err.message : undefined);
         } finally {
             setLoading(false);
         }
@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[90vw] h-[360px] bg-primary/8 rounded-full blur-3xl pointer-events-none -z-10" />
 
             <main className="flex-1 px-3 sm:px-4 py-12 sm:py-20 flex items-center justify-center">
-                <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card/90 p-5 sm:p-8 md:p-10 shadow-xl backdrop-blur-xl transition-all">
+                <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-5 sm:p-8 md:p-10 shadow-xl transition-all">
                     <div className="flex items-center gap-3 mb-6 pb-5 border-b border-border/60">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60 text-foreground border border-border/60 shadow-xs">
                             <LumaLogo size={22} />
@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
                 </div>
             </main>
 
-            <AppFooter />
+            <EditorialFooter />
         </div>
     );
 }

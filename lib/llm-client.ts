@@ -9,36 +9,88 @@ import { UserApiKeys } from './ai-keys';
 // Official Models (Configured from console.groq.com, aistudio.google.com, platform.openai.com, console.anthropic.com)
 // ============================================================================
 
-/** 
+/**
  * Groq Active Models
+ * (llama-3.1-70b-versatile and mixtral-8x7b-32768 have been decommissioned by
+ * Groq — replaced with the current lineup, matching what's proven working in
+ * the sibling Portfolio project's own multi-provider chat route.)
  */
 const GROQ_HEAVY_MODELS = [
-    'llama-3.3-70b-versatile',
-    'qwen/qwen3.6-27b',
+    // allam-2-7b deliberately excluded here — it hard-rejects any max_tokens
+    // over 4096, which is too small for the combined resume+JD-keywords+ATS-
+    // summary payload heavy tasks send; it stays in the light pool below where
+    // its cap is never an issue.
+    'groq/compound-mini',
+    'groq/compound',
     'qwen/qwen3.8-27b',
-    'openai/gpt-oss-120b'
+    'qwen/qwen3.6-27b',
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
 ];
 
 const GROQ_LIGHT_MODELS = [
-    'llama-3.1-8b-instant',
-    'llama-3.3-70b-versatile',
     'qwen/qwen3.6-27b',
-    'openai/gpt-oss-20b'
+    'openai/gpt-oss-20b',
+    'groq/compound-mini',
+    'allam-2-7b',
 ];
 
-/** 
+/**
  * Google Gemini Active Models
+ * (gemini-2.0-flash and gemini-1.5-pro have been retired by Google.
+ * gemini-flash-latest is a rolling alias so it won't go stale the same way.)
  */
 const GEMINI_HEAVY_MODELS = [
     'gemini-2.5-flash',
     'gemini-flash-latest',
-    'gemini-3.5-flash'
 ];
 
 const GEMINI_LIGHT_MODELS = [
-    'gemini-2.5-flash-lite',
-    'gemini-flash-lite-latest',
-    'gemini-2.5-flash'
+    'gemini-2.5-flash-lite-preview-06-17',
+    'gemini-2.5-flash',
+    'gemini-flash-latest',
+];
+
+/**
+ * Mistral AI Active Models — OpenAI-compatible endpoint (api.mistral.ai/v1).
+ */
+const MISTRAL_HEAVY_MODELS = [
+    'codestral-latest',
+    'ministral-14b-latest',
+    'open-mistral-nemo',
+];
+
+const MISTRAL_LIGHT_MODELS = [
+    'ministral-8b-latest',
+    'ministral-3b-latest',
+    'open-mistral-nemo',
+];
+
+/**
+ * OpenRouter Active Models — free-tier models via OpenAI-compatible endpoint.
+ */
+const OPENROUTER_HEAVY_MODELS = [
+    'nvidia/nemotron-3-super-120b-a12b:free',
+    'nvidia/nemotron-3.5-lightning:free',
+    'poolside/laguna-s-2.1:free',
+];
+
+const OPENROUTER_LIGHT_MODELS = [
+    'nvidia/nemotron-3.5-lightning:free',
+    'poolside/laguna-s-2.1:free',
+];
+
+/**
+ * GitHub Models Active Models — OpenAI-compatible endpoint (models.github.ai).
+ */
+const GITHUB_MODELS_HEAVY_MODELS = [
+    'gpt-4o-mini',
+    'Meta-Llama-3.1-8B-Instruct',
+];
+
+const GITHUB_MODELS_LIGHT_MODELS = [
+    'Phi-3.5-mini-instruct',
+    'gpt-4o-mini',
 ];
 
 /**
@@ -188,7 +240,11 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
             : defaultPool;
 
         configs.push({
-            provider: userGroq,
+            // Groq's OpenAI-compatible endpoint only implements Chat Completions —
+            // calling the provider directly (or .languageModel/.responses) defaults
+            // to the newer Responses API, which Groq doesn't support and which was
+            // making every Groq model fail with a generic "not found" error.
+            provider: (modelId: string) => userGroq.chat(modelId),
             models,
             name: `BYOK-Groq (${userKeys.groqModel || 'Default'})`
         });
@@ -221,9 +277,41 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
             apiKey: groqKey,
         });
         configs.push({
-            provider: groq,
+            // See BYOK-Groq comment above — Groq only supports Chat Completions.
+            provider: (modelId: string) => groq.chat(modelId),
             models: taskType === 'heavy' ? GROQ_HEAVY_MODELS : GROQ_LIGHT_MODELS,
             name: 'System-Groq (Default)'
+        });
+    }
+
+    // Mistral, OpenRouter, and GitHub Models are all OpenAI-compatible endpoints —
+    // same .chat() requirement as Groq (see comment above). System-only for now,
+    // matching how the sibling Portfolio project's chat route configures them
+    // (plain env vars, no BYOK plumbing for these three).
+    const mistralKey = process.env.MISTRAL_API_KEY;
+    if (mistralKey) {
+        const mistral = createOpenAI({ baseURL: 'https://api.mistral.ai/v1', apiKey: mistralKey });
+        configs.push({
+            provider: (modelId: string) => mistral.chat(modelId),
+            models: taskType === 'heavy' ? MISTRAL_HEAVY_MODELS : MISTRAL_LIGHT_MODELS,
+            name: 'System-Mistral (Default)'
+        });
+    }
+
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    if (openRouterKey) {
+        const openRouter = createOpenAI({
+            baseURL: 'https://openrouter.ai/api/v1',
+            apiKey: openRouterKey,
+            headers: {
+                'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://lumacv.sahilbansal.net',
+                'X-Title': 'LumaCV',
+            },
+        });
+        configs.push({
+            provider: (modelId: string) => openRouter.chat(modelId),
+            models: taskType === 'heavy' ? OPENROUTER_HEAVY_MODELS : OPENROUTER_LIGHT_MODELS,
+            name: 'System-OpenRouter (Default)'
         });
     }
 
@@ -237,8 +325,18 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
         });
     }
 
+    const githubModelsKey = process.env.GITHUB_MODELS_TOKEN || process.env.GITHUB_TOKEN;
+    if (githubModelsKey) {
+        const githubModels = createOpenAI({ baseURL: 'https://models.github.ai/inference', apiKey: githubModelsKey });
+        configs.push({
+            provider: (modelId: string) => githubModels.chat(modelId),
+            models: taskType === 'heavy' ? GITHUB_MODELS_HEAVY_MODELS : GITHUB_MODELS_LIGHT_MODELS,
+            name: 'System-GitHubModels (Default)'
+        });
+    }
+
     if (configs.length === 0) {
-        throw new Error('No AI provider configured. Please provide your own API key (Gemini, OpenAI, Anthropic, or Groq) in Settings, or configure system API keys.');
+        throw new Error('No AI provider configured. Please provide your own API key (Gemini, OpenAI, Anthropic, or Groq) in Settings, or configure a system API key (Gemini, Groq, Mistral, OpenRouter, OpenAI, or GitHub Models).');
     }
 
     return configs;
@@ -256,17 +354,42 @@ export async function generateStream(
     prompt: string,
     systemPrompt?: string,
     taskType: TaskType = 'heavy',
-    options?: { maxTokens?: number; abortSignal?: AbortSignal; userKeys?: UserApiKeys }
+    options?: {
+        maxTokens?: number;
+        abortSignal?: AbortSignal;
+        userKeys?: UserApiKeys;
+        maxAttempts?: number;
+        // Without this, failover only triggers on hard errors (network failure,
+        // timeout, empty stream) — a model that streams back syntactically fine
+        // but substantively useless content (e.g. `{}` from a weak fallback
+        // model under load) looks like a "success" and failover stops there.
+        // When provided, the full stream is collected up front and validated
+        // before committing to this model; a failed validation is treated the
+        // same as any other failure and the loop moves to the next model.
+        validate?: (fullText: string) => boolean;
+    }
 ): Promise<{ textStream: ReadableStream<string>; model: string }> {
     const providerConfigs = getProviderConfigurations(taskType, options?.userKeys);
 
     const maxOutputTokens = options?.maxTokens || 4000;
     const errors: string[] = [];
+    // No cap by default: on genuine failure this should fail over across every
+    // configured provider (Gemini -> Groq -> Mistral -> OpenRouter -> OpenAI ->
+    // GitHub Models) — that resilience is the whole point of configuring 5+
+    // providers. The "many AI API requests" complaint this used to guard
+    // against was actually the *pipeline* re-triggering itself on every
+    // success (a useEffect dependency bug in step3-processing.tsx, now fixed
+    // at the source) — not legitimate model failover depth. Callers that truly
+    // want a shallow, fast-fail chain can still pass `maxAttempts` explicitly.
+    const maxAttempts = options?.maxAttempts ?? Infinity;
+    let attempts = 0;
 
-    for (const config of providerConfigs) {
+    outer: for (const config of providerConfigs) {
         const { provider, models, name: providerName } = config;
 
         for (const modelId of models) {
+            if (attempts >= maxAttempts) break outer;
+            attempts++;
             const controller = new AbortController();
             const timeoutId = setTimeout(() => {
                 console.log(`[${providerName}] ${modelId} timed out after 15s, failing over...`);
@@ -288,22 +411,66 @@ export async function generateStream(
                     temperature: 0.2,
                     topP: 0.8,
                     abortSignal: controller.signal,
+                    // The AI SDK's own default retry-with-exponential-backoff (3
+                    // attempts) fights our failover loop: on a quota-exhausted or
+                    // rate-limited model it can burn 30-90s retrying the SAME dead
+                    // model before giving control back to us. Our outer loop already
+                    // provides retry/failover across every configured model and
+                    // provider, so let a single failure here fail over immediately.
+                    maxRetries: 0,
                 });
 
-                const reader = result.textStream.getReader();
-                const firstChunk = await reader.read();
+                // Consume the first chunk to verify the stream is alive
+                // and catch SDK-level errors (e.g. "model output must contain
+                // either output text or tool calls") before we commit.
+                let firstChunk: ReadableStreamReadResult<string>;
+                try {
+                    const reader0 = result.textStream.getReader();
+                    firstChunk = await reader0.read();
+                    reader0.releaseLock();
+                } catch (sdkErr) {
+                    // SDK threw synchronously on empty / invalid output
+                    throw sdkErr;
+                }
 
                 clearTimeout(timeoutId);
 
-                if (firstChunk.done) {
-                    throw new Error('Empty stream');
+                if (firstChunk.done || !firstChunk.value) {
+                    throw new Error('Empty stream — model returned no output');
                 }
 
                 console.log(`[${providerName}] Stream connected via ${modelId}`);
 
+                if (options?.validate) {
+                    // Content-quality gate: collect the rest of the stream now so we
+                    // can judge the full output before committing to this model.
+                    let fullText = firstChunk.value as string;
+                    const reader = result.textStream.getReader();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        fullText += value;
+                    }
+
+                    if (!options.validate(fullText)) {
+                        throw new Error('Model returned unusable/empty content');
+                    }
+
+                    const collectedStream = new ReadableStream<string>({
+                        start(streamController) {
+                            streamController.enqueue(fullText);
+                            streamController.close();
+                        },
+                    });
+
+                    return { textStream: collectedStream, model: `${providerName}/${modelId}` };
+                }
+
+                // Re-create a clean reader for the caller
                 const fullStream = new ReadableStream<string>({
                     async start(streamController) {
-                        streamController.enqueue(firstChunk.value);
+                        streamController.enqueue(firstChunk.value as string);
+                        const reader = result.textStream.getReader();
                         try {
                             while (true) {
                                 const { done, value } = await reader.read();
@@ -321,13 +488,22 @@ export async function generateStream(
             } catch (e) {
                 clearTimeout(timeoutId);
                 const msg = e instanceof Error ? e.message : String(e);
-                console.log(`[${providerName}] ${modelId} failed: ${msg.slice(0, 100)}, failing over...`);
+                // Treat empty-output SDK errors the same as any other failover
+                const isEmptyOutputError = msg.toLowerCase().includes('model output') ||
+                    msg.toLowerCase().includes('empty stream') ||
+                    msg.toLowerCase().includes('no object generated') ||
+                    msg.toLowerCase().includes('unusable');
+                if (isEmptyOutputError) {
+                    console.log(`[${providerName}] ${modelId} returned empty output, failing over...`);
+                } else {
+                    console.log(`[${providerName}] ${modelId} failed: ${msg.slice(0, 100)}, failing over...`);
+                }
                 errors.push(`${providerName}:${modelId}: ${msg.slice(0, 200)}`);
             }
         }
     }
 
-    throw new Error(`All providers and models exhausted. Attempts: ${errors.join(' | ')}`);
+    throw new Error(`AI request failed after ${errors.length} attempt(s): ${errors.join(' | ')}`);
 }
 
 /**

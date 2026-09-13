@@ -11,8 +11,11 @@ function getRedis() {
 }
 
 export async function GET(req: NextRequest) {
+    // Fail closed: if COMPILE_WORKER_SECRET isn't configured, this must reject
+    // rather than silently serve internal stats to anyone (the previous
+    // `secret && ...` check skipped auth entirely when the env var was unset).
     const secret = process.env.COMPILE_WORKER_SECRET;
-    if (secret && req.headers.get('x-worker-secret') !== secret) {
+    if (!secret || req.headers.get('x-worker-secret') !== secret) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -31,7 +31,7 @@
     if "linkedin" in contact and contact.linkedin != "" { items.push(link("https://" + clean-link(contact.linkedin))[#clean-link(contact.linkedin)]) }
     if "github" in contact and contact.github != "" { items.push(link("https://" + clean-link(contact.github))[#clean-link(contact.github)]) }
     if "website" in contact and contact.website != "" { items.push(link("https://" + clean-link(contact.website))[#clean-link(contact.website)]) }
-    items.join(text(fill: muted)[ · ])
+    items.join(text(fill: rgb("#fed7aa"))[ · ])
   }
 
   let skill-lines = {
@@ -53,7 +53,7 @@
     })
     body
   }
-  block(fill: accent, width: 100%, inset: (x: 0.55em, y: 0.48em), radius: 3pt, [#text(size: 22pt, weight: "bold", fill: white)[#name]#if headline != "" [#v(0.08em)#text(size: 9.5pt, fill: white)[#headline]]
+  block(fill: accent, width: 100%, inset: (x: 0.55em, y: 0.48em), radius: 3pt, [#show link: set text(fill: white); #text(size: 22pt, weight: "bold", fill: white)[#name]#if headline != "" [#v(0.08em)#text(size: 9.5pt, fill: white)[#headline]]
   v(0.10em)#text(size: 7.8pt, fill: white)[#contact-text]]) #v(0.12em) line(length: 100%, stroke: 0.7pt + stroke-line)
 
   if summary != "" {

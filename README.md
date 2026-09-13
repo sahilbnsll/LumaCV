@@ -14,7 +14,7 @@
   <a href="#two-tailoring-modes">Dual Tailoring Modes</a> •
   <a href="#transparent-audit-trail">Audit Trail</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="#templates">48 Templates</a> •
+  <a href="#templates">52 Templates</a> •
   <a href="#byok-privacy">BYOK Privacy</a> •
   <a href="#testing">Verification</a> •
   <a href="docs/architecture.md">Docs Hub</a> •
@@ -44,12 +44,16 @@ LumaCV features a **transparent, anti-hallucination AI pipeline** that operates 
   - **Score Gap Diagnostics**: Explains exactly why the ATS score isn't 100% and itemizes the exact point impact for each missing competency.
   - **Evidence Safety Guarantee**: Automated safety verdict confirming zero hallucinated metrics, employers, or credentials.
 - 📊 **Dynamic Normalized ATS Scoring Engine**: Evaluates hard skills, core responsibilities, keyword density, and formatting compliance across a normalized 4-pillar formula that reaches 95–100% for well-matched candidates without artificial caps.
-- 📐 **48 Architectural Template Combinations**: 6 core design archetypes (`Modern`, `Classic`, `Engineering`, `Compact`, `Two-Column`, `ATS-Safe`) across 8 curated executive colorways.
-- 📱 **Adaptive Responsive UI**: Tailored layouts across mobile, tablet, and desktop featuring swipeable touch snap carousels and sticky action bars.
-- 🔑 **Bring Your Own Key (BYOK)**: Native support for Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud. Keys are held ephemerally in browser memory and are never persisted or logged.
+- 📐 **52 Typst Templates**: Spanning Classic/ATS-Optimized, Modern & Tech, and Executive & Advisory families with instant vector previews and offline CLI compatibility — see [`lib/resume-schema.ts`](lib/resume-schema.ts).
+- 🌊 **Atmospheric Dual-Mode Floating Vector Lines**: Perpetual, GPU-accelerated contour waves flowing gracefully across both light and dark modes with calibrated Apple slate and cosmic white tones that never obscure foreground text or card elevation.
+- 🧭 **Universal Kinetic Menu & Spring Motion**: Full-screen navigation drawer with rotating glyph trigger (`KineticMenuButton`) accessible from every view (Editor, Dashboard, Templates, Docs, Auth) powered by Apple fluid spring physics (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- 🧲 **Magnetic Floating Dock**: macOS-grade bottom dock with calibrated spring physics, vivid gradient badges, high-contrast tooltips, and specular highlight icons for rapid workspace switching.
+- 💳 **Unified Open-Source Sustainability Suite**: Centralized Apple-grade glassmorphic UPI dialog with dynamic SVG QR code generation and real-time custom amount verification, alongside GitHub Sponsors and Buy Me a Coffee channels.
+- 📱 **Adaptive Responsive UI**: Tailored layouts across mobile, tablet, and desktop featuring swipeable touch snap carousels, responsive dialogs, and sticky action bars.
+- 🔑 **Bring Your Own Key (BYOK)**: Native support for Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud — plus five system-configured fallback providers (Gemini, Groq, Mistral, OpenRouter, GitHub Models) so the app works out of the box even without a BYOK key. Keys are held ephemerally in browser memory and are never persisted or logged.
 - 📦 **Dual Export Architecture**: Instant vector PDF downloads or raw Typst source exports (`.typ`) for offline CLI builds.
-- 📬 **Integrated User Feedback Service**: Direct bug and feature report dispatch powered by Resend with verified domain delivery.
-- 🔒 **Privacy-First & Self-Hostable**: Client-side PDF text extraction via `pdfjs-dist`, optional Supabase authentication, and zero third-party tracking telemetry.
+- 📬 **Integrated User Feedback Service**: Direct bug and feature report dispatch powered by Resend.
+- 🔒 **Privacy-First & Self-Hostable**: Client-side PDF/DOCX text extraction (`pdfjs-dist` / `mammoth`) — the file itself never leaves the browser, only extracted text is sent server-side for AI features. Optional Supabase authentication. (Aggregate, privacy-respecting page analytics via Vercel Analytics — see [Privacy Policy](https://lumacv.sahilbansal.net/privacy).)
 
 ---
 
@@ -98,18 +102,16 @@ Unlike "black box" resume optimizers, LumaCV exposes every editorial decision:
 
 ---
 
-## 48 Curated Typst Templates
+## 52 Curated Typst Templates
 
-LumaCV provides 6 foundational typesetting archetypes paired with 8 executive color palettes:
+LumaCV ships 52 templates across three families — the authoritative list is
+`TemplateTypeSchema` in [`lib/resume-schema.ts`](lib/resume-schema.ts):
 
-| Archetype | Best Suited For | Key Visual Characteristics |
+| Family | Examples | Best Suited For |
 | :--- | :--- | :--- |
-| **Modern** | Product Managers, Tech Leads | Clean sans-serif, category pill tags, streamlined contact bar |
-| **Classic** | Finance, Law, Executive | Harvard-style serif typography, elegant horizontal rules |
-| **Engineering** | Software, Systems, DevOps | High-density layout, dual-rule sections, explicit tech matrices |
-| **Compact** | 10+ Year Veteran Careers | Maximum information density, single-page fit algorithm |
-| **Two-Column** | Designers, Technical Writers | Asymmetric layout with structured sidebar for skills & awards |
-| **ATS-Safe** | Enterprise & Government ATS | Pure single-column linear flow, guaranteed 100% parser indexability |
+| **Classic & ATS-Optimized** | `modern`, `classic`, `engineering`, `compact`, `two_column`, `ats_safe`, `skillsfirst`, `credential` | Enterprise/government ATS, traditional industries |
+| **Modern & Tech** | `terminal`, `matrix`, `product`, `startup`, `mono`, `cadence` | Startups, software/product roles |
+| **Executive & Advisory** | `executive`, `consultant` | Senior leadership, consulting |
 
 **Colorways**: `none`, `navy`, `cobalt`, `emerald`, `burgundy`, `teal`, `slate`, `black`.
 
@@ -173,13 +175,13 @@ Open [http://localhost:3000](http://localhost:3000) to launch LumaCV.
 ## Architecture Overview
 
 ```
-[User's PDF Resume]
+[User's PDF/DOCX Resume]
         │
-        ▼ (Client-side pdfjs-dist)
+        ▼ (Client-side pdfjs-dist / mammoth — file never leaves the browser)
 [Raw Text + Extracted URLs]
         │
         ▼ POST /api/v1/resume/parse
-[LLM Parser (Gemini 2.5 Flash / Groq / Claude)]
+[LLM Parser — fails over across Gemini → Groq → Mistral → OpenRouter → OpenAI → GitHub Models]
         │
         ▼ (jsonrepair + normalizeResumeFromLLM)
 [Structured ResumeData (JSON)]
@@ -187,8 +189,9 @@ Open [http://localhost:3000](http://localhost:3000) to launch LumaCV.
         ▼ (Zustand Store -> Step 2 Form)
 [User Edits / Verification]
         │
-        ▼ POST /api/v1/resume/analyze-jd + POST /api/v1/resume/tailor
-[Tailored ResumeData + Transparent Audit Trail + Typst AST]
+        ▼ POST /api/v1/resume/tailor (raw `jd` text OR pre-extracted jdKeywords)
+[Tailored ResumeData + Transparent Audit Trail — one AI call total; the same
+ completion extracts JD keywords too if the caller didn't already have them]
         │
         ▼ POST /api/v1/resume/compile
 [Typst Native Engine (bin/typst)]
@@ -203,14 +206,19 @@ Read the full [Architecture Documentation](docs/architecture.md) for deeper tech
 
 ## BYOK Privacy & Model Compatibility
 
-LumaCV connects directly with leading AI providers using user-provided API keys:
+LumaCV connects directly with leading AI providers using user-provided API keys (BYOK), and falls back to system-configured providers when no BYOK key is set:
 
-| Provider | Supported Models | Recommended Use Case |
-| :--- | :--- | :--- |
-| **Google Gemini** | `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite` | Ultra-low latency (< 400ms), structured outputs |
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o3-mini` | Benchmark schema compliance & formatting |
-| **Anthropic Claude**| `claude-3-5-sonnet`, `claude-3-5-haiku` | Nuanced, natural executive vocabulary |
-| **Groq Cloud** | `qwen/qwen-2.5-32b`, `llama-3.3-70b` | Maximum token generation speed |
+| Provider | Access | Models | Notes |
+| :--- | :--- | :--- | :--- |
+| **Google Gemini** | BYOK + system | `gemini-2.5-flash`, `gemini-flash-latest` | Tried first in the system fallback chain |
+| **Groq Cloud** | BYOK + system | `groq/compound-mini`, `qwen/qwen3.8-27b`, `openai/gpt-oss-120b`, and others | OpenAI-compatible endpoint |
+| **Mistral AI** | System only | `codestral-latest`, `ministral-14b-latest` | OpenAI-compatible endpoint |
+| **OpenRouter** | System only | Free-tier models (e.g. `nvidia/nemotron-3.5-lightning:free`) | OpenAI-compatible endpoint |
+| **OpenAI** | BYOK + system | `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo` | |
+| **GitHub Models** | System only | `gpt-4o-mini`, `Meta-Llama-3.1-8B-Instruct` | Free with a GitHub PAT |
+| **Anthropic Claude** | BYOK only | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022` | |
+
+See [`lib/llm-client.ts`](lib/llm-client.ts) for the exact model lists and failover order.
 
 > **Privacy Guarantee**: BYOK keys are held strictly in local browser memory (`localStorage` / session headers) and sent over encrypted HTTPS directly to model inference endpoints. They are never written to disk, database, or server logs.
 
@@ -230,7 +238,7 @@ npm run lint
 # Production build test
 npm run build
 
-# Automated Visual Regression Audit (48 combinations)
+# Automated Visual Regression Audit (all 52 templates)
 node scripts/test-visual-regression.mjs
 ```
 
