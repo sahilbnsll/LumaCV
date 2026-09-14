@@ -45,6 +45,41 @@ const ACCENT_COLORS = Object.values(PALETTES)
   .filter((p) => p.id !== "none")
   .map((p) => ({ name: p.label, value: p.hex }));
 
+// PALETTES' hex values are tuned for text on white resume paper, several
+// (navy, cobalt, burgundy, black) are too dark to hit 3:1 against this
+// section's near-black background when applied directly to the headline.
+// Lightens only for that display purpose, the picker swatches and the
+// actual resume-editor colors (PALETTES itself) are left untouched.
+function lightenForDarkBg(hex: string, minLightness = 0.55): string {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return hex;
+  const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (l >= minLightness) return hex;
+  const d = max - min;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  let h: number;
+  if (d === 0) h = 0;
+  else if (max === r) h = ((g - b) / d) % 6;
+  else if (max === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  const c = (1 - Math.abs(2 * minLightness - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const mm = minLightness - c / 2;
+  let [r2, g2, b2] = [0, 0, 0];
+  if (h < 60) [r2, g2, b2] = [c, x, 0];
+  else if (h < 120) [r2, g2, b2] = [x, c, 0];
+  else if (h < 180) [r2, g2, b2] = [0, c, x];
+  else if (h < 240) [r2, g2, b2] = [0, x, c];
+  else if (h < 300) [r2, g2, b2] = [x, 0, c];
+  else [r2, g2, b2] = [c, 0, x];
+  const toHex = (v: number) => Math.round((v + mm) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
+}
+
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-4";
 const dockLabel = "mb-[7px] block text-[11px] leading-[1.4] text-muted-foreground";
@@ -156,7 +191,7 @@ export function ResumeStackHero() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
                 className="text-foreground"
-                style={{ color: accent }}
+                style={{ color: lightenForDarkBg(accent) }}
               >
                 {activeTemplateName}
               </motion.span>
@@ -292,7 +327,7 @@ export function ResumeStackHero() {
                 type="button"
                 className={`flex min-h-touch flex-1 cursor-pointer flex-col items-center justify-center gap-[4px] rounded-[4px] border p-2 text-[11px] transition-all ${
                   selectedIdx === i
-                    ? "border-primary bg-primary/10 text-primary font-semibold shadow-xs"
+                    ? "border-primary bg-primary/10 text-primary-text font-semibold shadow-xs"
                     : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 } ${focusRing}`}
                 aria-pressed={selectedIdx === i}

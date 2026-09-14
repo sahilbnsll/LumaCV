@@ -78,7 +78,11 @@ export function KineticMenuButton({ open, onClick }: { open: boolean; onClick: (
             aria-expanded={open}
             className="flex items-center gap-2 rounded-lg px-2.5 py-2 min-h-touch text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-            <div className="relative h-4 w-9 overflow-hidden text-xs font-semibold hidden sm:block">
+            {/* Decorative, both "Menu" and "Close" sit in the DOM at once for the
+                slide animation, which otherwise reads as visible text that doesn't
+                match the button's aria-label. The aria-label already states
+                open/closed, so hide this from the accessibility tree entirely. */}
+            <div aria-hidden="true" className="relative h-4 w-9 overflow-hidden text-xs font-semibold hidden sm:block">
                 <div ref={textRef} style={{ willChange: 'transform' }}>
                     <p className="h-4 leading-4">Menu</p>
                     <p className="h-4 leading-4">Close</p>

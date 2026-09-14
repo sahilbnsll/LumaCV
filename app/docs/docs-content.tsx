@@ -847,7 +847,7 @@ export default function DocsPageContent() {
                 one sticking in place as the next lands on top of it, the current
                 chapter's card picked out with a primary border. */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_480px] gap-10 xl:gap-14 items-start">
-                <main className="min-w-0 space-y-16 pb-28 text-sm text-muted-foreground leading-relaxed">
+                <main id="main-content" className="min-w-0 space-y-16 pb-28 text-sm text-muted-foreground leading-relaxed">
 
                     {/* Mobile-only chapter card stack: the same "real stack of paper"
                         deck as the desktop right rail, condensed and pinned above the

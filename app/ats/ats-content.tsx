@@ -409,7 +409,7 @@ function AtsCheckerContent() {
         <div className="min-h-screen bg-transparent text-foreground flex flex-col antialiased">
             <AppHeader />
 
-            <main className="flex-1 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <main id="main-content" className="flex-1 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 w-full">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-6">
                     <div>

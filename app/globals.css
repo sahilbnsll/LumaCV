@@ -44,6 +44,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-text: var(--primary-text);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -78,6 +79,11 @@
   --popover-foreground: oklch(0.20 0.005 260);
   --primary: oklch(0.54 0.22 260);      /* #0071e3 - Apple signature blue */
   --primary-foreground: oklch(1 0 0);
+  /* For text-primary usage (links, small labels) as opposed to bg-primary
+     buttons, see the .dark override below for why these need to differ.
+     Light mode's --primary already reads at 4.87-5.27:1 as text on the page
+     background/cards, so no separate value is needed here. */
+  --primary-text: var(--primary);
   --secondary: oklch(0.965 0.002 260);  /* #f5f5f7 - Apple secondary surface */
   --secondary-foreground: oklch(0.20 0.005 260);
   --muted: oklch(0.965 0.002 260);      /* #f5f5f7 */
@@ -124,8 +130,25 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.65 0.22 264);
+  /* L dropped from 0.65 to 0.58 (same hue/chroma): the brighter value only
+     hit 3.52:1 contrast against white text (measured via canvas pixel
+     sampling, WCAG needs 4.5:1 for normal-size text), failing on every
+     small primary button/badge in dark mode. 0.58 is the exact crossover
+     point (4.50:1), chosen over going lower because this token also does
+     double duty as `text-primary` directly on dark surfaces elsewhere (a
+     handful of small badges/links), where a LOWER L only makes contrast
+     worse. No single L clears 4.5:1 in both roles at once, those leftover
+     text-on-dark-surface instances need their own token, not a tweak here. */
+  --primary: oklch(0.58 0.22 264);
   --primary-foreground: oklch(1 0 0);
+  /* --primary itself is tuned for bg-primary buttons (needs to be dark
+     enough that white button text clears 4.5:1). A few small labels/badges
+     use text-primary directly on a dark surface instead, where a DARKER
+     primary only hurts contrast, verified there is no single lightness that
+     satisfies both roles at once. This restores the original brighter value
+     for that second role (measured 4.57-5.62:1 against the actual dark
+     surfaces that use it, vs. 3.43-4.39:1 if they inherited --primary). */
+  --primary-text: oklch(0.65 0.22 264);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

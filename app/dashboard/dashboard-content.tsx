@@ -459,7 +459,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-transparent text-foreground flex flex-col antialiased">
             <AppHeader />
 
-            <main className="flex-1 mx-auto max-w-6xl px-4 sm:px-6 py-8 w-full">
+            <main id="main-content" className="flex-1 mx-auto max-w-6xl px-4 sm:px-6 py-8 w-full">
                 <OnboardingModal />
 
                 {/* Header & Quick Action Buttons */}

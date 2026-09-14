@@ -519,10 +519,10 @@ export function StandaloneEditorFeature() {
                     if (sec.id === "personal") {
                       return (
                         <div key="personal" className="border-b border-border/40 pb-3 transition-all">
-                          <h4 className="text-lg sm:text-xl font-bold text-foreground tracking-tight transition-all">
+                          <h3 className="text-lg sm:text-xl font-bold text-foreground tracking-tight transition-all">
                             {doc.personal.name || "Your Name"}
-                          </h4>
-                          <p className="text-xs text-primary font-medium transition-all mt-0.5">
+                          </h3>
+                          <p className="text-xs text-primary-text font-medium transition-all mt-0.5">
                             {doc.personal.title || "Your Professional Title"}
                           </p>
                           <p className="text-[11px] text-muted-foreground pt-1 transition-all flex flex-wrap gap-x-2 gap-y-0.5">

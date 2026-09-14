@@ -265,7 +265,7 @@ function EditorContent() {
                     </div>
                 </header>
 
-                <main className="flex-1">
+                <main id="main-content" className="flex-1">
                     <ResumeEditorEntry onComplete={handleImportComplete} />
                 </main>
 
@@ -615,7 +615,7 @@ function EditorContent() {
             </header>
 
             {/* ── MAIN WORKSPACE (LumaCV 3-Pane Layout: [Sections | Editor Workspace | Live Preview]) ── */}
-            <main className="flex-1 w-full max-w-[1780px] mx-auto p-2 sm:p-4 lg:p-6">
+            <main id="main-content" className="flex-1 w-full max-w-[1780px] mx-auto p-2 sm:p-4 lg:p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                     {/* LEFT & CENTER COLUMNS: Sections Navigator & Active Section Workspace */}
                     <section

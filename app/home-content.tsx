@@ -27,7 +27,7 @@ export default function HomeContent() {
       <AppHeader />
 
       {/* Main Editorial Story Flow */}
-      <main className="flex-1 flex flex-col overflow-x-clip w-full max-w-full">
+      <main id="main-content" className="flex-1 flex flex-col overflow-x-clip w-full max-w-full">
         {/* 1. First Hero: 3D Dual-Rail Image Stream Corridor showcasing Typst templates. This is the page's one <h1>. */}
         <LumaStreamHero />
 

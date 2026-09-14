@@ -178,7 +178,7 @@ export function TruthfulFoundations() {
       </div>
 
       <div className="pt-3 sm:pt-4">
-        <p className="text-[11px] sm:text-xs text-muted-foreground/70 font-sans tracking-tight">
+        <p className="text-[11px] sm:text-xs text-muted-foreground/80 font-sans tracking-tight">
           {asOfDate}
         </p>
       </div>

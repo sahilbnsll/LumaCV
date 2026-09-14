@@ -48,7 +48,8 @@ export const FORMATS: FormatOption[] = [
       btnText: "#FFFFFF",
       badgeBg: "rgba(229, 37, 42, 0.15)",
       badgeBorder: "rgba(229, 37, 42, 0.45)",
-      badgeText: "#EF4444",
+      badgeText: "#F87171", // red-400, not the brand red itself, small text on this translucent pill needs the lighter shade to clear WCAG AA against a dark page background
+
       radioColor: "#E5252A",
       ringColor: "rgba(229, 37, 42, 0.4)",
     },
@@ -68,7 +69,7 @@ export const FORMATS: FormatOption[] = [
       btnText: "#FFFFFF",
       badgeBg: "rgba(24, 90, 189, 0.15)",
       badgeBorder: "rgba(24, 90, 189, 0.45)",
-      badgeText: "#3B82F6",
+      badgeText: "#60A5FA", // blue-400, same reasoning as the pdf badge above
       radioColor: "#185ABD",
       ringColor: "rgba(24, 90, 189, 0.4)",
     },
@@ -324,7 +325,7 @@ export function ExportFormatShowcase() {
                   >
                     {/* Top Header */}
                     <div className="flex items-center justify-between text-[11px] font-semibold tracking-tight">
-                      <span className="font-bold tracking-wider uppercase text-[10.5px] opacity-90">
+                      <span className="font-bold tracking-wider uppercase text-[10.5px]">
                         LUMACV • {fmt.label.toUpperCase()}
                       </span>
                       <span className="p-1 rounded-md bg-current/15 backdrop-blur-xs">
@@ -337,7 +338,7 @@ export function ExportFormatShowcase() {
                       <h3 className="text-2xl font-bold tracking-tight leading-tight">
                         {candidate.name}
                       </h3>
-                      <p className="text-xs font-semibold opacity-85 mt-0.5 tracking-wide">
+                      <p className="text-xs font-semibold mt-0.5 tracking-wide">
                         {candidate.title}
                       </p>
 
@@ -357,7 +358,7 @@ export function ExportFormatShowcase() {
                     </div>
 
                     {/* Card Bottom Bar */}
-                    <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider font-semibold opacity-90 pt-2 border-t border-current/20">
+                    <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider font-semibold pt-2 border-t border-current/20">
                       <span className="tracking-widest">Sample resume</span>
                       <ArrowDown className="size-3.5 stroke-[2.5]" />
                     </div>
@@ -406,7 +407,7 @@ export function ExportFormatShowcase() {
                         <div className="text-[14.5px] sm:text-[15px] font-semibold text-foreground tracking-tight flex items-center gap-2 uppercase">
                           <span>{fmt.label}</span>
                           {fmt.recommended && (
-                            <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20 font-medium normal-case">
+                            <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-primary/10 text-primary-text border border-primary/20 font-medium normal-case">
                               Recommended
                             </span>
                           )}
