@@ -165,7 +165,7 @@ export function LumaStreamHero() {
                     asChild
                     size="lg"
                     variant="invert"
-                    className="h-11 sm:h-12 px-6 text-xs sm:text-sm font-semibold transition-all hover:scale-[1.02]"
+                    className="h-11 sm:h-12 px-6 text-xs sm:text-sm font-semibold transition-[color,background-color,border-color,box-shadow,transform] hover:scale-[1.02]"
                   >
                     <Link href="/editor" className="flex items-center gap-2">
                       <span>Build Your Resume</span>
@@ -177,7 +177,7 @@ export function LumaStreamHero() {
                     asChild
                     variant="outline"
                     size="lg"
-                    className="h-11 sm:h-12 rounded-xl px-6 text-xs sm:text-sm font-medium border-border/80 bg-background/80 hover:bg-muted/70 backdrop-blur-md transition-all shadow-2xs"
+                    className="h-11 sm:h-12 rounded-xl px-6 text-xs sm:text-sm font-medium border-border/80 bg-background/80 hover:bg-muted/70 backdrop-blur-md transition-[color,background-color,border-color,box-shadow] shadow-2xs"
                   >
                     <Link href="/templates" className="flex items-center gap-2">
                       <Layers className="size-4 text-muted-foreground" />

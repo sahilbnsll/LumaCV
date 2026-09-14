@@ -361,7 +361,7 @@ export const CoverflowCarousel = React.forwardRef<
               type="button"
               aria-label="Previous template"
               onClick={() => nudge(-1)}
-              className="inline-flex size-10 sm:size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-all hover:bg-muted active:scale-95 cursor-pointer backdrop-blur-sm shadow-xs"
+              className="inline-flex size-10 sm:size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-[background-color,transform] hover:bg-muted active:scale-95 cursor-pointer backdrop-blur-sm shadow-xs"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -379,7 +379,7 @@ export const CoverflowCarousel = React.forwardRef<
               type="button"
               aria-label="Next template"
               onClick={() => nudge(1)}
-              className="inline-flex size-10 sm:size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-all hover:bg-muted active:scale-95 cursor-pointer backdrop-blur-sm shadow-xs"
+              className="inline-flex size-10 sm:size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card/80 text-foreground transition-[background-color,transform] hover:bg-muted active:scale-95 cursor-pointer backdrop-blur-sm shadow-xs"
             >
               <ChevronRight className="size-5" />
             </button>
@@ -416,7 +416,7 @@ export const CoverflowCarousel = React.forwardRef<
             <div className="mt-6">
               <Link
                 href={`/editor?template=${active.id}`}
-                className="inline-flex items-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2.5 text-[13px] font-medium text-background shadow-xs transition-all hover:bg-foreground/90 group cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2.5 text-[13px] font-medium text-background shadow-xs transition-colors hover:bg-foreground/90 group cursor-pointer"
               >
                 <span>{actionText}</span>
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
