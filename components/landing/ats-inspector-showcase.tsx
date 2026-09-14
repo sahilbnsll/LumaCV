@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, ArrowRight, RotateCcw, Copy, Check, FileUp, AlertTriangle } from "lucide-react";
 import { extractTextFromPdf, renderPdfThumbnail } from "@/lib/pdf-parser";
@@ -221,13 +222,26 @@ export function AtsInspectorShowcase() {
                 isDragging ? "ring-4 ring-primary scale-105" : "hover:transform-[perspective(1000px)_rotateY(0deg)_rotateZ(0deg)]"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={customThumbnail || "/templates/alex-morgan-modern.png"}
-                alt={fileName}
-                className="size-full object-cover pointer-events-none"
-                loading="lazy"
-              />
+              {customThumbnail ? (
+                // A user-dropped PDF's thumbnail is a client-rendered blob:
+                // URL, next/image's optimizer can't fetch/resize those, so
+                // this one path stays a plain <img>.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={customThumbnail}
+                  alt={fileName}
+                  className="size-full object-cover pointer-events-none"
+                  loading="lazy"
+                />
+              ) : (
+                <Image
+                  src="/templates/alex-morgan-modern.png"
+                  alt={fileName}
+                  fill
+                  sizes="(max-width: 600px) 165px, (max-width: 900px) 180px, 235px"
+                  className="object-cover pointer-events-none"
+                />
+              )}
 
               {isDragging && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-white p-4 text-center">
