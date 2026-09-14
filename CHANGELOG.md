@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [Unreleased]
+## [2.10.0] - 2026-09-14
 
 ### Security
 - **Cross-user data overwrite (IDOR)**: `POST /api/v1/resumes` and `POST /api/v1/applications` upserted a client-supplied `id` with no ownership check, so a signed-in user could pass another user's row id and overwrite their resume/application, contingent entirely on Supabase RLS being configured to catch it. Both routes now verify the existing row's `user_id` before upserting and return `404` on mismatch.
@@ -28,10 +28,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed `ANTHROPIC_API_KEY` and `TYPST_BIN_PATH` from documented environment variables (README, CONTRIBUTING, deployment.md) — neither is read anywhere in the code; Claude is BYOK-only by design and the Typst binary path isn't configurable.
 - Fixed a fabricated-looking changelog reference to a nonexistent `QSTASH_URL` variable (corrected to the real `UPSTASH_REDIS_REST_URL`, which genuinely is per-instance).
 - Removed `walkthrough.md`, a stale single-session dev scratch note fully superseded by this changelog and `docs/ats-scoring.md`.
-- Added `AGENTS.md`, a canonical technical-context document for AI coding agents (architecture, data flow, auth/security model, environment variables, and explicit "do not break" invariants).
+- Wrote `AGENTS.md`, a canonical technical-context document for AI coding agents (architecture, data flow, auth/security model, environment variables, and explicit "do not break" invariants). Kept local per the project's existing `.gitignore` convention for agent-context files (`CLAUDE.md`, `gemini.md`, etc.), not committed to the repo.
 
 ### Added
 - `app/manifest.ts` — a web app manifest was missing despite `viewport.themeColor` already being set.
+
+### Changed
+- **Mobile fixes**: the hero resume stack was cropped/half-cut on mobile (fixed with CSS container queries instead of a fixed-px scale); the templates gallery had the resume name hidden behind its tag row and a preview modal you couldn't scroll on mobile; the resume editor's mobile header had the Import/Template buttons colliding with the candidate name; toast notifications were oversized on mobile.
+- **Docs page**: added a mobile variant of the chapter "paper stack" card UI (previously desktop-only), then fixed a translucency bug in it where scrolled page content bled through the stacked cards.
+- Corrected footer social links (X, LinkedIn, GitHub) and reworded the footer/billing page to make clear the project is solo-maintained and open to contributions, with a new "Contribute" link.
 
 ---
 
