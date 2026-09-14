@@ -124,6 +124,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="font-sans antialiased min-h-screen">
+        {supabaseUrl && (
+          // AuthProvider fires a getSession() request to Supabase on mount;
+          // preconnecting opens the TLS connection ahead of that request
+          // instead of paying the full DNS+TCP+TLS cost when it's made.
+          <link rel="preconnect" href={supabaseUrl} crossOrigin="anonymous" />
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
