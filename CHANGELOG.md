@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed `ANTHROPIC_API_KEY` and `TYPST_BIN_PATH` from documented environment variables (README, CONTRIBUTING, deployment.md) — neither is read anywhere in the code; Claude is BYOK-only by design and the Typst binary path isn't configurable.
 - Fixed a fabricated-looking changelog reference to a nonexistent `QSTASH_URL` variable (corrected to the real `UPSTASH_REDIS_REST_URL`, which genuinely is per-instance).
 - Removed `walkthrough.md`, a stale single-session dev scratch note fully superseded by this changelog and `docs/ats-scoring.md`.
-- Wrote `AGENTS.md`, a canonical technical-context document for AI coding agents (architecture, data flow, auth/security model, environment variables, and explicit "do not break" invariants). Kept local per the project's existing `.gitignore` convention for agent-context files (`CLAUDE.md`, `gemini.md`, etc.), not committed to the repo.
+- Added `AGENTS.md`, a canonical technical-context document for AI coding agents (architecture, data flow, auth/security model, environment variables, and explicit "do not break" invariants). Force-added despite the project's existing `.gitignore` rule for agent-context files (which still excludes `CLAUDE.md`/`gemini.md`), since this one is meant to travel with the repo for anyone cloning it.
 
 ### Added
 - `app/manifest.ts` — a web app manifest was missing despite `viewport.themeColor` already being set.
