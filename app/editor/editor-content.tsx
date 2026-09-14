@@ -48,7 +48,7 @@ import {
 } from 'lucide-react';
 import { notify } from '@/lib/notify';
 import { cn } from '@/lib/utils';
-import { getLocalResumes, saveLocalResume, SavedResume } from '@/lib/user-resumes-store';
+import { getLocalResumes, saveLocalResume, defaultDraftResumeId, SavedResume } from '@/lib/user-resumes-store';
 import { exportResume, ExportFormatType } from '@/lib/resume-export';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOTION_VARIANTS, TRANSITION_EASINGS } from '@/lib/motion';
@@ -76,9 +76,15 @@ function EditorContent() {
     const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    // Track current active resume ID from URL or generate default
+    // Current active resume ID: the URL's ?id= when editing a saved resume,
+    // otherwise a deterministic per-user "default draft" id. Derived (not
+    // useState) so it updates once `user` resolves asynchronously after
+    // mount instead of locking onto the unauthenticated fallback forever.
     const queryId = searchParams.get('id');
-    const [currentResumeId, setCurrentResumeId] = useState<string>(() => queryId || (user?.id ? `editor-${user.id}-default` : 'local-editor-default'));
+    const currentResumeId = useMemo(
+        () => queryId || (user?.id ? defaultDraftResumeId(user.id) : 'local-editor-default'),
+        [queryId, user?.id]
+    );
 
     // Close the Accent Color Palette popover on outside click or Escape,
     // mirrors the downloadMenuRef pattern in components/pdf-preview.tsx.
@@ -109,7 +115,6 @@ function EditorContent() {
 
         const idParam = searchParams.get('id');
         if (idParam) {
-            setCurrentResumeId(idParam);
             const savedList = getLocalResumes(user?.id);
             const found = savedList.find((r) => r.id === idParam);
             if (found && found.resumeData) {

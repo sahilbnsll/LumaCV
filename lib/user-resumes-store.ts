@@ -213,3 +213,17 @@ export function getLocalResumeById(id: string, userId?: string): SavedResume | n
     const list = getLocalResumes(userId);
     return list.find(r => r.id === id) || null;
 }
+
+/**
+ * Deterministic per-user id for the editor's "default draft" resume, the
+ * one it falls back to when opened without a saved resume's real id (e.g.
+ * `/editor` with no `?id=`). Must be a real UUID, unlike the old
+ * `editor-<uid>-default` scheme, because autosave upserts it straight into
+ * Supabase's `user_resumes.id` (a uuid column); derived from the user's
+ * own (already-UUID) id so it stays stable across visits without needing
+ * storage or randomness.
+ */
+export function defaultDraftResumeId(userId: string): string {
+    const hex = userId.replace(/-/g, '').padEnd(20, '0');
+    return `${hex.slice(0, 8)}-0000-4000-8000-${hex.slice(8, 20)}`;
+}
