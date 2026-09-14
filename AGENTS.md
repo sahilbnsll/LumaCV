@@ -77,7 +77,7 @@ Supabase Postgres. Key tables (`supabase/schema.sql`): `profiles` (username↔em
 - **Auth**: `requireUser()` (`lib/auth.ts`) calls `supabase.auth.getUser()` server-side — it validates the session cookie against Supabase, it does not trust anything the client claims about its own identity. Every route that touches user-owned data calls this first.
 - **Rate limiting**: `ratelimit` from `lib/rate-limit.ts` (Upstash, 10 req/15min) guards every AI-calling route by IP, skipped when the caller supplies their own BYOK key (their own cost, their own limit). **This fails open if `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` are unset** — every "rate-limited" route becomes silently unlimited. Always set these in production.
 - **Validation**: Zod schemas (`TailorResumeRequestSchema`, `AnalyzeJDRequestSchema`, etc. in `lib/resume-schema.ts` or inline) validate AI-route input. `/applications` and `/resumes` POST routes use manual field checks, not Zod — lower priority to fix but worth Zod-ifying if you're touching those files anyway.
-- **`middleware.ts` does not gate any API route.** It only refreshes the Supabase session cookie and sets baseline security headers on every response. Authorization is 100% the individual route's responsibility.
+- **`middleware.ts` does not gate any API route.** It only refreshes the Supabase session cookie and sets `X-DNS-Prefetch-Control`. Authorization is 100% the individual route's responsibility.
 
 ## FRONTEND
 
@@ -101,10 +101,11 @@ Supabase Auth (`@supabase/ssr`), email/password plus optional username-based sig
 ## SECURITY
 
 - **Never trust client-supplied ids for ownership**. See the Database section — both resume/application upserts now verify ownership server-side before writing.
-- **Never echo secrets or raw provider error text to the client** in a route response beyond what's already there — `details: error.message` on a handful of AI routes is a known, accepted-for-now minor info-disclosure (Medium/Low severity, all behind `requireUser()` already) documented as a follow-up, not something to expand.
+- **Never echo secrets or raw provider error text to the client**. The applications/resumes CRUD routes log the real error server-side and return a generic message only. The AI, compile, and parse routes are the deliberate exception: their `details: error.message` is a genuinely actionable message for the user (a Typst compile error, a parse failure reason), not an info-disclosure gap, don't "fix" those into generic messages, and don't add `error.message` passthrough to any other route without the same justification.
+- **Any `?redirect=`/`?next=`-style query param must go through `sanitizeRedirectPath()`** (`lib/app-url.ts`) before it's used in a client-side navigation or, especially, a server-side `emailRedirectTo`/redirect URL. An unvalidated one is an open redirect that can turn this app's own trusted confirmation emails into a phishing vector, not just a theoretical low-severity issue, it was a real, live bug fixed in 2.15.0.
 - **The demo/compile bypass**: `POST /api/v1/resume/compile` skips auth only for one exact, hardcoded payload (`personalInfo.name === "Alex Morgan"`, the sample demo resume) so the public `/demo` page can compile without a session. It's still bound by the in-memory `compileRatelimit`. Don't widen this bypass condition.
 - **`/api/v1/internal/infra-check`** is gated by a shared-secret header (`COMPILE_WORKER_SECRET`) checked against the env var, fails closed if unset. It is not meant to be called by the client app — don't wire it into any user-facing flow.
-- Security headers are set in both `next.config.js` (`headers()`) and `middleware.ts` — redundant but harmless defense-in-depth; if you need to change one, check whether the other needs the same change.
+- **Security headers (CSP, HSTS, `X-Frame-Options`, etc.) are set in `next.config.mjs`'s `headers()` only**, the single source of truth as of 2.15.0. `middleware.ts` used to set an overlapping, occasionally-conflicting `X-Frame-Options` too; that duplication was removed, don't reintroduce it there. If you change the CSP, remember `frame-src` must keep `'self' blob:` (the editor's PDF preview renders through a `blob:` iframe, `'none'` silently breaks it with no console-visible layout symptom until you actually check DevTools).
 
 ## DEPLOYMENT
 
@@ -137,6 +138,7 @@ There is **no `ANTHROPIC_API_KEY`** (Claude is BYOK-only, don't add a server-sid
 - `app/opengraph-image.tsx`'s declared `size` (1200×630) must match what it actually renders — this is what fixed a previously-broken, wrong-aspect-ratio social preview image. If you replace it with a static asset again, the asset must genuinely be 1200×630.
 - The `outputFileTracingIncludes` config in `next.config.js` for `bin/` and `typst/` — removing it silently breaks PDF compilation in production only (works fine in `next dev`).
 - `id="main-content"` on every top-level route's primary `<main>` — the root layout's "Skip to main content" link (`app/layout.tsx`) targets this id sitewide. It was missing on most routes for a long time with no visible symptom (only a broken keyboard/screen-reader skip link), so a new page's `<main>` needs this id added explicitly, nothing enforces it automatically.
+- Any resume/application `id` sent to `POST /api/v1/resumes` or `/api/v1/applications` must be a real UUID, the `id` columns are Postgres `uuid`. The editor's own client-generated default-draft id used to be a plain string (`editor-<uid>-default`), which silently 500'd on every autosave for a brand-new session while the localStorage fallback right next to it succeeded, masking the failure entirely. Use `defaultDraftResumeId()` (`lib/user-resumes-store.ts`) for any new client-side-generated id in this flow, don't hand-roll another string scheme.
 
 ## CHANGE PROCESS
 

@@ -59,7 +59,7 @@ Add all variables from Section 1 in the Vercel Project Settings $\rightarrow$ En
 
 ### Step 4: Edge & Serverless Considerations
 - API routes executing Typst compilations (`/api/v1/resume/compile`) run in Node.js Serverless Functions, spawning the bundled native Typst CLI binary as a child process (not WASM).
-- The `middleware.ts` runs on the Edge Runtime with strict security headers.
+- The `middleware.ts` runs on the Edge Runtime and refreshes the Supabase session cookie; security headers (CSP, HSTS, `X-Frame-Options`, etc.) are set separately in `next.config.mjs`'s `headers()`, not in middleware.
 
 ---
 
@@ -180,7 +180,7 @@ sudo certbot --nginx -d lumacv.sahilbansal.net
    ```bash
    curl -I https://your-domain.com
    ```
-   Ensure `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin` are present.
+   Ensure `Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: strict-origin-when-cross-origin` are all present.
 2. **Verify Sitemap & Robots**:
    - `https://your-domain.com/sitemap.xml`
    - `https://your-domain.com/robots.txt`

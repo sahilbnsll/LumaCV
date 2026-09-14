@@ -121,12 +121,16 @@ LumaCV uses **Typst**, a fast, memory-safe typesetting system written in Rust:
 - Features graceful fallbacks: if `RESEND_API_KEY` is not configured, submissions are logged locally without failing the user request.
 
 ### 3.7 Production Security & Hardening (`next.config.mjs`)
-LumaCV enforces modern defense-in-depth HTTP security headers:
-- `X-Frame-Options: DENY`: Blocks clickjacking and iframe embedding attacks.
+LumaCV enforces modern defense-in-depth HTTP security headers, all set in `next.config.mjs`'s `headers()` as the single source of truth (`middleware.ts` only refreshes the Supabase session cookie and sets `X-DNS-Prefetch-Control`, it does not duplicate these):
+- `Content-Security-Policy`: restricts script/style/image/connect origins to `'self'` plus the Supabase project origin and `api.github.com`. `script-src`/`style-src` still need `'unsafe-inline'` (an inline JSON-LD script in the root layout, and `image-stream-hero.tsx`'s runtime `<style>` injection for its keyframe animations); closing that gap needs a nonce-based CSP, a larger deferred change, not an oversight. `frame-src` is `'self' blob:`, not `'none'`: the resume editor's live PDF preview renders through a `blob:` URL iframe, and setting `'none'` breaks it silently (no console error pointing at the actual cause until you inspect the CSP violation).
+- `Strict-Transport-Security`: `max-age=63072000; includeSubDomains; preload`.
+- `X-Frame-Options: DENY`: Blocks clickjacking and iframe embedding attacks (this, plus `frame-ancestors 'none'` in the CSP above, is the actual clickjacking defense, orthogonal to `frame-src`, which controls what *this* page can embed, not who can embed *it*).
 - `X-Content-Type-Options: nosniff`: Prevents MIME-sniffing exploits.
 - `Referrer-Policy: strict-origin-when-cross-origin`: Restricts referrer leaking across origins.
 - `Permissions-Policy`: Restricts camera, microphone, and geolocation access.
 - `outputFileTracingIncludes`: Guarantees native `bin/typst` binaries and `typst/` templates are bundled into Vercel and Docker production deployments.
+
+Post-login/signup redirect targets (`?redirect=`/`?next=` query params) are passed through `sanitizeRedirectPath()` (`lib/app-url.ts`) before use in either a client-side navigation or Supabase's `emailRedirectTo`, rejecting absolute and protocol-relative URLs so a crafted link can't turn a real confirmation email into a phishing redirect.
 
 ---
 
