@@ -5,10 +5,28 @@ import { extractUserApiKeys, hasCustomKeys } from "@/lib/ai-keys";
 import { suggestColumnMapping } from "@/lib/application-import-parser";
 import { jsonrepair } from "jsonrepair";
 import { ratelimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 export const maxDuration = 45;
 
+// headers/sampleRows were previously read raw from the body with only an
+// Array.isArray check, unbounded array length or per-cell size fed straight
+// into the LLM prompt below is a token-cost abuse vector even though this
+// route is authenticated and rate-limited (rate limiting bounds request
+// count, not per-request size). Only the first 3 sampleRows ever reach the
+// prompt, but the caps here also stop an oversized body from being parsed
+// into memory in the first place.
+const ImportAiMapRequestSchema = z.object({
+  headers: z.array(z.string().max(200)).max(150),
+  sampleRows: z.array(z.record(z.string(), z.unknown())).max(50).optional().default([]),
+});
+
 export async function POST(req: NextRequest) {
+  const contentLength = req.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+  }
+
   const auth = await requireUser();
   if (auth.response) return auth.response;
 
@@ -28,9 +46,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { headers = [], sampleRows = [] } = body;
+    const validated = ImportAiMapRequestSchema.safeParse(body);
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: validated.error.format() },
+        { status: 400 }
+      );
+    }
+    const { headers, sampleRows } = validated.data;
 
-    if (!Array.isArray(headers) || headers.length === 0) {
+    if (headers.length === 0) {
       return NextResponse.json(
         { error: "headers array is required" },
         { status: 400 }

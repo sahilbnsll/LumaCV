@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { updateApplicationInputSchema } from "@/lib/application-schema";
 
 export async function PATCH(
   req: NextRequest,
@@ -12,7 +13,15 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const body = await req.json();
+    const rawBody = await req.json();
+    const validated = updateApplicationInputSchema.safeParse(rawBody);
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: validated.error.format() },
+        { status: 400 }
+      );
+    }
+    const body = validated.data;
     const supabase = createSupabaseServerClient();
     const now = new Date().toISOString();
 

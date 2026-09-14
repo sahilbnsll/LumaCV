@@ -3,11 +3,16 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth';
 
 const ExportTypSchema = z.object({
-    typstCode: z.string().min(1),
-    filename: z.string().optional(),
+    typstCode: z.string().min(1).max(500000),
+    filename: z.string().max(200).optional(),
 });
 
 export async function POST(req: NextRequest) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+    }
+
     const auth = await requireUser();
     if (auth.response) return auth.response;
 

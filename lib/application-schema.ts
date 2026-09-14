@@ -190,3 +190,23 @@ export const createApplicationInputSchema = z.object({
 
 export type CreateApplicationInput = z.infer<typeof createApplicationInputSchema>;
 export type UpdateApplicationInput = Partial<CreateApplicationInput>;
+
+// PATCH /api/v1/applications/[id] previously wrote every body.field straight
+// into the DB update with only an `!== undefined` check, no shape/type
+// validation at all. The ownership check (id + user_id scoped) already
+// prevented cross-user writes, this closes the separate gap of a caller
+// being able to write arbitrary types/shapes into status, tags, contacts,
+// etc. .partial() since PATCH allows updating any subset of fields.
+export const updateApplicationInputSchema = createApplicationInputSchema.partial().extend({
+  contacts: z
+    .array(
+      z.object({
+        name: z.string(),
+        role: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        linkedin: z.string().optional(),
+      })
+    )
+    .optional(),
+});

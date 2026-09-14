@@ -8,7 +8,7 @@ import { ratelimit } from '@/lib/rate-limit';
 export const runtime = 'edge';
 
 const ScoreRequestSchema = z.object({
-    resumeText: z.string().optional(),
+    resumeText: z.string().max(30000).optional(),
     resumeData: z.any().optional(),
     jdKeywords: z.preprocess((val) => {
         if (!val || typeof val !== 'object') {
@@ -220,6 +220,11 @@ export async function POST(req: NextRequest) {
     // (unlike its siblings): the guest-facing ATS Checker (/ats) calls it
     // without requiring login, matching that page's own "no signup required"
     // promise. The rate limit brings it in line with every other resume route.
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+    }
+
     const ip = req.ip ?? '127.0.0.1';
     const { success } = await ratelimit.limit(ip);
     if (!success) {

@@ -8,10 +8,15 @@ import { z } from 'zod';
 export const maxDuration = 60;
 
 const AnalyzeJDRequestSchema = z.object({
-    jd: z.string().min(10, 'Job description is too short'),
+    jd: z.string().min(10, 'Job description is too short').max(50000, 'Job description is too long'),
 });
 
 export async function POST(req: NextRequest) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Payload too large. Maximum allowed size is 2MB.' }, { status: 413 });
+    }
+
     // Strictly enforce authentication for all resume operations
     const auth = await requireUser();
     if (auth.response) return auth.response;
