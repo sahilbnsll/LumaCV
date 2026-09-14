@@ -188,11 +188,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ application: mapRowToApplication(data) });
   } catch (error) {
+    console.error("[ApplicationsAPI] POST error:", error);
     return NextResponse.json(
-      {
-        error: "Failed to save application",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to save application" },
       { status: 500 }
     );
   }

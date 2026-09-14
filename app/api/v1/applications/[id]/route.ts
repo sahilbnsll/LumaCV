@@ -58,11 +58,9 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, updated: data || dbUpdates });
   } catch (error) {
+    console.error("[ApplicationsAPI] PATCH error:", error);
     return NextResponse.json(
-      {
-        error: "Failed to update application",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to update application" },
       { status: 500 }
     );
   }
@@ -91,11 +89,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
+    console.error("[ApplicationsAPI] DELETE error:", error);
     return NextResponse.json(
-      {
-        error: "Failed to delete application",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to delete application" },
       { status: 500 }
     );
   }

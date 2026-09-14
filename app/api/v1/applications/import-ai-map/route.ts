@@ -135,11 +135,9 @@ Return ONLY a valid JSON object matching this schema where the values are EXACT 
       return NextResponse.json({ mapping: heuristicMapping, source: "heuristic" });
     }
   } catch (error) {
+    console.error("[ImportAIMap] error:", error);
     return NextResponse.json(
-      {
-        error: "Failed to map columns",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to map columns" },
       { status: 500 }
     );
   }

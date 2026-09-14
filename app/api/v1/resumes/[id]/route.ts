@@ -23,8 +23,9 @@ export async function GET(
         if (!data) return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
         return NextResponse.json({ resume: data });
     } catch (error) {
+        console.error('[ResumesAPI] GET by id error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch resume', details: error instanceof Error ? error.message : 'Unknown error' },
+            { error: 'Failed to fetch resume' },
             { status: 500 }
         );
     }
@@ -49,8 +50,9 @@ export async function DELETE(
         if (error) throw error;
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error('[ResumesAPI] DELETE error:', error);
         return NextResponse.json(
-            { error: 'Failed to delete resume', details: error instanceof Error ? error.message : 'Unknown error' },
+            { error: 'Failed to delete resume' },
             { status: 500 }
         );
     }

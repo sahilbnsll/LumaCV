@@ -40,8 +40,9 @@ export async function GET() {
         if (error) throw error;
         return NextResponse.json({ resumes: data || [] });
     } catch (error) {
+        console.error('[ResumesAPI] GET error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch resumes', details: error instanceof Error ? error.message : 'Unknown error' },
+            { error: 'Failed to fetch resumes' },
             { status: 500 }
         );
     }
@@ -113,8 +114,9 @@ export async function POST(req: NextRequest) {
         if (error) throw error;
         return NextResponse.json({ resume: data });
     } catch (error) {
+        console.error('[ResumesAPI] POST error:', error);
         return NextResponse.json(
-            { error: 'Failed to save resume', details: error instanceof Error ? error.message : 'Unknown error' },
+            { error: 'Failed to save resume' },
             { status: 500 }
         );
     }
