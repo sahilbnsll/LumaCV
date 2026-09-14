@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
+import { getAppUrl } from '@/lib/app-url';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lumacv.sahilbansal.net';
   const now = new Date();
 
   const routes = [
@@ -22,7 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   return routes.map(({ path, changeFrequency, priority }) => ({
-    url: `${baseUrl}${path}`,
+    url: getAppUrl(path),
     lastModified: now,
     changeFrequency,
     priority,

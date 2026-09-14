@@ -1,8 +1,7 @@
 import { MetadataRoute } from 'next';
+import { getAppUrl } from '@/lib/app-url';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lumacv.sahilbansal.net';
-
   return {
     rules: [
       {
@@ -26,6 +25,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: getAppUrl('/sitemap.xml'),
   };
 }
