@@ -4,11 +4,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
 
-  // Security Headers (OWASP recommended defense-in-depth)
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // Security headers live in next.config.mjs's headers() as the single
+  // source of truth (CSP, HSTS, X-Frame-Options, etc). This used to also
+  // set X-Frame-Options/Referrer-Policy/Permissions-Policy here, duplicating
+  // (and for X-Frame-Options, disagreeing with) that config, only
+  // X-DNS-Prefetch-Control stays here since it's harmless to duplicate and
+  // not worth adding to the static config for one header.
   response.headers.set('X-DNS-Prefetch-Control', 'on');
 
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
