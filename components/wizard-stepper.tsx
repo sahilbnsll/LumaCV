@@ -40,7 +40,7 @@ export function WizardStepper() {
                                 }
                             }}
                             className={cn(
-                                "shrink-0 relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 transition-all text-xs group min-h-[36px] focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-hidden select-none",
+                                "shrink-0 relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 transition-[background-color,border-color,box-shadow,opacity] text-xs group min-h-[36px] focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-hidden select-none",
                                 isCurrent && "bg-card border border-border shadow-sm font-semibold",
                                 isCompleted && "hover:bg-muted/50 cursor-pointer text-foreground/90",
                                 !isAccessible && "cursor-not-allowed opacity-35"
@@ -50,7 +50,7 @@ export function WizardStepper() {
                             {/* Step Badge Indicator */}
                             <div
                                 className={cn(
-                                    "flex h-5 w-5 sm:h-5.5 sm:w-5.5 shrink-0 items-center justify-center rounded-lg text-[10px] font-mono font-bold transition-all duration-300",
+                                    "flex h-5 w-5 sm:h-5.5 sm:w-5.5 shrink-0 items-center justify-center rounded-lg text-[10px] font-mono font-bold transition-[background-color,border-color,color,box-shadow] duration-300",
                                     isCompleted
                                         ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400"
                                         : isCurrent

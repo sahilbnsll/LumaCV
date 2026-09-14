@@ -39,7 +39,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                 <div
                     onClick={() => handleSelectMode('optimize')}
                     className={cn(
-                        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
+                        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-[border-color,background-color,box-shadow,transform] duration-200 cursor-pointer text-left select-none",
                         tailorMode === 'optimize'
                             ? "border-emerald-500/70 bg-emerald-500/[0.05] dark:bg-emerald-500/[0.08] ring-2 ring-emerald-500/30 shadow-md shadow-emerald-500/5 -translate-y-0.5"
                             : "border-border/70 bg-card/60 hover:border-emerald-500/30 hover:bg-card/90 hover:-translate-y-0.5 hover:shadow-sm"
@@ -57,7 +57,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                             </div>
                             <span
                                 className={cn(
-                                    "flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all",
+                                    "flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-[background-color,color,box-shadow,transform,opacity]",
                                     tailorMode === 'optimize'
                                         ? "bg-emerald-500 text-white shadow-xs scale-100 opacity-100"
                                         : "border border-border/70 text-transparent scale-90 opacity-60"
@@ -96,7 +96,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                 <div
                     onClick={() => handleSelectMode('tailor')}
                     className={cn(
-                        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer text-left select-none",
+                        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-[border-color,background-color,box-shadow,transform] duration-200 cursor-pointer text-left select-none",
                         tailorMode === 'tailor'
                             ? "border-primary/70 bg-primary/[0.05] ring-2 ring-primary/30 shadow-md shadow-primary/5 -translate-y-0.5"
                             : "border-border/70 bg-card/60 hover:border-primary/30 hover:bg-card/90 hover:-translate-y-0.5 hover:shadow-sm"
@@ -114,7 +114,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                             </div>
                             <span
                                 className={cn(
-                                    "flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all",
+                                    "flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-[background-color,color,box-shadow,transform,opacity]",
                                     tailorMode === 'tailor'
                                         ? "bg-primary text-white shadow-xs scale-100 opacity-100"
                                         : "border border-border/70 text-transparent scale-90 opacity-60"

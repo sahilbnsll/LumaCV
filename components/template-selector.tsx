@@ -47,7 +47,7 @@ export function MiniLayoutRepresentation({
     return (
         <div
             className={cn(
-                "h-40 sm:h-52 w-full rounded-lg border overflow-hidden relative transition-all duration-300 bg-muted/20 shadow-xs",
+                "h-40 sm:h-52 w-full rounded-lg border overflow-hidden relative transition-[border-color,box-shadow] duration-300 bg-muted/20 shadow-xs",
                 isSelected
                     ? "border-primary ring-2 ring-primary/40 shadow-md"
                     : "border-border/60 group-hover:border-primary/40 group-hover:shadow-xs"
@@ -118,7 +118,7 @@ export function TemplateSelector() {
                     type="button"
                     onClick={() => setActiveTab('popular')}
                     className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer",
+                        "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-[background-color,color,box-shadow] cursor-pointer",
                         activeTab === 'popular'
                             ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground"
@@ -131,7 +131,7 @@ export function TemplateSelector() {
                     type="button"
                     onClick={() => setActiveTab('all')}
                     className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer",
+                        "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-[background-color,color,box-shadow] cursor-pointer",
                         activeTab === 'all'
                             ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground"
@@ -174,7 +174,7 @@ export function TemplateSelector() {
                                     aria-label={`${tmpl.name} template: ${tmpl.description}`}
                                     onClick={() => handleSelect(tmpl.id as TemplateType)}
                                     className={cn(
-                                        "group shrink-0 w-36 sm:w-40 flex flex-col rounded-xl border p-2 text-left transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
+                                        "group shrink-0 w-36 sm:w-40 flex flex-col rounded-xl border p-2 text-left transition-[border-color,background-color,box-shadow] duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
                                         isSelected
                                             ? "border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-sm"
                                             : "border-border/60 bg-muted/15 hover:border-primary/40 hover:bg-muted/30"
@@ -205,7 +205,7 @@ export function TemplateSelector() {
                                 type="button"
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={cn(
-                                    "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer",
+                                    "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-[background-color,color,border-color,box-shadow] cursor-pointer",
                                     showFilters
                                         ? "bg-primary text-primary-foreground border-primary shadow-2xs"
                                         : "bg-muted/40 text-muted-foreground border-border/70 hover:text-foreground"
@@ -252,7 +252,7 @@ export function TemplateSelector() {
                                     aria-label={`${tmpl.name} template: ${tmpl.description}`}
                                     onClick={() => handleSelect(tmpl.id as TemplateType)}
                                     className={cn(
-                                        "group relative flex flex-col justify-between rounded-xl border p-2 text-left transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
+                                        "group relative flex flex-col justify-between rounded-xl border p-2 text-left transition-[border-color,background-color,box-shadow] duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
                                         isSelected
                                             ? "border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-sm"
                                             : "border-border/60 bg-muted/15 hover:border-primary/40 hover:bg-muted/30"

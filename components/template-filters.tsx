@@ -98,7 +98,7 @@ export function TemplateFilters({
                         value={filters.search}
                         onChange={(e) => onChange({ ...filters, search: e.target.value })}
                         className={cn(
-                            "w-full rounded-xl border border-border/60 bg-muted/40 pl-8.5 pr-8 py-1.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all",
+                            "w-full rounded-xl border border-border/60 bg-muted/40 pl-8.5 pr-8 py-1.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary/60 transition-shadow",
                             compact ? "text-xs h-8" : "text-xs sm:text-sm h-9"
                         )}
                     />
@@ -150,7 +150,7 @@ export function TemplateFilters({
                                 type="button"
                                 onClick={() => onChange({ ...filters, layout: opt.id })}
                                 className={cn(
-                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer border",
+                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-[background-color,color,border-color,box-shadow] cursor-pointer border",
                                     filters.layout === opt.id
                                         ? "bg-primary text-primary-foreground border-primary shadow-2xs font-semibold"
                                         : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"
@@ -175,7 +175,7 @@ export function TemplateFilters({
                                 type="button"
                                 onClick={() => onChange({ ...filters, style: opt.id })}
                                 className={cn(
-                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer border",
+                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-[background-color,color,border-color,box-shadow] cursor-pointer border",
                                     filters.style === opt.id
                                         ? "bg-primary text-primary-foreground border-primary shadow-2xs font-semibold"
                                         : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"
@@ -200,7 +200,7 @@ export function TemplateFilters({
                                 type="button"
                                 onClick={() => onChange({ ...filters, density: opt.id })}
                                 className={cn(
-                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer border",
+                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-[background-color,color,border-color,box-shadow] cursor-pointer border",
                                     filters.density === opt.id
                                         ? "bg-primary text-primary-foreground border-primary shadow-2xs font-semibold"
                                         : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"
@@ -225,7 +225,7 @@ export function TemplateFilters({
                                 type="button"
                                 onClick={() => onChange({ ...filters, useCase: opt.id })}
                                 className={cn(
-                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer border",
+                                    "px-2 py-1 rounded-lg text-[11px] font-medium transition-[background-color,color,border-color,box-shadow] cursor-pointer border",
                                     filters.useCase === opt.id
                                         ? "bg-primary text-primary-foreground border-primary shadow-2xs font-semibold"
                                         : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"

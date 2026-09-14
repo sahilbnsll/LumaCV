@@ -229,7 +229,7 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
                                         href={item.href}
                                         onClick={onClose}
                                         className={cn(
-                                            "group relative flex items-baseline gap-3.5 sm:gap-5 py-2.5 rounded-2xl px-3.5 -mx-3.5 transition-all duration-150",
+                                            "group relative flex items-baseline gap-3.5 sm:gap-5 py-2.5 rounded-2xl px-3.5 -mx-3.5 transition-colors duration-150",
                                             isActive
                                                 ? "bg-primary/10 text-foreground font-semibold"
                                                 : "hover:bg-muted/60 text-foreground/90 hover:text-foreground"
