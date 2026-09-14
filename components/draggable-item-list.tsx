@@ -72,7 +72,7 @@ export function DraggableItemList<T extends { id: string }>({
                     onDrop={(e) => handleDrop(e, index)}
                     onDragEnd={handleDragEnd}
                     className={cn(
-                        'relative rounded-xl border bg-muted/25 p-4 sm:p-5 transition-all duration-150',
+                        'relative rounded-xl border bg-muted/25 p-4 sm:p-5 transition-[opacity,border-color,background-color,transform,box-shadow] duration-150',
                         draggingIndex === index
                             ? 'opacity-40 border-primary/50 bg-primary/5 scale-[0.99]'
                             : 'border-border',

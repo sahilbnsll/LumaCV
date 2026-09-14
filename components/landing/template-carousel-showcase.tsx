@@ -132,7 +132,7 @@ export function TemplateCarouselShowcase() {
                   type="button"
                   key={item.id}
                   ref={(el) => { pillRefs.current[itemIdx] = el; }}
-                  className={`rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+                  className={`rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-[background-color,color,box-shadow] cursor-pointer whitespace-nowrap ${
                     itemIdx === activeIdx
                       ? "bg-foreground text-background font-semibold shadow-xs"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/60"

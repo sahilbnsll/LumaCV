@@ -68,7 +68,7 @@ export function ColorPaletteSelector({ className }: { className?: string }) {
                             aria-label={`${swatch.label} accent color`}
                             onClick={() => handleSelectTheme(swatch)}
                             className={cn(
-                                "group relative h-6 w-6 sm:h-6.5 sm:w-6.5 rounded-full transition-all flex items-center justify-center cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                                "group relative h-6 w-6 sm:h-6.5 sm:w-6.5 rounded-full transition-[box-shadow,transform,opacity] flex items-center justify-center cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                                 isSelected
                                     ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 shadow-sm"
                                     : "opacity-80 hover:opacity-100 hover:scale-115"
@@ -79,7 +79,7 @@ export function ColorPaletteSelector({ className }: { className?: string }) {
                                 <Check className="h-3 w-3 text-white stroke-[3] drop-shadow-xs" />
                             )}
                             {/* Hover tooltip label placed above */}
-                            <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-150 bg-popover text-popover-foreground text-[10px] font-medium px-2 py-0.5 rounded-md shadow-lg whitespace-nowrap z-50 border border-border/80">
+                            <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-popover text-popover-foreground text-[10px] font-medium px-2 py-0.5 rounded-md shadow-lg whitespace-nowrap z-50 border border-border/80">
                                 {swatch.label}
                             </span>
                         </button>

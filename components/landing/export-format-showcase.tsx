@@ -377,7 +377,7 @@ export function ExportFormatShowcase() {
                     type="button"
                     onClick={() => setSelectedFormat(fmt)}
                     className={cn(
-                      "w-full text-left p-3.5 sm:p-4 rounded-xl transition-all duration-200 cursor-pointer border flex items-center justify-between gap-4 group",
+                      "w-full text-left p-3.5 sm:p-4 rounded-xl transition-[background-color,border-color,box-shadow] duration-200 cursor-pointer border flex items-center justify-between gap-4 group",
                       isSelected
                         ? "bg-muted/70 dark:bg-white/[0.06] border-foreground/20 shadow-xs"
                         : "bg-transparent border-border/40 hover:bg-muted/40 hover:border-border"
@@ -386,7 +386,7 @@ export function ExportFormatShowcase() {
                     <div className="flex items-center gap-3.5">
                       <span
                         className={cn(
-                          "inline-flex items-center justify-center w-12 h-8 rounded-lg border text-xs font-mono font-bold transition-all",
+                          "inline-flex items-center justify-center w-12 h-8 rounded-lg border text-xs font-mono font-bold transition-[background-color,color,border-color,box-shadow,transform]",
                           isSelected
                             ? "shadow-xs scale-105"
                             : "bg-card border-border text-muted-foreground group-hover:text-foreground group-hover:border-foreground/30"
@@ -414,7 +414,7 @@ export function ExportFormatShowcase() {
                     {/* Radio indicator */}
                     <div
                       className={cn(
-                        "size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200",
+                        "size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-[border-color,box-shadow] duration-200",
                         isSelected ? "border-current" : "border-border/70 group-hover:border-muted-foreground"
                       )}
                       style={{

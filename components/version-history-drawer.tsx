@@ -122,7 +122,7 @@ export function VersionHistoryDrawer({
                                         <div
                                             key={ver.id}
                                             onClick={() => setSelectedVersionId(ver.id)}
-                                            className={`rounded-xl border p-4 transition-all cursor-pointer ${
+                                            className={`rounded-xl border p-4 transition-[border-color,background-color,box-shadow] cursor-pointer ${
                                                 isSelected
                                                     ? 'border-primary/60 bg-primary/[0.03] shadow-xs'
                                                     : 'border-border/60 bg-muted/10 hover:border-border'

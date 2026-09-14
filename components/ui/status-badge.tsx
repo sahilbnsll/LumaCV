@@ -31,7 +31,7 @@ export function StatusBadge({
     return (
         <span
             className={cn(
-                'inline-flex items-center gap-1.5 text-[11px] font-mono font-medium transition-all duration-200',
+                'inline-flex items-center gap-1.5 text-[11px] font-mono font-medium transition-colors duration-200',
                 state === 'saving' && 'text-amber-500',
                 state === 'saved' && 'text-emerald-500',
                 state === 'failed' && 'text-rose-500',

@@ -68,7 +68,7 @@ export function ApplicationsBoard({
               onDragLeave={(e) => handleDragLeave(e, stage.key)}
               onDrop={(e) => handleDrop(e, stage.key)}
               className={cn(
-                "w-[290px] shrink-0 rounded-2xl border p-3 bg-secondary/30 transition-all duration-150 flex flex-col max-h-[calc(100vh-210px)]",
+                "w-[290px] shrink-0 rounded-2xl border p-3 bg-secondary/30 transition-[border-color,background-color,box-shadow] duration-150 flex flex-col max-h-[calc(100vh-210px)]",
                 isOver
                   ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                   : "border-border/60"

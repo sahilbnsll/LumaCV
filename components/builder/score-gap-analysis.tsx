@@ -121,7 +121,7 @@ export const ScoreGapAnalysis = React.memo(function ScoreGapAnalysis({
     return (
         <div
             className={cn(
-                "rounded-xl border p-4 space-y-3 text-xs transition-all",
+                "rounded-xl border p-4 space-y-3 text-xs transition-[border-color,background-color]",
                 isTargetAchieved
                     ? "border-emerald-500/30 bg-emerald-500/[0.04]"
                     : "border-amber-500/30 bg-amber-500/[0.04]"
@@ -154,7 +154,7 @@ export const ScoreGapAnalysis = React.memo(function ScoreGapAnalysis({
                     type="button"
                     onClick={() => setFilterTab('missing')}
                     className={cn(
-                        "px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold transition-all cursor-pointer",
+                        "px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold transition-[background-color,color,border-color,box-shadow] cursor-pointer",
                         filterTab === 'missing'
                             ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-2xs"
                             : "bg-muted/40 text-muted-foreground hover:bg-muted/70"
@@ -166,7 +166,7 @@ export const ScoreGapAnalysis = React.memo(function ScoreGapAnalysis({
                     type="button"
                     onClick={() => setFilterTab('partial')}
                     className={cn(
-                        "px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold transition-all cursor-pointer",
+                        "px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold transition-[background-color,color,border-color,box-shadow] cursor-pointer",
                         filterTab === 'partial'
                             ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-2xs"
                             : "bg-muted/40 text-muted-foreground hover:bg-muted/70"
@@ -178,7 +178,7 @@ export const ScoreGapAnalysis = React.memo(function ScoreGapAnalysis({
                     type="button"
                     onClick={() => setFilterTab('matched')}
                     className={cn(
-                        "px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold transition-all cursor-pointer",
+                        "px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold transition-[background-color,color,border-color,box-shadow] cursor-pointer",
                         filterTab === 'matched'
                             ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-2xs"
                             : "bg-muted/40 text-muted-foreground hover:bg-muted/70"

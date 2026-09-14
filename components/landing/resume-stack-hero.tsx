@@ -84,7 +84,7 @@ const focusRing =
   "focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-4";
 const dockLabel = "mb-[7px] block text-[11px] leading-[1.4] text-muted-foreground";
 const dockButton =
-  "relative grid min-h-touch min-w-touch cursor-pointer place-items-center bg-transparent text-[12px] text-muted-foreground hover:text-foreground transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]";
+  "relative grid min-h-touch min-w-touch cursor-pointer place-items-center bg-transparent text-[12px] text-muted-foreground hover:text-foreground transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 // ─── Stack position offsets for 3 papers ──────────────────────────────────────
 
@@ -325,7 +325,7 @@ export function ResumeStackHero() {
               <button
                 key={tpl.id}
                 type="button"
-                className={`flex min-h-touch flex-1 cursor-pointer flex-col items-center justify-center gap-[4px] rounded-[4px] border p-2 text-[11px] transition-all ${
+                className={`flex min-h-touch flex-1 cursor-pointer flex-col items-center justify-center gap-[4px] rounded-[4px] border p-2 text-[11px] transition-[border-color,background-color,color,box-shadow] ${
                   selectedIdx === i
                     ? "border-primary bg-primary/10 text-primary-text font-semibold shadow-xs"
                     : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -364,7 +364,7 @@ export function ResumeStackHero() {
                   onClick={() => setAccent(color.value)}
                 >
                   <span
-                    className={`size-[23px] rounded-full transition-all ${
+                    className={`size-[23px] rounded-full transition-shadow ${
                       accent === color.value ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
                     }`}
                     style={{ backgroundColor: color.value }}

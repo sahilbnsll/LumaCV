@@ -263,7 +263,7 @@ export function AtsInspectorShowcase() {
               type="button"
               onClick={handleReadSample}
               disabled={isExtracting}
-              className="motion-safe:active:not-disabled:not-focus-visible:transform-[scale(0.97)] flex min-w-[140px] flex-col items-center gap-[14px] rounded border border-border bg-card px-4 py-5 text-foreground text-[13px] transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] hover:not-disabled:border-foreground/30 disabled:cursor-progress max-[900px]:flex-row max-[900px]:gap-2.5 max-[900px]:py-[13px] cursor-pointer shadow-xs"
+              className="motion-safe:active:not-disabled:not-focus-visible:transform-[scale(0.97)] flex min-w-[140px] flex-col items-center gap-[14px] rounded border border-border bg-card px-4 py-5 text-foreground text-[13px] transition-[border-color,transform] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] hover:not-disabled:border-foreground/30 disabled:cursor-progress max-[900px]:flex-row max-[900px]:gap-2.5 max-[900px]:py-[13px] cursor-pointer shadow-xs"
             >
               {isExtracting && !uploadedFileName ? (
                 <svg className="animate-spin h-5 w-5 text-[#deb89b]" viewBox="0 0 24 24" fill="none">

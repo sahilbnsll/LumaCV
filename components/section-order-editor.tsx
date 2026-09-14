@@ -141,7 +141,7 @@ export function SectionOrderEditor({ className, hideHeader }: { className?: stri
                                 setDragOverKey(null);
                             }}
                             className={cn(
-                                'flex items-center justify-between rounded-xl border px-3 py-2 text-xs transition-all select-none',
+                                'flex items-center justify-between rounded-xl border px-3 py-2 text-xs transition-[opacity,border-color,background-color,transform,box-shadow] select-none',
                                 isBeingDragged && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-primary/5',
                                 isTargeted && 'border-primary ring-2 ring-primary/30 bg-primary/10',
                                 !isBeingDragged && !isTargeted && 'border-border/60 bg-background/80 hover:border-border'
