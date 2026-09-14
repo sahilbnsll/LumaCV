@@ -380,7 +380,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverSectionKey(null);
                                         }}
                                         className={cn(
-                                            'group flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer select-none shrink-0 lg:shrink',
+                                            'group flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-[opacity,color,border-color,background-color,box-shadow,transform] cursor-pointer select-none shrink-0 lg:shrink',
                                             isSectionDragging && 'opacity-40 scale-[0.98] border border-dashed border-primary/50',
                                             isSectionDragOver && 'border border-primary ring-1 ring-primary/40 bg-primary/10',
                                             isActive
@@ -744,7 +744,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-xl border p-3.5 space-y-2 transition-all select-none',
+                                            'rounded-xl border p-3.5 space-y-2 transition-[opacity,border-color,background-color,box-shadow,transform] select-none',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && 'border-border bg-card/60'
@@ -879,7 +879,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-2xl border transition-all overflow-hidden select-none',
+                                            'rounded-2xl border transition-[opacity,border-color,background-color,box-shadow,transform] overflow-hidden select-none',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && (isExpanded ? 'border-primary/50 bg-card shadow-sm' : 'border-border bg-card/60 hover:border-border')
@@ -1247,7 +1247,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-2xl border transition-all overflow-hidden select-none',
+                                            'rounded-2xl border transition-[opacity,border-color,background-color,box-shadow,transform] overflow-hidden select-none',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && (isExpanded ? 'border-primary/50 bg-card shadow-sm' : 'border-border bg-card/60 hover:border-border')
@@ -1656,7 +1656,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-2xl border transition-all overflow-hidden select-none p-3.5 space-y-3',
+                                            'rounded-2xl border transition-[opacity,border-color,background-color,box-shadow,transform] overflow-hidden select-none p-3.5 space-y-3',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && (isExpanded ? 'border-primary/50 bg-card shadow-sm' : 'border-border bg-card/60 hover:border-border')
@@ -1872,7 +1872,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-xl border p-3.5 space-y-3 transition-all',
+                                            'rounded-xl border p-3.5 space-y-3 transition-[opacity,border-color,background-color,box-shadow,transform]',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && 'border-border bg-card/60'
@@ -2022,7 +2022,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-xl border p-3 space-y-2 transition-all',
+                                            'rounded-xl border p-3 space-y-2 transition-[opacity,border-color,background-color,box-shadow,transform]',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && 'border-border bg-card/60'
@@ -2212,7 +2212,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                             setDragOverItemIndex(null);
                                         }}
                                         className={cn(
-                                            'rounded-xl border p-3 space-y-2 transition-all',
+                                            'rounded-xl border p-3 space-y-2 transition-[opacity,border-color,background-color,box-shadow,transform]',
                                             isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary/60 bg-muted/30',
                                             isDragOver && 'border-primary ring-2 ring-primary/30 bg-primary/[0.03]',
                                             !isDragging && !isDragOver && 'border-border bg-card/60'
