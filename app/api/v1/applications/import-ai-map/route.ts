@@ -1,15 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { generateStream, collectStream, extractJsonObjectFromAssistantText } from "@/lib/llm-client";
-import { extractUserApiKeys } from "@/lib/ai-keys";
+import { extractUserApiKeys, hasCustomKeys } from "@/lib/ai-keys";
 import { suggestColumnMapping } from "@/lib/application-import-parser";
 import { jsonrepair } from "jsonrepair";
+import { ratelimit } from "@/lib/rate-limit";
 
 export const maxDuration = 45;
 
 export async function POST(req: NextRequest) {
   const auth = await requireUser();
   if (auth.response) return auth.response;
+
+  // Every other AI-calling route rate-limits; this one didn't, so a signed-in
+  // user could spam LLM calls (cost abuse) with no throttle. Skip the limiter
+  // only when the caller supplied their own BYOK key, same policy as tailor.
+  if (!hasCustomKeys(extractUserApiKeys(req))) {
+    const ip = req.ip ?? "127.0.0.1";
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later or configure your own AI key." },
+        { status: 429 }
+      );
+    }
+  }
 
   try {
     const body = await req.json();
@@ -28,7 +43,7 @@ export async function POST(req: NextRequest) {
     // Most real-world exports (LinkedIn, Notion, a plain "Company/Position/Status"
     // sheet) already resolve cleanly via alias matching alone. Only spend an AI
     // call when the heuristic couldn't confidently resolve the two fields that
-    // actually matter for a usable import — skips the AI request entirely for
+    // actually matter for a usable import, skips the AI request entirely for
     // the common case instead of calling it unconditionally on every import.
     if (heuristicMapping.company && heuristicMapping.position) {
       return NextResponse.json({ mapping: heuristicMapping, source: "heuristic" });

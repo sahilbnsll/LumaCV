@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { JobApplication } from "@/lib/application-schema";
+import { JobApplication, createApplicationInputSchema } from "@/lib/application-schema";
+
+// `createApplicationInputSchema` already existed in lib/application-schema.ts
+// but was never wired into this route, this POST handler was doing manual
+// field defaults + a single `!company || !position` check instead of real
+// validation. `id` and `contacts` are added here rather than in the shared
+// schema since `id` is specific to this upsert endpoint (not part of the
+// application's own shape) and `createApplicationInputSchema` predates the
+// contacts field being added to the route.
+const applicationUpsertSchema = createApplicationInputSchema.extend({
+  id: z.string().min(1).optional(),
+  contacts: z
+    .array(
+      z.object({
+        name: z.string(),
+        role: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        linkedin: z.string().optional(),
+      })
+    )
+    .optional()
+    .default([]),
+});
 
 function mapRowToApplication(row: any): JobApplication {
   return {
@@ -60,33 +84,50 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const {
-      id,
-      company,
-      position,
-      location = "",
-      remoteType = "unspecified",
-      status = "applied",
-      appliedDate,
-      deadline,
-      salary = "",
-      url = "",
-      jobDescription = "",
-      notes = "",
-      contacts = [],
-      resumeId = "",
-      tags = [],
-    } = body;
-
-    if (!company || !position) {
+    const validated = applicationUpsertSchema.safeParse(body);
+    if (!validated.success) {
       return NextResponse.json(
-        { error: "company and position are required fields" },
+        { error: "Invalid input", details: validated.error.format() },
         { status: 400 }
       );
     }
 
+    const {
+      id,
+      company,
+      position,
+      location,
+      remoteType,
+      status,
+      appliedDate,
+      deadline,
+      salary,
+      url,
+      jobDescription,
+      notes,
+      contacts,
+      resumeId,
+      tags,
+    } = validated.data;
+
     const supabase = createSupabaseServerClient();
     const now = new Date().toISOString();
+
+    // `id` is client-supplied (used for upserting an existing draft), so
+    // without this check a signed-in user could pass another user's row id
+    // and overwrite it (id is the upsert conflict target, not scoped to
+    // user_id). Reject up front rather than trusting Supabase RLS alone to
+    // catch a cross-user write.
+    if (id) {
+      const { data: existing } = await supabase
+        .from("user_applications")
+        .select("user_id")
+        .eq("id", id)
+        .maybeSingle();
+      if (existing && existing.user_id !== user.id) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+    }
 
     const payload = {
       ...(id ? { id } : {}),

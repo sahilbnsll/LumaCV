@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { ratelimit } from '@/lib/rate-limit';
 
 // Resolves a chosen username to its account email so the client can sign in
 // via normal email/password auth. Requires the service-role key because
@@ -11,6 +12,15 @@ export async function POST(req: NextRequest) {
 
     if (!supabaseUrl || !serviceKey) {
         return NextResponse.json({ error: 'Username sign-in is not configured.' }, { status: 501 });
+    }
+
+    // This endpoint returns a real account email for a valid username, so
+    // without a limiter here it's a free, unlimited account-enumeration
+    // primitive. Reuses the same per-IP limiter the AI routes use.
+    const ip = req.ip ?? '127.0.0.1';
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+        return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 });
     }
 
     let username: unknown;
@@ -40,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Same generic response whether the username doesn't exist or the lookup
-    // is empty — don't let this endpoint be used to enumerate accounts.
+    // is empty, don't let this endpoint be used to enumerate accounts.
     if (!data?.email) {
         return NextResponse.json({ error: 'No account found for that username.' }, { status: 404 });
     }

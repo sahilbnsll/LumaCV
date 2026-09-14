@@ -1,3 +1,15 @@
+// STATUS: not currently wired into any route (confirmed via a full-repo grep
+// during a production audit, see AGENTS.md). This is a complete server-side
+// PDF storage layer (upload a compiled PDF to Supabase Storage, hash-keyed;
+// issue a signed URL; upsert a tracking row) — planned infrastructure for
+// caching compiled PDFs server-side, not accidental leftover code. Left
+// in place rather than deleted or force-wired-in, since actually adopting it
+// is a real product decision (storage cost, cache invalidation, signed-URL
+// exposure), not something to bolt on silently. If you're picking this back
+// up: `SUPABASE_RESUMES_BUCKET` (used here and in
+// app/api/v1/internal/infra-check/route.ts) is the only other place that
+// currently references the storage bucket this file targets.
+
 type ResumeRowStatus = 'queued' | 'compiling' | 'ready' | 'failed';
 
 export class SupabaseStorageError extends Error {

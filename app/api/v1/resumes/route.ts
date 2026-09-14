@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireUser } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { ResumeDataSchema, TemplateTypeSchema } from '@/lib/resume-schema';
+
+// This route previously did no real validation beyond `!resumeData`, letting
+// a malformed resumeData shape reach Supabase as an opaque JSON blob (only
+// caught later, confusingly, wherever it's next read back out). Reuses the
+// same ResumeDataSchema the AI routes already validate against.
+const saveResumeSchema = z.object({
+    id: z.string().min(1).optional(),
+    title: z.string().min(1).optional().default('Untitled Resume'),
+    templateId: TemplateTypeSchema.optional().default('modern'),
+    resumeData: ResumeDataSchema,
+    typstCode: z.string().optional(),
+    atsScore: z.number().optional(),
+    targetJobTitle: z.string().optional(),
+    targetJobCompany: z.string().optional(),
+});
 
 export async function GET() {
     const auth = await requireUser();
@@ -32,22 +49,43 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
+        const validated = saveResumeSchema.safeParse(body);
+        if (!validated.success) {
+            return NextResponse.json(
+                { error: 'Invalid input', details: validated.error.format() },
+                { status: 400 }
+            );
+        }
+
         const {
             id,
-            title = 'Untitled Resume',
-            templateId = 'modern',
+            title,
+            templateId,
             resumeData,
             typstCode,
             atsScore,
             targetJobTitle,
             targetJobCompany,
-        } = body;
-
-        if (!resumeData) {
-            return NextResponse.json({ error: 'resumeData is required' }, { status: 400 });
-        }
+        } = validated.data;
 
         const supabase = createSupabaseServerClient();
+
+        // `id` is client-supplied (used for upserting an existing draft), so
+        // without this check a signed-in user could pass another user's
+        // resume id and overwrite it (id is the upsert conflict target, not
+        // scoped to user_id). Reject up front rather than trusting Supabase
+        // RLS alone to catch a cross-user write.
+        if (id) {
+            const { data: existing } = await supabase
+                .from('user_resumes')
+                .select('user_id')
+                .eq('id', id)
+                .maybeSingle();
+            if (existing && existing.user_id !== user.id) {
+                return NextResponse.json({ error: 'Not found' }, { status: 404 });
+            }
+        }
+
         const payload = {
             ...(id ? { id } : {}),
             user_id: user.id,
