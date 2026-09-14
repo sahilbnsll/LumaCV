@@ -20,6 +20,7 @@ This guide walks you through setting up Supabase for LumaCV to support Email/Pas
 3. For local development or instant signups without an SMTP email server:
    - Toggle **Confirm email** to **OFF** (this allows users to log in immediately upon signup without waiting for an email confirmation link).
 4. Click **Save**.
+5. In **Authentication** $\rightarrow$ **Policies** (or **Auth Settings**, depending on dashboard version), enable **Leaked Password Protection**. This checks new passwords against HaveIBeenPwned.org and is flagged by Supabase's security advisor when off; it's a dashboard toggle, not something `schema.sql` can set.
 
 ---
 

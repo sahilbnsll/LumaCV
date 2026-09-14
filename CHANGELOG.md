@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.11.1] - 2026-09-14
+
+### Security
+- Fixed 3 Supabase database-linter warnings: `set_updated_at()` and `increment_platform_stat()` had a mutable `search_path` (added `set search_path = public`); `handle_new_user()`, `increment_platform_stat()`, and `set_updated_at()` were all `SECURITY DEFINER`/trigger-only functions callable directly via Supabase's auto-generated `/rest/v1/rpc/...` API by any `anon`/`authenticated` caller (Postgres grants `EXECUTE` to `PUBLIC` by default). `increment_platform_stat()` in particular let anyone corrupt the public homepage stats by calling it directly with an arbitrary key/amount, bypassing the app entirely. Revoked public execute on all three; the app's own server-side (service-role) calls are unaffected.
+- The remaining two advisor findings were reviewed and left as-is: `feedback` table's public `INSERT`-only policy is intentional (a public feedback form with no read/update/delete access for anon), and `rls_auto_enable()` isn't defined anywhere in this repo's `schema.sql`, likely a stray function created directly in the dashboard, flagged for manual review rather than guessed at.
+
+---
+
 ## [2.11.0] - 2026-09-14
 
 ### Added

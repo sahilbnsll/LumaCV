@@ -69,13 +69,23 @@ begin
 end;
 $$;
 
+-- SECURITY DEFINER functions run with the definer's (elevated) privileges
+-- and, unless revoked, Postgres grants EXECUTE to PUBLIC by default,
+-- meaning Supabase's auto-generated PostgREST API exposes them at
+-- /rest/v1/rpc/<function_name> to any anon or authenticated caller, not
+-- just to the trigger that's meant to invoke them. handle_new_user only
+-- needs to run as a trigger (Postgres invokes triggers directly, this
+-- grant has no effect on that), so there's no legitimate reason for a
+-- client to call it directly.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
 -- Also sync on updateUser() calls (e.g. changing username/full_name from
--- Settings) — without this, public.profiles silently goes stale after the
+-- Settings), without this, public.profiles silently goes stale after the
 -- first sign-up and username login stops resolving the current username.
 drop trigger if exists on_auth_user_updated on auth.users;
 create trigger on_auth_user_updated
@@ -134,12 +144,15 @@ create policy "Users can delete their own resumes"
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
   return new;
 end;
 $$;
+
+revoke execute on function public.set_updated_at() from public, anon, authenticated;
 
 drop trigger if exists tr_user_resumes_updated_at on public.user_resumes;
 create trigger tr_user_resumes_updated_at
@@ -193,11 +206,13 @@ create policy "Allow public read on platform stats"
   on public.platform_stats for select
   using (true);
 
--- Atomic increment helper function
+-- Atomic increment helper function. Called server-side only (see
+-- lib/stats-service.ts, via the service-role client) with a fixed,
+-- code-controlled stat_key, never with a value a browser sent directly.
 create or replace function public.increment_platform_stat(stat_key text, amount bigint default 1)
 returns bigint
 language plpgsql
-security definer
+security definer set search_path = public
 as $$
 declare
   new_value bigint;
@@ -211,6 +226,14 @@ begin
   return new_value;
 end;
 $$;
+
+-- Without this, Postgres's default PUBLIC execute grant means Supabase's
+-- auto-generated PostgREST API exposes this at
+-- /rest/v1/rpc/increment_platform_stat to any anon or authenticated
+-- caller, since it's SECURITY DEFINER, anyone could call it directly
+-- with an arbitrary stat_key/amount and corrupt the public homepage
+-- stats, entirely bypassing the app's own code path.
+revoke execute on function public.increment_platform_stat(text, bigint) from public, anon, authenticated;
 
 
 -- ==============================================================================
