@@ -173,7 +173,7 @@ export function ResumeEditorEntry({ onComplete, onCancel }: ResumeEditorEntryPro
                         <div className="space-y-6">
                             <div
                                 {...getRootProps()}
-                                className={`border-2 border-dashed rounded-2xl p-10 sm:p-12 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 ${
+                                className={`border-2 border-dashed rounded-2xl p-10 sm:p-12 text-center cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-300 flex flex-col items-center justify-center gap-4 ${
                                     isDragActive
                                         ? 'border-primary bg-primary/10 scale-[0.99] ring-4 ring-primary/20'
                                         : 'border-border/80 hover:border-primary/60 hover:bg-muted/40'

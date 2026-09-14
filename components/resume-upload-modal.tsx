@@ -153,7 +153,7 @@ export function ResumeUploadModal({ open, onOpenChange, onParsed }: ResumeUpload
                             >
                                 <div
                                     {...getRootProps()}
-                                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3 ${
+                                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-[border-color,background-color,transform] duration-200 flex flex-col items-center justify-center gap-3 ${
                                         isDragActive
                                             ? 'border-primary bg-primary/5 scale-[0.99]'
                                             : 'border-border/80 hover:border-primary/50 hover:bg-muted/40'

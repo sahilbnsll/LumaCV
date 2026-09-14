@@ -422,7 +422,7 @@ export function StandaloneEditorFeature() {
                         onDragOver={(e) => handleDragOver(e, sec.id)}
                         onDrop={(e) => handleDrop(e, sec.id)}
                         onDragEnd={handleDragEnd}
-                        className={`p-3.5 rounded-xl border transition-all flex flex-col group shadow-xs ${
+                        className={`p-3.5 rounded-xl border transition-[border-color,background-color,box-shadow,transform] flex flex-col group shadow-xs ${
                           dragOverId === sec.id
                             ? "border-primary/60 bg-primary/5 scale-[1.01]"
                             : isEditing
@@ -450,7 +450,7 @@ export function StandaloneEditorFeature() {
                           <button
                             type="button"
                             onClick={() => setEditingId(isEditing ? null : sec.id)}
-                            className={`ml-2 shrink-0 flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                            className={`ml-2 shrink-0 flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-[background-color,color,border-color] cursor-pointer ${
                               isEditing
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30"

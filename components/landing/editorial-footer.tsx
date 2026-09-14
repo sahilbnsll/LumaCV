@@ -215,7 +215,7 @@ export function EditorialFooter() {
                     >
                       <span>{link.label}</span>
                       <ArrowUpRight 
-                        className="size-3.5 opacity-0 transition-all duration-200 group-hover/link:opacity-60 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" 
+                        className="size-3.5 opacity-0 transition-[opacity,transform] duration-200 group-hover/link:opacity-60 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5"
                         aria-hidden="true" 
                       />
                     </a>
