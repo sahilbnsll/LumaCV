@@ -2,8 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Card width is the --cf-card CSS var, a clamp() so it varies by caller
+// (this component's own default is 180-270px, template-carousel-showcase
+// overrides to 210-290px). These bounds cover both callers' ranges, plus
+// headroom for the selected/center card's larger on-screen scale, without
+// falling back to the raw source PNGs (500KB+ each, up to 15 slides).
+const COVERFLOW_SLIDE_SIZES = "(max-width: 640px) 220px, 400px";
 
 const useIsoLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -334,12 +342,13 @@ export const CoverflowCarousel = React.forwardRef<
                   aspectRatio: "210 / 297",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={slide.src}
                   alt={slide.alt}
+                  fill
+                  sizes={COVERFLOW_SLIDE_SIZES}
                   draggable={false}
-                  className="h-full w-full select-none object-cover object-top pointer-events-none"
+                  className="select-none object-cover object-top pointer-events-none"
                 />
               </div>
             ))}
