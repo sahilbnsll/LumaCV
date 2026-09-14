@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.14.0] - 2026-09-14
+
+### Fixed
+- **The homepage's "One resume. 52 looks." carousel was still loading 6.7 MB of raw images**, a separate bug from the image-stream-hero fix earlier this release cycle: a different component (`coverflow-carousel.tsx`) used raw `<img>` tags pointing directly at the full-resolution source PNGs. This is why the PageSpeed score barely moved after the first image fix, the larger of the two offenders was still live. Switched to `next/image`, confirmed via network trace that every request now routes through the image optimizer.
+- **Render-blocking CSS** (~2.3s combined across two stylesheets under PageSpeed's throttling profile): enabled Next.js's `optimizeCss`, which inlines above-the-fold CSS into the HTML response instead of blocking on two full `<link>` stylesheets. Verified with a full production build and a visual pass across light/dark mode, the editor, and the templates gallery, no missing styles, no regressions.
+- **Non-composited color animation** on the export-format showcase: 4 cards were animating `backgroundColor`/`color` through Framer Motion's `animate` prop, forcing a main-thread repaint every frame, even though each card's color never actually changes (it's a permanent per-card value in a deck-shuffle animation, only position/scale/opacity change). Moved the colors to a static style object instead, same visual result, zero animation cost. The download button's color genuinely does transition between formats and was left as-is rather than force a riskier visual redesign for one small element.
+
+### Docs
+- A full re-read of both PageSpeed Insights reports (not just the summary) confirmed everything else already passes or is informational only: minified CSS/JS, unused CSS, cache lifetimes, duplicated JavaScript, font-display, and Cumulative Layout Shift (a literal 0.000). An "unknown AWS endpoint" that appeared in the critical path in an earlier report was investigated and confirmed to not exist anywhere in this codebase or its dependencies, almost certainly a Search-Console test-harness artifact, not a real site issue.
+
+---
+
 ## [2.13.0] - 2026-09-14
 
 ### Added
