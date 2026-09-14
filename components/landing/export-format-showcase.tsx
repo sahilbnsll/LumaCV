@@ -309,15 +309,11 @@ export function ExportFormatShowcase() {
                       if (info.offset.x < -60 || info.velocity.x < -400) cycleFormat(1);
                       else if (info.offset.x > 60 || info.velocity.x > 400) cycleFormat(-1);
                     }}
-                    animate={{
-                      ...slotStyle,
-                      backgroundColor: fmt.color.bg,
-                      color: fmt.color.text,
-                    }}
+                    animate={slotStyle}
                     whileHover={isFront ? { rotate: 0, scale: 1.03, y: -6 } : undefined}
                     whileDrag={isFront ? { rotate: 0, scale: 1.02, cursor: "grabbing" } : undefined}
                     transition={SPRING_PRESETS.snappy}
-                    style={{ zIndex: 40 - slot }}
+                    style={{ zIndex: 40 - slot, backgroundColor: fmt.color.bg, color: fmt.color.text }}
                     className={cn(
                       "absolute inset-0 rounded-2xl p-6 sm:p-7 flex flex-col justify-between overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.5),0_8px_20px_rgba(0,0,0,0.25)] ring-1 ring-black/10 dark:ring-white/20 ring-inset",
                       isFront ? "cursor-grab active:cursor-grabbing touch-pan-y" : "pointer-events-none"
