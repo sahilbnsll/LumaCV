@@ -32,9 +32,15 @@ const nextConfig = {
     config.resolve.alias.canvas = false;
 
     // pdfjs-dist is only used client-side; avoid bundling it on the server
-    // and prevent Next.js from generating overly-long chunk paths that 404
+    // and prevent Next.js from generating overly-long chunk paths that 404.
+    // The `$` suffix makes this an EXACT-match alias (bare `import
+    // 'pdfjs-dist'` only) — without it, webpack treats the key as a path
+    // prefix and rewrites every deeper subpath import too, which broke
+    // `pdfjs-dist/legacy/build/pdf.min.mjs` (used for broader mobile/older-
+    // browser worker compatibility) by resolving it as
+    // 'pdfjs-dist/build/pdf.min.mjs/legacy/build/pdf.min.mjs'.
     if (!isServer) {
-      config.resolve.alias['pdfjs-dist'] = 'pdfjs-dist/build/pdf.min.mjs';
+      config.resolve.alias['pdfjs-dist$'] = 'pdfjs-dist/build/pdf.min.mjs';
     }
 
     return config;

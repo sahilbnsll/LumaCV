@@ -28,7 +28,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 
     // Use the pre-built bundle directly to avoid Next.js chunk-path 404s
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfjsLib = await import('pdfjs-dist/build/pdf.min.mjs') as any;
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs') as any;
 
     // Same-origin worker (see public/pdf.worker.min.mjs), avoids protocol/CSP issues with //cdn URLs
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -40,6 +40,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         pdf = await loadingTask.promise;
     } catch (err) {
+        console.error('[pdf-parser] Failed to open PDF document:', err);
         throw new Error(
             `Could not open this PDF (${err instanceof Error ? err.message : 'unknown error'}). It may be corrupted, password-protected, or in a format this browser can't parse.`,
         );
@@ -77,14 +78,26 @@ export async function extractTextFromPdf(file: File): Promise<string> {
             } catch {
                 // Annotation extraction is best-effort
             }
-        } catch {
+        } catch (pageErr) {
             pagesFailed += 1;
+            // Every per-page failure was previously swallowed silently, so
+            // when *every* page failed there was no way to tell whether
+            // the cause was the worker, this specific PDF's structure, or
+            // something else, this is the only diagnostic trail available
+            // short of reproducing the exact device/file combination.
+            console.error(`[pdf-parser] Page ${i}/${pdf.numPages} extraction failed:`, pageErr);
         }
     }
 
     if (pagesFailed === pdf.numPages) {
+        // "This device" is a guess, not a confirmed cause, every page
+        // failing after the document itself opened successfully (numPages
+        // was readable) most often means the PDF's internal structure
+        // (font subsetting, content streams) is tripping up this pdf.js
+        // version, not a device capability gap, phrase it as "this PDF" to
+        // avoid pointing the user at the wrong fix.
         throw new Error(
-            'This PDF could not be read on this device. Try re-exporting it (e.g. "Print to PDF" from a desktop browser) or upload a .docx instead.',
+            'This PDF could not be read (0 of ' + pdf.numPages + ' pages parsed). It may use an unusual font/encoding this parser can\'t handle. Try re-exporting it (e.g. "Print to PDF" from a desktop browser) or upload a .docx instead.',
         );
     }
 
@@ -116,7 +129,7 @@ export async function renderPdfThumbnail(file: File): Promise<{ thumbnailUrl: st
 
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pdfjsLib = (await import('pdfjs-dist/build/pdf.min.mjs')) as any;
+        const pdfjsLib = (await import('pdfjs-dist/legacy/build/pdf.min.mjs')) as any;
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
         const arrayBuffer = await file.arrayBuffer();
