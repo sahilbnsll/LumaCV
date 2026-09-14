@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from './auth-provider';
 import { notify } from '@/lib/notify';
-import { Eye, EyeOff, ArrowRight, Loader2, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
 import { getAppUrl } from '@/lib/app-url';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
@@ -62,7 +62,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                     if (error) throw error;
                     notify.success('Account created', 'Welcome to LumaCV');
                 } else {
-                    // A bare username has no fixed relationship to its account email —
+                    // A bare username has no fixed relationship to its account email,
                     // look it up rather than guessing the old `@lumacv.me` convention.
                     let loginEmail = email;
                     if (!isEmail) {

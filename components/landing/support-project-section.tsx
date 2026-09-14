@@ -77,12 +77,12 @@ export function SupportProjectSection() {
 
           {/* ── Right Column: Support Channels Card ── */}
           <div className="w-full max-w-[640px] lg:ml-auto [perspective:1600px]">
-            {/* Notice-board tilt — more pronounced than a subtle hover-lift
+            {/* Notice-board tilt, more pronounced than a subtle hover-lift
                 card: rotateY for depth, a touch of rotateZ so it reads as
                 "hung on a wall slightly crooked" rather than a flat panel.
                 Relaxes toward flat on hover instead of staying static. */}
             <div className="liquid-glass relative overflow-hidden px-10 sm:px-12 pt-10 pb-8 text-foreground shadow-xl shadow-black/[0.04] dark:shadow-black/30 [transform:rotateY(-12deg)_rotateX(3deg)_rotateZ(-1.5deg)] hover:[transform:rotateY(-3deg)_rotateX(0deg)_rotateZ(0deg)_translateY(-4px)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-              {/* Soft accent wash — the same restrained "one glow, one accent"
+              {/* Soft accent wash, the same restrained "one glow, one accent"
                   treatment used elsewhere on this page, not a flat plain card */}
               <div
                 aria-hidden="true"

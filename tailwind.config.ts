@@ -31,12 +31,12 @@ const config: Config = {
             },
             maxWidth: {
                 "reading": "48rem",    // 768px (Legal, Settings, Single-Column Forms)
-                "marketing": "74rem",  // 1184px — matches the homepage's actual editorial container width
+                "marketing": "74rem",  // 1184px, matches the homepage's actual editorial container width
                 "dashboard": "80rem",  // 1280px (Dashboard project matrices)
                 "studio": "100rem",    // 1600px (Split-screen review workspace)
             },
             minHeight: {
-                // Apple HIG minimum tap target — the homepage already used this value
+                // Apple HIG minimum tap target, the homepage already used this value
                 // ad hoc (`min-h-[44px]`) in several places; this makes it a real token.
                 "touch": "44px",
             },

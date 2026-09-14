@@ -137,7 +137,7 @@ export function Step1JD() {
             trackEvent('jd_submitted', { wordCount, charCount: jd.length });
         }
         if (!resumeData && parseStage !== 'success') {
-            notify.info('Manual mode', 'No resume uploaded yet — you can fill your experience directly');
+            notify.info('Manual mode', 'No resume uploaded yet, you can fill your experience directly');
         }
         setStep(2);
     };
@@ -381,7 +381,7 @@ export function Step1JD() {
                             className="h-10 px-4 text-xs font-medium border-border/80 hover:bg-muted/40 rounded-xl cursor-pointer"
                             title="Skip AI and edit your resume directly in the manual editor"
                         >
-                            Skip AI — Edit Resume Directly
+                            Skip AI, Edit Resume Directly
                         </Button>
                     </Link>
                     <Button

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -469,7 +469,7 @@ export function FactPreservingAiShowcase() {
                         <ul className="space-y-1.5 pl-5 list-disc text-foreground/90 text-xs leading-relaxed">
                           {scenario.hallucinated.inventedClaims.map((claim, idx) => (
                             <li key={idx} className="text-rose-900 dark:text-rose-200/90">
-                              <span className="font-medium text-rose-700 dark:text-rose-300">{claim}</span> — candidate never stated this metric in raw inputs.
+                              <span className="font-medium text-rose-700 dark:text-rose-300">{claim}</span>, candidate never stated this metric in raw inputs.
                             </li>
                           ))}
                         </ul>

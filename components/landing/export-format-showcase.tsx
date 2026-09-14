@@ -277,7 +277,7 @@ export function ExportFormatShowcase() {
               {/* Real deck-shuffle: every format is its own permanent card
                   (never remounted, never content-swapped) parked at a "slot"
                   position computed from its distance behind the selected one.
-                  Changing selectedFormat just moves the slot targets — front
+                  Changing selectedFormat just moves the slot targets, front
                   springs back and fades toward the rear, the next-up card
                   springs up to the front, exactly like fanning a real deck.
                   Only the front card is draggable/interactive. */}

@@ -12,11 +12,11 @@ import { UserApiKeys } from './ai-keys';
 /**
  * Groq Active Models
  * (llama-3.1-70b-versatile and mixtral-8x7b-32768 have been decommissioned by
- * Groq — replaced with the current lineup, matching what's proven working in
+ * Groq, replaced with the current lineup, matching what's proven working in
  * the sibling Portfolio project's own multi-provider chat route.)
  */
 const GROQ_HEAVY_MODELS = [
-    // allam-2-7b deliberately excluded here — it hard-rejects any max_tokens
+    // allam-2-7b deliberately excluded here, it hard-rejects any max_tokens
     // over 4096, which is too small for the combined resume+JD-keywords+ATS-
     // summary payload heavy tasks send; it stays in the light pool below where
     // its cap is never an issue.
@@ -52,7 +52,7 @@ const GEMINI_LIGHT_MODELS = [
 ];
 
 /**
- * Mistral AI Active Models — OpenAI-compatible endpoint (api.mistral.ai/v1).
+ * Mistral AI Active Models, OpenAI-compatible endpoint (api.mistral.ai/v1).
  */
 const MISTRAL_HEAVY_MODELS = [
     'codestral-latest',
@@ -67,7 +67,7 @@ const MISTRAL_LIGHT_MODELS = [
 ];
 
 /**
- * OpenRouter Active Models — free-tier models via OpenAI-compatible endpoint.
+ * OpenRouter Active Models, free-tier models via OpenAI-compatible endpoint.
  */
 const OPENROUTER_HEAVY_MODELS = [
     'nvidia/nemotron-3-super-120b-a12b:free',
@@ -81,7 +81,7 @@ const OPENROUTER_LIGHT_MODELS = [
 ];
 
 /**
- * GitHub Models Active Models — OpenAI-compatible endpoint (models.github.ai).
+ * GitHub Models Active Models, OpenAI-compatible endpoint (models.github.ai).
  */
 const GITHUB_MODELS_HEAVY_MODELS = [
     'gpt-4o-mini',
@@ -240,7 +240,7 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
             : defaultPool;
 
         configs.push({
-            // Groq's OpenAI-compatible endpoint only implements Chat Completions —
+            // Groq's OpenAI-compatible endpoint only implements Chat Completions,
             // calling the provider directly (or .languageModel/.responses) defaults
             // to the newer Responses API, which Groq doesn't support and which was
             // making every Groq model fail with a generic "not found" error.
@@ -263,7 +263,7 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
     // Groq goes first: it's LPU-accelerated and consistently the fastest chain
     // member by a wide margin (often sub-second first-token, vs several
     // seconds for Gemini/OpenAI-class hosted inference). Most users have no
-    // BYOK key, so this ordering is what the majority of real requests pay —
+    // BYOK key, so this ordering is what the majority of real requests pay,
     // trying the slowest-typical provider first was adding real, avoidable
     // latency to the common case even when nothing failed over at all.
     const groqKey = process.env.GROQ_API_KEY;
@@ -273,7 +273,7 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
             apiKey: groqKey,
         });
         configs.push({
-            // See BYOK-Groq comment above — Groq only supports Chat Completions.
+            // See BYOK-Groq comment above, Groq only supports Chat Completions.
             provider: (modelId: string) => groq.chat(modelId),
             models: taskType === 'heavy' ? GROQ_HEAVY_MODELS : GROQ_LIGHT_MODELS,
             name: 'System-Groq (Default)'
@@ -290,7 +290,7 @@ function getProviderConfigurations(taskType: TaskType, userKeys?: UserApiKeys): 
         });
     }
 
-    // Mistral, OpenRouter, and GitHub Models are all OpenAI-compatible endpoints —
+    // Mistral, OpenRouter, and GitHub Models are all OpenAI-compatible endpoints,
     // same .chat() requirement as Groq (see comment above). System-only for now,
     // matching how the sibling Portfolio project's chat route configures them
     // (plain env vars, no BYOK plumbing for these three).
@@ -366,7 +366,7 @@ export async function generateStream(
         userKeys?: UserApiKeys;
         maxAttempts?: number;
         // Without this, failover only triggers on hard errors (network failure,
-        // timeout, empty stream) — a model that streams back syntactically fine
+        // timeout, empty stream), a model that streams back syntactically fine
         // but substantively useless content (e.g. `{}` from a weak fallback
         // model under load) looks like a "success" and failover stops there.
         // When provided, the full stream is collected up front and validated
@@ -381,11 +381,11 @@ export async function generateStream(
     const errors: string[] = [];
     // No cap by default: on genuine failure this should fail over across every
     // configured provider (Gemini -> Groq -> Mistral -> OpenRouter -> OpenAI ->
-    // GitHub Models) — that resilience is the whole point of configuring 5+
+    // GitHub Models), that resilience is the whole point of configuring 5+
     // providers. The "many AI API requests" complaint this used to guard
     // against was actually the *pipeline* re-triggering itself on every
     // success (a useEffect dependency bug in step3-processing.tsx, now fixed
-    // at the source) — not legitimate model failover depth. Callers that truly
+    // at the source), not legitimate model failover depth. Callers that truly
     // want a shallow, fast-fail chain can still pass `maxAttempts` explicitly.
     const maxAttempts = options?.maxAttempts ?? Infinity;
     let attempts = 0;
@@ -442,7 +442,7 @@ export async function generateStream(
                 clearTimeout(timeoutId);
 
                 if (firstChunk.done || !firstChunk.value) {
-                    throw new Error('Empty stream — model returned no output');
+                    throw new Error('Empty stream, model returned no output');
                 }
 
                 console.log(`[${providerName}] Stream connected via ${modelId}`);

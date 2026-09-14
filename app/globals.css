@@ -752,3 +752,36 @@ body.nav-open [data-luma-stream-card] {
   inset: -10px !important;
 }
 
+/* Mobile: the fixed 340px card plus its 36/12px padding ate a
+   disproportionate slice of a small screen and read heavier than the
+   action it was confirming. This block has to come after every base rule
+   above (not just live near the property it's tightening) because CSS
+   resolves same-specificity `!important` conflicts by source order, and
+   every rule above is already `!important` on every property it sets. */
+@media (max-width: 639px) {
+  [data-sonner-toaster] {
+    --width: calc(100vw - 24px) !important;
+  }
+
+  [data-sonner-toast] {
+    padding: 8px 30px 8px 10px !important;
+    border-radius: 10px !important;
+    gap: 8px !important;
+  }
+
+  [data-sonner-toast] [data-title] {
+    font-size: 12.5px !important;
+  }
+
+  [data-sonner-toast] [data-description] {
+    font-size: 11.5px !important;
+  }
+
+  [data-sonner-toast] [data-close-button] {
+    width: 20px !important;
+    height: 20px !important;
+    right: 6px !important;
+    top: 6px !important;
+  }
+}
+

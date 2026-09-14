@@ -1,5 +1,5 @@
 "use client";
-// beui.dev/components/motion/loader — adapted for LumaCV
+// beui.dev/components/motion/loader, adapted for LumaCV
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useId, useState } from "react";

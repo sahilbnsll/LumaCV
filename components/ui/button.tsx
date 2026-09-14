@@ -19,14 +19,14 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        /** The homepage's real primary CTA style — inverted foreground/background pill.
+        /** The homepage's real primary CTA style, inverted foreground/background pill.
          *  Extracted here so every hero/CTA button shares one definition instead of
          *  each section re-declaring `bg-foreground text-background` inline. */
         invert:
           "rounded-xl bg-foreground text-background shadow-md hover:bg-foreground/90 active:scale-[0.98]",
       },
       size: {
-        // Radius comes from `variant` (or the base `rounded-md`), not `size` — these
+        // Radius comes from `variant` (or the base `rounded-md`), not `size`, these
         // used to redeclare `rounded-md` redundantly, which shadowed variant radii
         // like `invert`'s `rounded-xl` once merged through tailwind-merge's last-wins rule.
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -49,7 +49,7 @@ const buttonVariants = cva(
 // Wrapped in forwardRef because every Radix trigger (DropdownMenuTrigger,
 // PopoverTrigger, TooltipTrigger, ...) rendered with `asChild` relies on its
 // Slot cloning a ref onto this component's real DOM node to measure/position
-// itself. Without forwardRef, that ref silently fails to attach — Radix ends
+// itself. Without forwardRef, that ref silently fails to attach, Radix ends
 // up with no real anchor element, and Floating UI falls back to measuring
 // the popper content against itself, producing wildly wrong positions (e.g.
 // a dropdown menu rendering off-screen instead of below its trigger).

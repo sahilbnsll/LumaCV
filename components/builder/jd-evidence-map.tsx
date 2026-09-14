@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FileCheck, Sparkles, CheckCircle2, AlertCircle, Tag } from 'lucide-react';
+import { FileCheck, Sparkles, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AtsAlignmentSummary } from '@/lib/resume-schema';
 

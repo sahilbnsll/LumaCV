@@ -9,7 +9,7 @@ const FEEDBACK_FILE = path.join(process.cwd(), 'data', 'feedback.json');
 
 export async function POST(req: NextRequest) {
     // Public, unauthenticated by design (anyone should be able to send
-    // feedback) — but every submission sends a real email to the admin and
+    // feedback), but every submission sends a real email to the admin and
     // writes to Supabase/disk, so it needs the same abuse-protection as any
     // other externally-consequential endpoint, not the compile route's
     // in-memory limiter (that one's built for near-zero-cost local calls).

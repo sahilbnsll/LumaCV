@@ -93,7 +93,7 @@ export function UserMenu() {
                 align="end"
                 className="w-56 p-1.5 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-md shadow-xl text-foreground"
             >
-                {/* User Identity Header — plain text, no status pill/badge clutter */}
+                {/* User Identity Header, plain text, no status pill/badge clutter */}
                 <DropdownMenuLabel className="px-2.5 py-2">
                     <div className="flex items-center gap-2.5">
                         <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
@@ -112,7 +112,7 @@ export function UserMenu() {
 
                 <DropdownMenuSeparator className="my-1 border-border/40" />
 
-                {/* Workspace Navigation — one neutral icon weight, no per-item rainbow colors */}
+                {/* Workspace Navigation, one neutral icon weight, no per-item rainbow colors */}
                 <DropdownMenuItem asChild>
                     <Link
                         href="/dashboard"

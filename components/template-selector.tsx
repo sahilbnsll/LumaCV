@@ -20,7 +20,7 @@ import { notify } from '@/lib/notify';
 import { TemplateFilters, filterResumeTemplates, INITIAL_TEMPLATE_FILTERS, TemplateFilterState } from '@/components/template-filters';
 
 // A small, hand-picked shortcut so someone who doesn't want to scroll all 52
-// templates can still land on something good immediately — one per broad
+// templates can still land on something good immediately, one per broad
 // archetype (tech, ATS-safe, executive/serif, engineering-dense, split-column,
 // startup-modern), not a ranking of "the best" ones.
 const POPULAR_TEMPLATE_IDS: TemplateType[] = [
@@ -78,8 +78,8 @@ export function TemplateSelector() {
     const [activeTab, setActiveTab] = useState<'popular' | 'all'>('popular');
     const [showFilters, setShowFilters] = useState(false);
     const popularScrollRef = useRef<HTMLDivElement>(null);
-    // Hidden native scrollbar (no-scrollbar) means a plain mouse — no trackpad,
-    // no shift+wheel habit — has no way to reach cards past the fold. These
+    // Hidden native scrollbar (no-scrollbar) means a plain mouse, no trackpad,
+    // no shift+wheel habit, has no way to reach cards past the fold. These
     // arrow buttons are the mouse-accessible equivalent of the swipe/drag
     // gesture touch and trackpad users already have.
     const scrollPopularBy = (dir: 1 | -1) => {
@@ -109,7 +109,7 @@ export function TemplateSelector() {
 
     return (
         <div className="flex-1 flex flex-col min-h-0 space-y-3">
-            {/* Nav bar between the two sections — each gets its own dedicated
+            {/* Nav bar between the two sections, each gets its own dedicated
                 scroll area below instead of stacking both in one column,
                 which is what caused the page to run out of room and clip
                 instead of scroll once Popular Picks grew past one row. */}
@@ -142,7 +142,7 @@ export function TemplateSelector() {
                 </button>
             </div>
 
-            {/* Popular Picks: single horizontally-scrollable row — a fast path
+            {/* Popular Picks: single horizontally-scrollable row, a fast path
                 for anyone who doesn't want to browse all 52. */}
             {activeTab === 'popular' && (
                 <div className="shrink-0 relative group/scroll">

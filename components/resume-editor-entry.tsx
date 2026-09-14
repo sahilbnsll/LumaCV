@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
     FileUp,
-    FileText,
     CheckCircle2,
     AlertCircle,
     Loader2,
@@ -15,9 +14,6 @@ import {
     FolderGit2,
     GraduationCap,
     Wrench,
-    Award,
-    User,
-    Layers,
     RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -297,7 +293,7 @@ export function ResumeEditorEntry({ onComplete, onCancel }: ResumeEditorEntryPro
                                 <div className="space-y-1">
                                     <div className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
                                         <CheckCircle2 className="w-4 h-4" />
-                                        <span>Extraction Complete — Factual Schema Ready</span>
+                                        <span>Extraction Complete, Factual Schema Ready</span>
                                     </div>
                                     <h3 className="text-xl font-bold text-foreground">
                                         {parsedData.personalInfo?.name || 'Candidate Resume'}

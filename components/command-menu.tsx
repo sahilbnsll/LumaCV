@@ -6,11 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search,
     FileText,
-    Plus,
     LayoutTemplate,
     Sparkles,
     Settings,
-    Heart,
     HelpCircle,
     Moon,
     Sun,

@@ -26,7 +26,7 @@ export function OnboardingModal() {
         {
             icon: FileText,
             title: '1. Ground-Truth Source Data',
-            description: 'Upload your existing PDF resume. LumaCV treats your dates, employers, metrics, and achievements as unalterable truth—guaranteeing zero AI hallucinations.',
+            description: 'Upload your existing PDF resume. LumaCV treats your dates, employers, metrics, and achievements as unalterable truth, guaranteeing zero AI hallucinations.',
         },
         {
             icon: Target,

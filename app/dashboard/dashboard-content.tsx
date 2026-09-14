@@ -32,7 +32,6 @@ import {
     Plus,
     Search,
     FileText,
-    Download,
     Trash2,
     PenLine,
     Sparkles,
@@ -43,14 +42,10 @@ import {
     Check,
     Lock,
     Target,
-    ShieldCheck,
-    Heart,
     Copy,
     Edit3,
     FileUp,
     MoreVertical,
-    Activity,
-    ExternalLink,
     Palette,
     FileCode2,
 } from 'lucide-react';
@@ -58,7 +53,6 @@ import { MagneticDock, type DockItem } from '@/components/ui/magnetic-dock';
 import { TemplateType, ResumeData, ResumeDataSchema } from '@/lib/resume-schema';
 import { ALL_TEMPLATES } from '@/lib/templates-data';
 import { DEMO_RESUME_DATA } from '@/lib/demo-data';
-import { toast } from 'sonner';
 import { notify } from '@/lib/notify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedCounter } from '@/components/animated-counter';
@@ -68,7 +62,7 @@ import { exportResume, ExportFormatType } from '@/lib/resume-export';
 
 // Hoisted: MagneticDock re-measures whenever its `items` array identity
 // changes, so this needs to stay a stable reference rather than be rebuilt
-// on every render. `id` is the real route — onSelect just router.push(id).
+// on every render. `id` is the real route, onSelect just router.push(id).
 const DASHBOARD_DOCK_ITEMS: DockItem[] = [
     { id: '/builder', label: 'Optimize Resume', icon: <Sparkles />, tint: '#4f46e5' },
     { id: '/editor', label: 'Resume Editor', icon: <FileCode2 />, tint: '#0d9488' },

@@ -8,7 +8,7 @@ import {
     TemplateUseCase,
     ResumeTemplate,
 } from '@/lib/templates-data';
-import { Search, X, SlidersHorizontal, RotateCcw, Columns2, Square, Sparkles, ShieldCheck } from 'lucide-react';
+import { Search, X, RotateCcw, Columns2, Square, Sparkles, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 

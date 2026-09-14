@@ -15,12 +15,12 @@ SUMMARY
 Staff Infrastructure & Systems Engineer with 8+ years architecting high-scale distributed systems, edge runtimes, and vector compilation engines.
 
 EXPERIENCE
-Acme Distributed Cloud — Principal Engineer | 2021 – Present
+Acme Distributed Cloud, Principal Engineer | 2021 – Present
 • Architected multi-region control planes utilizing Typst-compiled runbooks and automated failover topologies.
 • Reduced p99 API response latencies by 38% for 4M+ daily active sessions across global edge clusters.
 • Led cross-functional engineering team of 14 staff engineers across systems infrastructure and platform reliability.
 
-Vercel Inc. — Senior Systems Engineer | 2018 – 2021
+Vercel Inc., Senior Systems Engineer | 2018 – 2021
 • Engineered edge data delivery layer using Next.js App Router and TypeScript, serving 500M+ monthly requests.
 • Decreased cold-start times of serverless functions by 52% through lazy module evaluation and optimized memory pooling.
 • Authored core open-source runtime libraries adopted by 12,000+ enterprise developers.
@@ -206,7 +206,7 @@ export function AtsInspectorShowcase() {
           </div>
           <div className="lg:pl-8 flex lg:justify-end">
             <p className="text-muted-foreground text-[14.5px] leading-relaxed max-w-[400px]">
-              A resume can look flawless and still parse as noise. Pull the raw text layer from a real sample, or drop in your own — nothing leaves your browser.
+              A resume can look flawless and still parse as noise. Pull the raw text layer from a real sample, or drop in your own, nothing leaves your browser.
             </p>
           </div>
         </div>

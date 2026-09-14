@@ -21,7 +21,6 @@ import {
     Columns2,
     Square
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notify } from '@/lib/notify';
 import { TemplateFilters, filterResumeTemplates, INITIAL_TEMPLATE_FILTERS, TemplateFilterState } from '@/components/template-filters';
@@ -115,6 +114,38 @@ export default function TemplatesPageContent() {
                                 key={tmpl.id}
                                 className="group relative flex flex-col rounded-2xl border border-border/70 bg-card overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1"
                             >
+                                {/* Badge Strip: sits above the preview image (not overlaid on it), so
+                                    it can never cover the resume's own header/name underneath. It used
+                                    to be absolutely positioned on top of the thumbnail, which routinely
+                                    blocked the candidate name every real resume preview renders right
+                                    at the top of the page. */}
+                                <div className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 bg-muted/50 border-b border-border/60">
+                                    <span className="text-[10px] font-semibold text-foreground truncate">
+                                        {tmpl.badge}
+                                    </span>
+
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        {tmpl.layout === 'two_column' && (
+                                            <span className="px-1.5 py-0.5 rounded-md bg-blue-500/90 text-white text-[9px] font-semibold flex items-center gap-0.5 shadow-xs">
+                                                <Columns2 className="h-2.5 w-2.5" />
+                                                Split
+                                            </span>
+                                        )}
+                                        {tmpl.density === 'compact' && (
+                                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/90 text-white text-[9px] font-semibold flex items-center gap-0.5 shadow-xs">
+                                                <Square className="h-2.5 w-2.5" />
+                                                1-Page
+                                            </span>
+                                        )}
+                                        {tmpl.isAtsCompliant && (
+                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-[10px] font-semibold text-white shadow-xs">
+                                                <CheckCircle2 className="h-2.5 w-2.5" />
+                                                <span>ATS</span>
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* Preview Thumbnail (A4 proportions) */}
                                 <div className="relative aspect-[1/1.414] w-full overflow-hidden bg-muted/40 border-b border-border/60">
                                     <Image
@@ -125,34 +156,6 @@ export default function TemplatesPageContent() {
                                         className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                                         loading="lazy"
                                     />
-
-                                    {/* Top Corner Badges */}
-                                    <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none gap-1.5">
-                                        <span className="px-2 py-0.5 rounded-md bg-background/90 backdrop-blur-md border border-border/60 text-[10px] font-semibold text-foreground shadow-xs truncate max-w-[120px]">
-                                            {tmpl.badge}
-                                        </span>
-
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            {tmpl.layout === 'two_column' && (
-                                                <span className="px-1.5 py-0.5 rounded-md bg-blue-500/90 text-white text-[9px] font-semibold flex items-center gap-0.5 shadow-xs">
-                                                    <Columns2 className="h-2.5 w-2.5" />
-                                                    Split
-                                                </span>
-                                            )}
-                                            {tmpl.density === 'compact' && (
-                                                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/90 text-white text-[9px] font-semibold flex items-center gap-0.5 shadow-xs">
-                                                    <Square className="h-2.5 w-2.5" />
-                                                    1-Page
-                                                </span>
-                                            )}
-                                            {tmpl.isAtsCompliant && (
-                                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/90 backdrop-blur-md text-[10px] font-semibold text-white shadow-xs">
-                                                    <CheckCircle2 className="h-2.5 w-2.5" />
-                                                    <span>ATS</span>
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
 
                                     {/* Hover Actions Overlay */}
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5 p-4 backdrop-blur-[2px]">
@@ -238,32 +241,42 @@ export default function TemplatesPageContent() {
             {/* Full Preview Lightbox Modal */}
             <AnimatePresence>
                 {previewTemplate && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10 bg-black/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-black/80 backdrop-blur-sm">
+                        {/* Close Button: fixed to the viewport, not the scrolling card, so it
+                            never scrolls out of reach on mobile and always sits in the same
+                            predictable spot regardless of how tall the resume preview is. */}
+                        <button
+                            onClick={() => setPreviewTemplate(null)}
+                            className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[60] min-h-touch min-w-touch flex items-center justify-center rounded-full bg-background/95 hover:bg-background text-foreground border border-border/60 shadow-md transition-colors cursor-pointer"
+                            aria-label="Close preview"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             transition={{ duration: 0.2 }}
-                            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] bg-card border border-border/80 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-y-auto md:overflow-hidden"
+                            className="relative w-full max-w-4xl max-h-[88vh] bg-card border border-border/80 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-y-auto"
                         >
-                            {/* Close Button */}
-                            <button
-                                onClick={() => setPreviewTemplate(null)}
-                                className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/80 hover:bg-background text-foreground border border-border/60 transition-colors cursor-pointer"
-                                aria-label="Close preview"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-
-                            {/* Large A4 Preview Image */}
-                            <div className="relative flex-1 bg-muted/30 p-4 sm:p-6 flex items-center justify-center overflow-auto max-h-[50vh] md:max-h-none">
-                                <div className="relative aspect-[1/1.414] w-full max-w-[340px] sm:max-w-[420px] shadow-2xl rounded-lg overflow-hidden border border-border/60">
+                            {/* Large A4 Preview Image: height-driven (not width-driven) on
+                                mobile so the aspect-ratio box always fits within the space
+                                available without needing its own scroll. The old width-capped
+                                box plus a fixed 50vh wrapper could ask for more height than
+                                the wrapper had, and object-cover then cropped the overflow
+                                instead of shrinking to fit. That's what was cutting the
+                                resume off. object-contain is now also just a safety net: the
+                                box's own aspect-ratio already matches the image exactly, so
+                                nothing should ever need to crop. */}
+                            <div className="relative flex-1 bg-muted/30 p-4 sm:p-6 flex items-center justify-center">
+                                <div className="relative aspect-[1/1.414] h-[42vh] sm:h-[55vh] md:h-auto md:w-full md:max-w-[420px] shadow-2xl rounded-lg overflow-hidden border border-border/60">
                                     <Image
                                         src={previewTemplate.previewImage}
                                         alt={previewTemplate.name}
                                         fill
                                         sizes="420px"
-                                        className="object-cover object-top"
+                                        className="object-contain object-top"
                                     />
                                 </div>
                             </div>

@@ -18,35 +18,35 @@ const STAGE_CONFIG: Array<{
   color: string;
 }> = [
   {
-    // Stage 0: Analyzing JD — dot-matrix feels like parsing a grid of keywords
+    // Stage 0: Analyzing JD, dot-matrix feels like parsing a grid of keywords
     variant: "dot-matrix",
     label: "Analyzing job requirements",
     description: "Extracting keywords, skills, and role signals",
     color: "text-primary",
   },
   {
-    // Stage 1: Semantic mapping — metaballs visually merges two blobs (resume ↔ JD)
+    // Stage 1: Semantic mapping, metaballs visually merges two blobs (resume ↔ JD)
     variant: "metaballs",
     label: "Aligning your experience",
     description: "Matching your background against the role",
     color: "text-sky-500",
   },
   {
-    // Stage 2: Impact tuning — morph transforms shapes, like rewriting bullets
+    // Stage 2: Impact tuning, morph transforms shapes, like rewriting bullets
     variant: "morph",
     label: "Tuning impact and language",
     description: "Strengthening action verbs and quantified outcomes",
     color: "text-violet-500",
   },
   {
-    // Stage 3: Accuracy audit — newton's cradle represents precise, methodical checking
+    // Stage 3: Accuracy audit, newton's cradle represents precise, methodical checking
     variant: "newton",
     label: "Auditing for accuracy",
     description: "Verifying every claim against your source resume",
     color: "text-amber-500",
   },
   {
-    // Stage 4: Document build — bars filling up signals construction / compilation
+    // Stage 4: Document build, bars filling up signals construction / compilation
     variant: "bars",
     label: "Building your document",
     description: "Compiling the final Typst layout",

@@ -75,6 +75,7 @@ const COLUMNS: FooterColumn[] = [
   {
     title: "Community",
     links: [
+      { label: "Contribute", href: `${githubUrl}/blob/master/CONTRIBUTING.md`, isExternal: true },
       { label: "GitHub Sponsors", href: SUPPORT_CONFIG.githubSponsors.url, isExternal: true },
       { label: "Report an issue", href: `${githubUrl}/issues`, isExternal: true },
       { label: "Billing & Support", href: "/billing" },
@@ -94,11 +95,11 @@ const COLUMNS: FooterColumn[] = [
 const SOCIAL_LINKS = [
   { url: portfolioUrl, label: "Portfolio", icon: GlobeSimpleIcon },
   { url: githubUrl, label: "GitHub", icon: GithubLogoIcon },
-  { url: "https://x.com/sahilbnsll", label: "X", icon: XLogoIcon },
-  { url: "https://linkedin.com/in/sahilbansal", label: "LinkedIn", icon: LinkedinLogoIcon },
+  { url: "https://x.com/sahilbansalll", label: "X", icon: XLogoIcon },
+  { url: "https://linkedin.com/in/sahilbansal24", label: "LinkedIn", icon: LinkedinLogoIcon },
   { url: SUPPORT_CONFIG.buyMeACoffee.url, label: "Buy Me a Coffee", icon: CoffeeIcon },
   // Discord and Reddit icons ship with the icon set but stay unlisted here until
-  // LumaCV has a real server/subreddit to link to — see DiscordLogoIcon/RedditLogoIcon.
+  // LumaCV has a real server/subreddit to link to, see DiscordLogoIcon/RedditLogoIcon.
 ];
 
 void DiscordLogoIcon;
@@ -118,12 +119,12 @@ export function EditorialFooter() {
     };
   }, [releaseTag]);
 
-  // Cursor-following wordmark glow — mutates the glow layer's CSS vars
+  // Cursor-following wordmark glow, mutates the glow layer's CSS vars
   // directly via ref instead of setState, so mousemove never re-renders the
   // footer (same rAF-throttle approach as interactive-watermark.tsx, minus
   // the state write). The glow itself is a second copy of the wordmark text,
   // stacked exactly on top with its own background-clip:text + mix-blend
-  // screen — so the neon only ever lights up inside the letter strokes,
+  // screen, so the neon only ever lights up inside the letter strokes,
   // never as a rectangle behind/around them.
   const wordmarkAreaRef = useRef<HTMLDivElement>(null);
   const wordmarkGlowRef = useRef<HTMLParagraphElement>(null);
@@ -171,7 +172,7 @@ export function EditorialFooter() {
           </Link>
           
           <p className="mt-[18px] max-w-[300px] text-muted-foreground text-[14px] leading-[1.7]">
-            Free and open source. Typst-compiled resumes, scored against real ATS parsing — not guesswork.
+            Free and open source. Typst-compiled resumes, scored against real ATS parsing, not guesswork.
           </p>
 
           {/* Social Links Row */}
@@ -260,6 +261,15 @@ export function EditorialFooter() {
           >
             Sahil Bansal
           </a>
+          {" "}·{" "}
+          <a
+            href={`${githubUrl}/blob/master/CONTRIBUTING.md`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline-offset-[3px] hover:underline"
+          >
+            contributors welcome
+          </a>
           {releaseTag && (
             <>
               <span aria-hidden="true" className="px-2 text-border">
@@ -279,12 +289,12 @@ export function EditorialFooter() {
       </div>
 
       {/* ── Oversized Wordmark Watermark (LumaCV Signature Element) ──
-          Cursor-revealed gradient — the same technique already proven in
+          Cursor-revealed gradient, the same technique already proven in
           components/interactive-watermark.tsx (currently unused elsewhere):
           a second copy of the wordmark, filled with the site's vivid
           rose→violet→cyan gradient, confined to the glyphs via
           background-clip:text and revealed only inside a soft circular
-          mask-image that follows the cursor (mask-image, not mix-blend —
+          mask-image that follows the cursor (mask-image, not mix-blend,
           same soft falloff their SVG radialGradient used: opaque core,
           ~45% still solid, fading to nothing by 75%). Nothing paints in the
           gaps or outside the wordmark, and it needs no theme variant since

@@ -40,7 +40,7 @@ export function LumaStreamHero() {
 
   // Damped rAF lerp instead of spring physics: a spring settles toward a
   // moving target (always slightly behind, or overshoots if tuned snappy),
-  // while this continuously chases the real scroll value every frame — the
+  // while this continuously chases the real scroll value every frame, the
   // same "smooth the read, never hijack scroll" technique Lenis/Apple use
   // for scroll-scrubbed motion. Native scroll, momentum, and a11y are
   // untouched; only the shadow value driving the transforms is smoothed.

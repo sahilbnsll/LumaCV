@@ -66,7 +66,7 @@ const PIPELINE_STAGES: Stage[] = [
         stepNumber: '04',
         title: 'Confirming Factual Accuracy',
         shortTitle: 'Factual Consistency Audit',
-        subtitle: 'The tailoring step above already ran every claim through a fact-validation pass against your source background — confirming the result now.',
+        subtitle: 'The tailoring step above already ran every claim through a fact-validation pass against your source background, confirming the result now.',
         tag: 'ACCURACY AUDIT',
         icon: ShieldCheck,
     },
@@ -133,7 +133,7 @@ export function Step3Processing() {
 
             try {
                 // Stages 1 & 2 (JD requirement analysis + experience mapping) no longer
-                // make their own network calls — the single /tailor request below does
+                // make their own network calls, the single /tailor request below does
                 // that extraction itself in the same completion, cutting this pipeline
                 // from 2 AI calls down to 1. These stay as brief UI checkpoints so the
                 // progress view still reads as distinct steps.
@@ -144,7 +144,7 @@ export function Step3Processing() {
 
                 setCurrentStageIndex(1);
 
-                // Stage 3: the one real AI call — tailors the resume AND extracts JD
+                // Stage 3: the one real AI call, tailors the resume AND extracts JD
                 // keywords together (raw `jd` text in, no pre-extracted jdKeywords).
                 const generateRes = await fetch('/api/v1/resume/tailor', {
                     method: 'POST',
@@ -181,7 +181,7 @@ export function Step3Processing() {
                 );
 
                 // Baseline (pre-tailor) and final (post-tailor) scores are both cheap,
-                // non-AI heuristic calls — run them together now that we have
+                // non-AI heuristic calls, run them together now that we have
                 // jdKeywords, instead of gating one behind a separate earlier AI call.
                 if (extractedJdKeywords) {
                     const origText = resumeDataToPlainText(resumeData);
@@ -313,7 +313,7 @@ export function Step3Processing() {
                 {!errorMessage && (
                     <div className="space-y-2 pt-2">
                         <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden relative border border-border/40 p-0.5">
-                            {/* transform:scaleX instead of animating width — width triggers
+                            {/* transform:scaleX instead of animating width, width triggers
                                 layout/reflow on every frame, scaleX is GPU-composited. */}
                             <motion.div
                                 className="h-full w-full origin-left bg-gradient-to-r from-primary via-cyan-400 to-primary rounded-full shadow-[0_0_12px_rgba(56,189,248,0.5)]"

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAppStore } from '@/lib/store';
-import { ShieldCheck, Sparkles, Check, Info, Target, Zap, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Sparkles, Check, Target, Zap, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 
@@ -132,7 +132,7 @@ export function TailorModeSelector({ className }: { className?: string }) {
                                 Aggressive JD Alignment
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                Aggressively rewrites, reorders, and reframes experience to maximize ATS keyword match against the target job description — bending the wording, not the facts.
+                                Aggressively rewrites, reorders, and reframes experience to maximize ATS keyword match against the target job description, bending the wording, not the facts.
                             </p>
                         </div>
 

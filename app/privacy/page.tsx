@@ -54,7 +54,7 @@ export default function PrivacyPage() {
                             <span>Parsing happens in your browser</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                            Your PDF or DOCX file is read locally. Only the extracted text is sent to our server when you use an AI feature — the file itself never leaves your device.
+                            Your PDF or DOCX file is read locally. Only the extracted text is sent to our server when you use an AI feature, the file itself never leaves your device.
                         </p>
                     </div>
 
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
                             <span>Your own API keys stay local</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                            If you supply your own AI provider key (BYOK), it's kept in your browser's local storage and sent only as a per-request header — we never store it on our servers.
+                            If you supply your own AI provider key (BYOK), it's kept in your browser's local storage and sent only as a per-request header, we never store it on our servers.
                         </p>
                     </div>
                 </div>
@@ -79,8 +79,8 @@ export default function PrivacyPage() {
                             <li><strong>Resume files (PDF/DOCX):</strong> parsed entirely client-side (<code>pdfjs-dist</code>/<code>mammoth</code>). The file is not uploaded; only the extracted plain text is sent to our server, and only when you use an AI feature (parsing, ATS analysis, or optimization).</li>
                             <li><strong>Job descriptions:</strong> the text you paste is sent to our server solely to extract keywords or tailor your resume against it.</li>
                             <li><strong>Saved resumes:</strong> if you're signed in, resumes you explicitly save are stored server-side in Supabase (PostgreSQL), scoped to your account. If you're using the local demo/guest mode, resumes are kept only in your browser's local storage and never reach our server.</li>
-                            <li><strong>Feedback you submit:</strong> your message, and any name/email/rating you choose to include, is emailed to the project maintainer and best-effort logged for follow-up. This isn't rate-limited or authenticated — don't include anything you wouldn't want in an email.</li>
-                            <li><strong>Aggregate usage counts:</strong> we track platform-wide totals (resumes compiled, bullets tailored, user count) — not tied to your individual activity — shown on the homepage.</li>
+                            <li><strong>Feedback you submit:</strong> your message, and any name/email/rating you choose to include, is emailed to the project maintainer and best-effort logged for follow-up. This isn't rate-limited or authenticated, don't include anything you wouldn't want in an email.</li>
+                            <li><strong>Aggregate usage counts:</strong> we track platform-wide totals (resumes compiled, bullets tailored, user count), not tied to your individual activity, shown on the homepage.</li>
                             <li><strong>Page-view analytics:</strong> we use Vercel Analytics for aggregate, privacy-respecting traffic metrics (no cross-site tracking, no ad identifiers).</li>
                         </ul>
                     </section>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
                             3. Third-party AI providers
                         </h2>
                         <p>
-                            When you use an AI feature, the relevant text (resume content and/or job description) is sent to whichever provider is configured — currently Google Gemini, Groq, Mistral AI, OpenRouter, OpenAI, GitHub Models, or (if you supply your own key) Anthropic. Each provider has its own data-handling and retention policy, and OpenRouter in particular can route to different underlying model vendors depending on availability. We don't independently verify or guarantee each provider's training-data practices — if that's a concern for you, use the BYOK option with a provider whose terms you've reviewed, or the local Standalone Editor, which performs no AI processing at all.
+                            When you use an AI feature, the relevant text (resume content and/or job description) is sent to whichever provider is configured, currently Google Gemini, Groq, Mistral AI, OpenRouter, OpenAI, GitHub Models, or (if you supply your own key) Anthropic. Each provider has its own data-handling and retention policy, and OpenRouter in particular can route to different underlying model vendors depending on availability. We don't independently verify or guarantee each provider's training-data practices, if that's a concern for you, use the BYOK option with a provider whose terms you've reviewed, or the local Standalone Editor, which performs no AI processing at all.
                         </p>
                     </section>
 
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
                             4. Questions & data requests
                         </h2>
                         <p>
-                            To ask about your data, request a copy, or request deletion, email <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>. Depending on where you live, you may have specific legal rights (e.g. under GDPR or CCPA) regarding your personal data — this page describes what LumaCV actually does technically, and isn't a substitute for legal advice about your rights in your jurisdiction.
+                            To ask about your data, request a copy, or request deletion, email <a href="mailto:connect@sahilbansal.net" className="text-primary hover:underline font-medium">connect@sahilbansal.net</a>. Depending on where you live, you may have specific legal rights (e.g. under GDPR or CCPA) regarding your personal data, this page describes what LumaCV actually does technically, and isn't a substitute for legal advice about your rights in your jurisdiction.
                         </p>
                     </section>
                 </div>

@@ -25,7 +25,7 @@ export function AppHeader() {
                 }
             })
             .catch(() => {
-                // Leave starCount null — the pill hides the count rather than showing a fake one
+                // Leave starCount null, the pill hides the count rather than showing a fake one
             });
     }, []);
 
@@ -97,7 +97,7 @@ export function AppHeader() {
                     {/* Authenticated Workspace User Profile Menu */}
                     {user && <UserMenu />}
 
-                    {/* Menu Trigger — opens the kinetic full-screen navigation overlay */}
+                    {/* Menu Trigger, opens the kinetic full-screen navigation overlay */}
                     <KineticMenuButton open={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
                 </div>
             </div>

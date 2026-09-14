@@ -15,7 +15,7 @@ import { ResumeData, AnalyzeJDResponse } from '@/lib/resume-schema';
 export interface BuildTailorPromptOptions {
     resumeData: ResumeData;
     jdKeywords?: AnalyzeJDResponse | null;
-    /** Raw job description text — when jdKeywords isn't already extracted, the
+    /** Raw job description text, when jdKeywords isn't already extracted, the
      *  model extracts it itself as part of this same completion instead of a
      *  separate analyze-jd API call. */
     jd?: string | null;
@@ -80,7 +80,7 @@ Do NOT weaken the output unnecessarily just because the exact JD wording is not 
 
 KEYWORD ALIGNMENT & SEMANTIC BRIDGING:
 1. Extract required skills, technologies, responsibilities, tools, methodologies, and domain terminology from the JD:
-${needsKeywordExtraction ? `   The structured job intelligence below has NOT been pre-extracted — derive it
+${needsKeywordExtraction ? `   The structured job intelligence below has NOT been pre-extracted, derive it
    yourself from the raw job description text provided later in this prompt
    (required skills, preferred/bonus skills, core responsibilities, industry
    buzzwords, seniority level), then use your own extraction for the rest of
@@ -190,7 +190,7 @@ OUTPUT CONTRACT & SCHEMA REQUIREMENTS
 3. Every top-level section present in the source input must be retained in the output.
 4. In projects: provide both "highlights" and "impactBullets" as arrays of clean strings. NEVER output raw bracket markers like "[Highlight 1]" or "(Result)".
 5. In personalInfo: preserve candidate's name, email, phone, location, linkedin, and github exactly as provided.
-6. Provide an honest confidenceScore between 0 and 1 reflecting real parsing and alignment fidelity — do NOT default to a comfortable-looking number. A resume with weak JD overlap or low-confidence parsing should score low; there is no minimum floor.
+6. Provide an honest confidenceScore between 0 and 1 reflecting real parsing and alignment fidelity, do NOT default to a comfortable-looking number. A resume with weak JD overlap or low-confidence parsing should score low; there is no minimum floor.
 ${needsKeywordExtraction ? '7. You MUST include the "jdKeywords" object shown above, derived from the raw job description text below.' : ''}
 
 ================================================================================
@@ -206,7 +206,7 @@ ${JSON.stringify(jdKeywords, null, 2)}
 ` : ''}
 ${needsKeywordExtraction ? `
 ================================================================================
-TARGET JOB DESCRIPTION (raw text — extract structured intelligence yourself):
+TARGET JOB DESCRIPTION (raw text, extract structured intelligence yourself):
 ================================================================================
 ${jd!.trim().substring(0, 14000)}
 ` : ''}

@@ -23,7 +23,7 @@ const SAMPLE = {
       role: "Senior Platform Engineer",
       company: "Nebula Systems",
       location: "Bengaluru",
-      dates: "Jan 2023 — Present",
+      dates: "Jan 2023, Present",
       bullets: [
         "Redesigned the EKS platform around reusable Terraform modules, reducing bootstrap time from days to under an hour.",
         "Built GitOps delivery with Argo CD and progressive rollouts, cutting change incidents by 38%.",
@@ -34,7 +34,7 @@ const SAMPLE = {
       role: "DevOps Engineer",
       company: "Northstar Cloud",
       location: "Pune",
-      dates: "Jul 2020 — Dec 2022",
+      dates: "Jul 2020, Dec 2022",
       bullets: [
         "Migrated legacy workloads to AWS with Terraform and automated account provisioning.",
         "Built CI/CD pipelines with policy checks, artifact promotion, and automated rollback paths.",
@@ -45,7 +45,7 @@ const SAMPLE = {
       role: "Software Engineer",
       company: "Orbit Labs",
       location: "Hyderabad",
-      dates: "Jul 2018 — Jun 2020",
+      dates: "Jul 2018, Jun 2020",
       bullets: [
         "Developed Python services and automation for internal engineering workflows.",
         "Improved Linux service reliability through structured logging and health checks.",
@@ -58,7 +58,7 @@ const SAMPLE = {
   ],
   education: "B.Tech in Computer Science",
   school: "National Institute of Technology",
-  dates: "2014 — 2018",
+  dates: "2014, 2018",
   certs: ["AWS Certified DevOps Engineer – Professional", "Certified Kubernetes Administrator"],
 };
 
@@ -75,7 +75,7 @@ function ModernTech({ name, accent }: { name: string; accent: string }) {
   };
   // This mockup renders at 794px then gets scaled down ~0.44x to fit the hero's
   // 3D paper-stack composition, so source sizes here need to run well above what
-  // would look right at 1:1 — a ~10pt body / ~14pt heading (1.4x) ratio is what
+  // would look right at 1:1, a ~10pt body / ~14pt heading (1.4x) ratio is what
   // reads correctly at print resolution; these numbers preserve that pre-scale.
   const sectionLabel: React.CSSProperties = {
     fontSize: 12,

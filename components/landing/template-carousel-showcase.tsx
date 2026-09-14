@@ -36,14 +36,14 @@ export function TemplateCarouselShowcase() {
   const pillStripRef = useRef<HTMLDivElement>(null);
 
   // The strip only shows a handful of the 15 pills at once (overflow-x-auto,
-  // hidden scrollbar) — without this, using the carousel's prev/next arrows
+  // hidden scrollbar), without this, using the carousel's prev/next arrows
   // moves the active template forward while its pill can silently scroll out
   // of view, so the strip stops reflecting what's actually selected.
   //
   // This deliberately does NOT use scrollIntoView(): that walks every
   // scrollable ancestor up to and including the browser window, so on the
   // very first render (activeIdx starts at 0, and this section sits below
-  // the fold) it was scrolling the entire page down to this strip on load —
+  // the fold) it was scrolling the entire page down to this strip on load,
   // not just centering the pill within its own row. Computing and applying
   // the offset directly on the strip's own scroll container keeps this
   // change fully local to that one element.

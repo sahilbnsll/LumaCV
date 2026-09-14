@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, AlertCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type StatusBadgeState = 'idle' | 'saving' | 'saved' | 'failed' | 'retrying';

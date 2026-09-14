@@ -105,14 +105,14 @@ export const ProjectSchema = z.object({
   description: z.string().optional(),
   techStack: z.string().optional(),
   role: z.string().optional(),
-  /** Start date (e.g. "Jan 2024") — used separately from combined dates string */
+  /** Start date (e.g. "Jan 2024"), used separately from combined dates string */
   startDate: z.string().optional(),
-  /** End date (e.g. "Present") — used separately from combined dates string */
+  /** End date (e.g. "Present"), used separately from combined dates string */
   endDate: z.string().optional(),
   dates: z.string().optional(),
   /** Single-line impact summary, preserved for backward compatibility */
   impact: z.string().optional(),
-  /** Multi-bullet quantified results / impact (new — backward-compatible) */
+  /** Multi-bullet quantified results / impact (new, backward-compatible) */
   impactBullets: z.array(z.string()).optional(),
   link: z.string().optional(),
   /** Highlight / feature bullets rendered as a bullet list in the PDF */
@@ -345,7 +345,7 @@ export type TemplateType = z.infer<typeof TemplateTypeSchema>;
 export const GenerateResumeRequestSchema = z.object({
   resumeData: ResumeDataSchema,
   // Either pass pre-extracted jdKeywords, or raw `jd` text and let the tailor
-  // call extract keywords itself in the same completion — avoids a separate
+  // call extract keywords itself in the same completion, avoids a separate
   // analyze-jd round trip when the caller doesn't already have jdKeywords.
   jdKeywords: AnalyzeJDResponseSchema.optional(),
   jd: z.string().optional(),
@@ -370,7 +370,7 @@ export const GenerateResumeResponseSchema = z.object({
   typstCode: z.string().optional(),
   confidenceScore: z.number().min(0).max(1),
   // Present when the caller sent raw `jd` text instead of pre-extracted
-  // jdKeywords — lets the client score against the same keywords without a
+  // jdKeywords, lets the client score against the same keywords without a
   // separate analyze-jd call.
   jdKeywords: AnalyzeJDResponseSchema.optional(),
   atsAlignmentSummary: AtsAlignmentSummarySchema.optional(),

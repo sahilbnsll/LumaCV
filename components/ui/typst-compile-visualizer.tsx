@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Cpu, Zap, ShieldCheck, FileText, CheckCircle2, Sparkles } from "lucide-react";
+import { Cpu, Zap, ShieldCheck, Sparkles } from "lucide-react";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
@@ -62,7 +62,7 @@ export function TypstCompileVisualizer({
         className
       )}
     >
-      {/* Ambient Typst Mathematical Blueprint Grid — faint texture only, no
+      {/* Ambient Typst Mathematical Blueprint Grid, faint texture only, no
           laser-sweep / LiDAR-crosshair "document scanner" cliché. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[linear-gradient(to_right,#0071e3_1px,transparent_1px),linear-gradient(to_bottom,#0071e3_1px,transparent_1px)] bg-[size:48px_48px] opacity-[0.04] dark:opacity-[0.07]" />
 

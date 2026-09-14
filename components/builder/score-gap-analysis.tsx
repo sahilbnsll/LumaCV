@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Target, CheckCircle2, AlertCircle, HelpCircle, RefreshCw, Loader2, Sparkles } from 'lucide-react';
+import { Target, CheckCircle2, AlertCircle, HelpCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { MatchScoreResponse } from '@/lib/match-score-types';

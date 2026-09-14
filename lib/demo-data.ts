@@ -1,11 +1,11 @@
 import { ResumeData, ResumeDataSchema } from './resume-schema';
 
-// Shared demo/golden resume — used by the Dashboard demo account, ATS Checker
+// Shared demo/golden resume, used by the Dashboard demo account, ATS Checker
 // sample, /demo page, and the Editor's "start from example" entry point, and
 // by the template QA scripts (scripts/audit-all-templates.mjs and friends).
 // Populates every schema field so template QA exercises the full layout, but
 // the content itself is written as a natural, realistic senior engineer's
-// resume — not an exaggerated "does everything" persona.
+// resume, not an exaggerated "does everything" persona.
 export const DEMO_RESUME_DATA: ResumeData = ResumeDataSchema.parse({
     personalInfo: {
         name: 'Alex Morgan',
@@ -18,7 +18,7 @@ export const DEMO_RESUME_DATA: ResumeData = ResumeDataSchema.parse({
         github: 'github.com/alexm',
         portfolio: 'https://alexmorgan.dev',
     },
-    summary: 'Platform engineer with 8+ years building and operating cloud infrastructure at scale. Focused on Kubernetes platforms, developer experience, and making deployments boring — reliable, observable, and fast to roll back. Comfortable owning a system from design through on-call.',
+    summary: 'Platform engineer with 8+ years building and operating cloud infrastructure at scale. Focused on Kubernetes platforms, developer experience, and making deployments boring, reliable, observable, and fast to roll back. Comfortable owning a system from design through on-call.',
     techStackSummary: 'AWS, Kubernetes, Terraform, Python, Go, Argo CD, GitHub Actions, Prometheus, Grafana',
     skills: [
         { category: 'Cloud & Infra', items: 'AWS (EKS, RDS, S3, CloudFront), Terraform, VPC, IAM' },

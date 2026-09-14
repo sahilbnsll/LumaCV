@@ -51,7 +51,7 @@ export function resumeToMarkdown(data: ResumeData): string {
   if (data.experience && data.experience.length > 0) {
     lines.push('## Experience');
     for (const exp of data.experience) {
-      lines.push(`### ${exp.title} — ${exp.company}`);
+      lines.push(`### ${exp.title}, ${exp.company}`);
       const meta = [exp.dates, exp.location].filter(Boolean).join(' | ');
       if (meta) lines.push(`*${meta}*`);
 
@@ -70,7 +70,7 @@ export function resumeToMarkdown(data: ResumeData): string {
   if (data.education && data.education.length > 0) {
     lines.push('## Education');
     for (const edu of data.education) {
-      lines.push(`### ${edu.degree || 'Degree'} — ${edu.institution}`);
+      lines.push(`### ${edu.degree || 'Degree'}, ${edu.institution}`);
       const meta = [edu.dates, edu.location, edu.gpa ? `GPA: ${edu.gpa}` : ''].filter(Boolean).join(' | ');
       if (meta) lines.push(`*${meta}*`);
       lines.push('');

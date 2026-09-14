@@ -24,7 +24,7 @@ export interface CoverflowCarouselProps {
   rotate?: number;
   /** How far the first neighbour recedes, as a fraction of card width. */
   depth?: number;
-  /** Viewer distance as a multiple of card width — smaller is a wider lens. */
+  /** Viewer distance as a multiple of card width, smaller is a wider lens. */
   perspective?: number;
   /** Exponent on distance. Below 1 the rake eases off as cards travel out. */
   falloff?: number;

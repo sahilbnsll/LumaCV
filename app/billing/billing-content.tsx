@@ -70,7 +70,7 @@ export default function BillingPage() {
                         Billing &amp; Support
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        LumaCV is completely free and open source, developed by{' '}
+                        LumaCV is completely free and open source, a passion project by{' '}
                         <a
                             href="https://sahilbansal.net/"
                             target="_blank"
@@ -79,7 +79,15 @@ export default function BillingPage() {
                         >
                             Sahil Bansal
                         </a>{' '}
-                        and community contributors. Your support keeps compilation servers blazing fast and the project freely accessible to job seekers everywhere.
+                        and open to{' '}
+                        <a
+                            href="https://github.com/sahilbnsll/LumaCV/blob/master/CONTRIBUTING.md"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground font-semibold hover:underline underline-offset-2"
+                        >
+                            community contributions
+                        </a>. Your support keeps compilation servers blazing fast and the project freely accessible to job seekers everywhere.
                     </p>
                     <div className="flex justify-center">
                         <div className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 dark:bg-card/60 px-3.5 py-1.5 rounded-full border border-border/70 dark:border-white/10 shadow-2xs">

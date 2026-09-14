@@ -19,8 +19,6 @@ import {
     Loader2,
     Sparkles,
     ShieldCheck,
-    X,
-    ArrowRight
 } from 'lucide-react';
 import { extractTextFromFile } from '@/lib/document-parser';
 import { getCustomKeyHeaders } from '@/lib/ai-keys';
@@ -94,7 +92,7 @@ export function ResumeUploadModal({ open, onOpenChange, onParsed }: ResumeUpload
             setStep('success');
             notify.success('Resume parsed successfully', file.name);
 
-            // Auto-apply after a brief success flash — long enough to register,
+            // Auto-apply after a brief success flash, long enough to register,
             // short enough not to feel like the app is stalling after a parse
             // that (once the AI call itself returns) is already done.
             setTimeout(() => {

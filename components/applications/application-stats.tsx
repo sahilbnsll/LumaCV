@@ -6,8 +6,7 @@ import {
   APPLICATION_STAGES,
   ApplicationStatus,
 } from "@/lib/application-schema";
-import { Briefcase, CheckCircle2, TrendingUp, Clock, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Briefcase, CheckCircle2, TrendingUp, Clock } from "lucide-react";
 
 interface ApplicationStatsProps {
   applications: JobApplication[];

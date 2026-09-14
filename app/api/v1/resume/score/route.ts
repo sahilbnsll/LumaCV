@@ -215,7 +215,7 @@ function computeCategoryDetails(
 
 export async function POST(req: NextRequest) {
     // This route was the only one in the resume-processing API surface with no
-    // rate limit at all — an open endpoint accepting arbitrary-size text/JSON
+    // rate limit at all, an open endpoint accepting arbitrary-size text/JSON
     // bodies for scoring computation. It deliberately stays unauthenticated
     // (unlike its siblings): the guest-facing ATS Checker (/ats) calls it
     // without requiring login, matching that page's own "no signup required"
@@ -284,7 +284,7 @@ export async function POST(req: NextRequest) {
         if (respCount > 0) activeWeightSum += 0.25;
         if (buzzCount > 0) activeWeightSum += 0.15;
 
-        // No JD keywords supplied at all — there is nothing to score against, so this
+        // No JD keywords supplied at all, there is nothing to score against, so this
         // must not be reported as a (fabricated) perfect match. `isCalculated: false`
         // below is what tells the client to show its honest "no_jd" state instead.
         const hasAnyKeywords = activeWeightSum > 0;

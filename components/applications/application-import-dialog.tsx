@@ -39,8 +39,6 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertTriangle,
-  FileText,
-  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -341,7 +339,7 @@ export function ApplicationImportDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unmapped" className="text-xs text-muted-foreground">
-                        — Do not map —
+                       , Do not map,
                       </SelectItem>
                       {headers.map((h) => (
                         <SelectItem key={h} value={h} className="text-xs font-medium">

@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 /**
  * Single source of truth for theme switching UI. Two variants cover the two
  * real use cases in the app instead of each screen hand-rolling its own:
- * - "icon" — compact binary dark/light toggle for header/toolbar contexts.
- * - "cards" — light/dark/system picker for the Profile Preferences panel,
+ * - "icon", compact binary dark/light toggle for header/toolbar contexts.
+ * - "cards", light/dark/system picker for the Profile Preferences panel,
  *   where there's room to expose the "system" option explicitly.
  */
 export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'cards' }) {

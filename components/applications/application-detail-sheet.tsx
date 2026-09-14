@@ -19,12 +19,9 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
-  Building2,
-  Briefcase,
   MapPin,
   Calendar,
   DollarSign,
@@ -37,7 +34,6 @@ import {
   Check,
   Activity,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ApplicationDetailSheetProps {
   application: JobApplication | null;

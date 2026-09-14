@@ -13,7 +13,7 @@ export const maxDuration = 60;
 
 /**
  * The model can return syntactically valid (or jsonrepair-salvageable) JSON
- * that is still substantively empty — e.g. a weaker fallback model returning
+ * that is still substantively empty, e.g. a weaker fallback model returning
  * `{}` under load. normalizeResumeFromLLM's per-field defaults ('Your Name',
  * empty arrays) would otherwise mask that as usable output. Returns null when
  * the parsed content isn't usable, so the caller can fail over to the next
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
             maxTokens: 8000,
             userKeys,
             // Gate failover on actual content quality, not just "did a model
-            // respond" — a weak fallback model returning an empty/near-empty
+            // respond", a weak fallback model returning an empty/near-empty
             // structure now fails over to the next provider/model instead of
             // being accepted as a 200 success.
             validate: (fullText) => tryParseResume(fullText) !== null,
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         const resumeData = tryParseResume(rawText);
         if (!resumeData) {
             return NextResponse.json(
-                { error: 'Could not read this resume', details: 'The AI could not extract any usable content from this PDF. It may be scanned/image-based, password-protected, or every configured AI provider returned an incomplete response — try again or enter your details manually.' },
+                { error: 'Could not read this resume', details: 'The AI could not extract any usable content from this PDF. It may be scanned/image-based, password-protected, or every configured AI provider returned an incomplete response, try again or enter your details manually.' },
                 { status: 422 }
             );
         }

@@ -274,7 +274,7 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
   });
 
   const projects = (data.projects || []).map((proj) => {
-    // Resolve dates — prefer explicit startDate/endDate, fall back to combined dates string
+    // Resolve dates, prefer explicit startDate/endDate, fall back to combined dates string
     const resolvedDates = (() => {
       const sd = (proj as any).startDate?.trim();
       const ed = (proj as any).endDate?.trim();
@@ -290,13 +290,13 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
       id: proj.id || '',
       name: proj.name || 'Project',
       stack: proj.techStack?.trim() || '',
-      // Keep description as a clean prose string — do NOT append bullets in parentheses
+      // Keep description as a clean prose string, do NOT append bullets in parentheses
       description: proj.description?.trim() || '',
       url: proj.link?.trim() || '',
       role: proj.role?.trim() || '',
       dates: resolvedDates,
       impact: proj.impact?.trim() || '',
-      // Separate arrays — templates can render them as distinct bullet groups
+      // Separate arrays, templates can render them as distinct bullet groups
       impactBullets: cleanImpactBullets,
       highlights: cleanHighlights,
       bullets: cleanBullets,

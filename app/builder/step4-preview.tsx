@@ -5,33 +5,23 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { PdfPreview } from '@/components/pdf-preview';
-import { ResumeForm } from '@/components/resume-form';
 import { TemplateSelector } from '@/components/template-selector';
-import { SectionOrderEditor } from '@/components/section-order-editor';
 import { useAuth } from '@/components/auth-provider';
 import { saveLocalResume, SavedResume } from '@/lib/user-resumes-store';
 import { trackEvent } from '@/lib/analytics';
 import { formatSaveStatus, ProjectSaveStatus } from '@/lib/project-store';
-import { StatusBadge } from '@/components/ui/status-badge';
 
 import {
     ArrowLeft,
-    PenLine,
-    CheckCircle2,
     Sparkles,
     Download,
     FileCode2,
     Bookmark,
     TrendingUp,
     Check,
-    Undo2,
-    FileCheck,
     ShieldCheck,
     Target,
     History,
-    Palette,
-    Copy,
-    CheckCheck,
     LayoutGrid,
     Loader2,
     Edit3,
@@ -104,7 +94,7 @@ function BreakdownBar({
                 </div>
             </div>
             <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                {/* transform:scaleX instead of width — width triggers layout/reflow
+                {/* transform:scaleX instead of width, width triggers layout/reflow
                     on every transition frame, scaleX is GPU-composited. */}
                 <div
                     className={cn('h-full w-full origin-left rounded-full transition-transform duration-500 ease-out', colorClass)}
@@ -138,7 +128,7 @@ export function Step4Preview() {
     const { user } = useAuth();
     const router = useRouter();
 
-    // Right-panel tab state — 'analysis' | 'diff' | 'keywords' | 'edit'
+    // Right-panel tab state, 'analysis' | 'diff' | 'keywords' | 'edit'
     const [activeTab, setActiveTab] = useState<'analysis' | 'diff' | 'keywords' | 'edit'>('analysis');
     const [designSheetOpen, setDesignSheetOpen] = useState(false);
     const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
@@ -168,7 +158,7 @@ export function Step4Preview() {
         };
     }, [exportMenuOpen]);
 
-    // Bullet diff tracking — reverting/re-accepting a bullet here actually rewrites
+    // Bullet diff tracking, reverting/re-accepting a bullet here actually rewrites
     // the canonical resumeData (via setBulletText), not just this tab's own display,
     // so the exported/saved resume reflects what the diff viewer shows.
     const [revertedBullets, setRevertedBullets] = useState<Record<string, boolean>>({});
@@ -350,9 +340,9 @@ export function Step4Preview() {
         const candidateRole = currentData?.personalInfo.title?.trim();
         const title =
             candidateRole && candidateName
-                ? `${candidateName} — ${candidateRole}`
+                ? `${candidateName}, ${candidateRole}`
                 : candidateName
-                    ? `${candidateName} — ${targetTitle}`
+                    ? `${candidateName}, ${targetTitle}`
                     : targetTitle;
         const nowIso = new Date().toISOString();
 
@@ -460,7 +450,7 @@ export function Step4Preview() {
     const handleDownloadSource = () => handleExportFormat('typ');
 
     // ── Explainable bullet diffs ───────────────────────────────────────────
-    // Built from the server's auditTrail.bulletChanges — a stable snapshot of what
+    // Built from the server's auditTrail.bulletChanges, a stable snapshot of what
     // actually changed, captured once at generation time. This is deliberately NOT
     // derived by re-comparing currentData against resumeData on every render: once
     // preTailorSnapshot and currentData were decoupled (so Step 4 could show a real

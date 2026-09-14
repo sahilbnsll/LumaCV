@@ -9,7 +9,7 @@ import { LumaLogo } from '@/components/luma-logo';
 import { useAuth } from '@/components/auth-provider';
 import { cn } from '@/lib/utils';
 
-/* Kinetic full-screen nav — adapted from the "sterling-gate" pattern (GSAP
+/* Kinetic full-screen nav, adapted from the "sterling-gate" pattern (GSAP
    CustomEase, simultaneous button/overlay/backdrop reveal with links
    following 0.35s later, per-item ambient shape swap on hover). Re-themed to
    LumaCV's own chart-color tokens instead of the original's indigo/purple/
@@ -60,7 +60,7 @@ function getMainEase() {
     }
 }
 
-/** The header's own menu-trigger button — text swap + rotating glyph, synced to `open`. */
+/** The header's own menu-trigger button, text swap + rotating glyph, synced to `open`. */
 export function KineticMenuButton({ open, onClick }: { open: boolean; onClick: () => void }) {
     const textRef = useRef<HTMLDivElement>(null);
     const iconRef = useRef<HTMLDivElement>(null);
@@ -106,7 +106,7 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
     const linkRefs = useRef<Array<HTMLLIElement | null>>([]);
     const mounted = useRef(false);
 
-    // Open/close timeline — hardware-accelerated GPU slide with Apple fluid easing
+    // Open/close timeline, hardware-accelerated GPU slide with Apple fluid easing
     useEffect(() => {
         if (!mounted.current) {
             mounted.current = true;
@@ -121,6 +121,15 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
         if (open) {
             document.body.style.overflow = 'hidden';
             document.body.classList.add('nav-open');
+            // pointer-events flips synchronously, in the same tick the open/close
+            // is triggered, instead of only at the tail end of the animated
+            // timeline below. Without this, this element (fixed inset-0, z-100,
+            // sitting above every header button) keeps swallowing every click on
+            // the page for the ~0.5-0.7s the close tween takes to reach its final
+            // `display: none` step, and indefinitely if the tab loses focus
+            // mid-close, since GSAP's rAF ticker pauses in background tabs, that
+            // was the "header stops responding, then works again later" bug.
+            gsap.set(rootRef.current, { pointerEvents: 'auto' });
             tl.set(rootRef.current, { display: 'flex' })
                 .fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' })
                 .fromTo(panelRef.current, { xPercent: 100 }, { xPercent: 0, duration: 0.6, ease: mainEase }, '<')
@@ -133,6 +142,7 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
         } else {
             document.body.style.overflow = '';
             document.body.classList.remove('nav-open');
+            gsap.set(rootRef.current, { pointerEvents: 'none' });
             tl.to(linkRefs.current, { opacity: 0, x: 10, duration: 0.22, stagger: 0.018, ease: 'power2.in' })
                 .to(panelRef.current, { xPercent: 100, duration: 0.5, ease: mainEase }, '<+=0.04')
                 .to(overlayRef.current, { opacity: 0, duration: 0.35, ease: 'power2.out' }, '<')
@@ -163,7 +173,7 @@ export function FullScreenNav({ open, onClose }: { open: boolean; onClose: () =>
             aria-modal="true"
             aria-label="Site navigation"
         >
-            {/* Click-outside scrim — dims the rest of the page, doesn't cover it */}
+            {/* Click-outside scrim, dims the rest of the page, doesn't cover it */}
             {/* Click-outside scrim */}
             <div
                 ref={overlayRef}

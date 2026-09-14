@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/components/auth-provider';
 import { TemplateType, ResumeData } from '@/lib/resume-schema';
-import { ALL_TEMPLATES, ResumeTemplate } from '@/lib/templates-data';
+import { ALL_TEMPLATES } from '@/lib/templates-data';
 import { PALETTES } from '@/lib/design-tokens';
 import { PdfPreview } from '@/components/pdf-preview';
 import { CompactResumeEditor } from '@/components/compact-resume-editor';
@@ -33,7 +33,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
     Download,
@@ -42,18 +41,14 @@ import {
     CheckCircle2,
     Eye,
     Edit3,
-    FileText,
     Loader2,
-    Save,
     FileUp,
-    RotateCcw,
     Activity,
     ChevronDown
 } from 'lucide-react';
 import { notify } from '@/lib/notify';
 import { cn } from '@/lib/utils';
 import { getLocalResumes, saveLocalResume, SavedResume } from '@/lib/user-resumes-store';
-import { resumeDataToPlainText } from '@/lib/resume-plaintext';
 import { exportResume, ExportFormatType } from '@/lib/resume-export';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOTION_VARIANTS, TRANSITION_EASINGS } from '@/lib/motion';
@@ -85,7 +80,7 @@ function EditorContent() {
     const queryId = searchParams.get('id');
     const [currentResumeId, setCurrentResumeId] = useState<string>(() => queryId || (user?.id ? `editor-${user.id}-default` : 'local-editor-default'));
 
-    // Close the Accent Color Palette popover on outside click or Escape —
+    // Close the Accent Color Palette popover on outside click or Escape,
     // mirrors the downloadMenuRef pattern in components/pdf-preview.tsx.
     useEffect(() => {
         if (!palettePopoverOpen) return;
@@ -166,7 +161,7 @@ function EditorContent() {
                 const item: SavedResume = {
                     id: currentResumeId,
                     userId: user.id,
-                    title: existing?.title || `${resumeData.personalInfo?.name || 'Resume'} — ${activeTemplate.name}`,
+                    title: existing?.title || `${resumeData.personalInfo?.name || 'Resume'}, ${activeTemplate.name}`,
                     targetJobTitle: existing?.targetJobTitle,
                     targetJobCompany: existing?.targetJobCompany,
                     templateId: template,
@@ -282,7 +277,7 @@ function EditorContent() {
     // ── STAGE 3, 4, 5: MANUAL EDITOR WORKSPACE ──
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
-            {/* ── TOP ACTION BAR (Clean Precision Navigation — Apple HIG) ── */}
+            {/* ── TOP ACTION BAR (Clean Precision Navigation, Apple HIG) ── */}
             <header className="sticky top-0 z-40 glass-nav border-b border-border/60 transition-colors">
                 <div className="w-full flex h-14 items-center justify-between px-3 sm:px-6">
                     {/* Left: Brand + Document Title */}
@@ -294,7 +289,7 @@ function EditorContent() {
                         >
                             <LumaLogo size={24} />
                             {/* Brand weight/tracking matched to the shared AppHeader lockup
-                                (font-bold, tracking-[-0.03em]) — kept at text-sm and hidden
+                                (font-bold, tracking-[-0.03em]), kept at text-sm and hidden
                                 below sm: this bar is already tight with the candidate name,
                                 badge, and the scrollable tool row. */}
                             <span className="font-display font-bold tracking-[-0.03em] text-sm text-foreground hidden sm:inline">
@@ -306,7 +301,7 @@ function EditorContent() {
 
                         {/* Title Display */}
                         <div className="flex items-center gap-2">
-                            <span className="font-medium text-xs sm:text-sm text-foreground truncate max-w-[130px] sm:max-w-[220px]">
+                            <span className="font-medium text-xs sm:text-sm text-foreground truncate max-w-[150px] sm:max-w-[220px]">
                                 {candidateName}
                             </span>
                             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40 hidden lg:inline">
@@ -317,12 +312,14 @@ function EditorContent() {
 
                     {/* Center / Action Controls */}
                     <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-                        {/* Feature buttons scroll on narrow screens instead of forcing the
-                            page to overflow horizontally or clipping off entirely — same
-                            pattern as the section-tabs row in the compact resume editor.
+                        {/* Import/Template triggers move to their own row below on
+                            mobile (see "Mobile Secondary Toolbar") instead of sharing
+                            this tight h-14 bar, where they used to collide with the
+                            candidate name on narrow screens. Desktop keeps them here
+                            since there's room, scrolling if the row ever overflows.
                             Theme/account/menu stay pinned outside this so they're always
                             reachable without needing to discover the scroll. */}
-                        <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar min-w-0">
+                        <div className="hidden lg:flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar min-w-0">
                         {/* 1. Import / Upload Resume Trigger */}
                         <Button
                             variant="outline"
@@ -390,11 +387,11 @@ function EditorContent() {
                         </div>
                         </div>
 
-                        {/* 4. Accent Color Palette Selector — kept outside the scrollable
+                        {/* 4. Accent Color Palette Selector, kept outside the scrollable
                             row above: an overflow-x-auto ancestor computes overflow-y:auto
                             too (a plain CSS overflow rule, not just a Radix quirk), which
                             clipped this popover's absolutely-positioned dropdown out of
-                            view — it opened in state but was invisible/unreachable. Same
+                            view, it opened in state but was invisible/unreachable. Same
                             root cause and fix as the Export dropdown below. Closes on
                             outside click / Escape via paletteMenuRef below, mirroring the
                             download-menu pattern in components/pdf-preview.tsx. */}
@@ -468,7 +465,7 @@ function EditorContent() {
                             </AnimatePresence>
                         </div>
 
-                        {/* 6. Export Options (Split Button with Radix DropdownMenu) — kept
+                        {/* 6. Export Options (Split Button with Radix DropdownMenu), kept
                             outside the scrollable row above: nesting this trigger inside an
                             overflow-x-auto ancestor confused Radix's collision-boundary
                             detection and positioned the dropdown content off-screen (top:
@@ -545,6 +542,33 @@ function EditorContent() {
                             <KineticMenuButton open={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
                         </div>
                     </div>
+                </div>
+
+                {/* Mobile Secondary Toolbar: Import Resume + Template Selector, moved
+                    out of the h-14 bar above (where they collided with the candidate
+                    name on narrow screens) into their own row with room to breathe. */}
+                <div className="flex lg:hidden items-center gap-2 overflow-x-auto no-scrollbar px-3 py-1.5 border-t border-border/40">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setUploadModalOpen(true)}
+                        className="h-8 px-2.5 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer shrink-0"
+                        title="Import another resume (PDF or Word)"
+                    >
+                        <FileUp className="h-3.5 w-3.5 text-primary" />
+                        <span>Import</span>
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTemplateSheetOpen(true)}
+                        className="h-8 px-2.5 text-xs font-medium rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 gap-1.5 cursor-pointer shrink-0"
+                        title="Browse and select from 52 templates"
+                    >
+                        <Layout className="h-3.5 w-3.5 text-primary" />
+                        <span className="font-semibold">{activeTemplate.name}</span>
+                    </Button>
                 </div>
 
                 {/* Mobile View Toggle (Preview vs Editor) */}

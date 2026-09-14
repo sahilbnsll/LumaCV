@@ -43,7 +43,6 @@ import {
     SlidersHorizontal,
     Trash2,
     RotateCcw,
-    Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
@@ -188,7 +187,7 @@ function ProfileWorkstationContent() {
 
                 // The `handle_new_user` DB trigger that populates public.profiles
                 // only fires on signup (auth.users INSERT), not on later
-                // auth.updateUser() calls — so username changes here also need to
+                // auth.updateUser() calls, so username changes here also need to
                 // reach public.profiles directly, or username login (which reads
                 // from public.profiles) silently keeps resolving the old value.
                 const { error: profileError } = await supabase
@@ -277,7 +276,7 @@ function ProfileWorkstationContent() {
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!supabase || !user) {
-            notify.error('Guest Session', 'Password update requires a signed-in account');
+            notify.error('Sign in required', 'Password update requires a signed-in account');
             return;
         }
         if (newPassword.length < 6) {

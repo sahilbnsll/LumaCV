@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MiniLayoutRepresentation } from '@/components/template-selector';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AnimatedCounter } from '@/components/animated-counter';
 import { exportResume, ExportFormatType } from '@/lib/resume-export';
@@ -54,14 +53,14 @@ export default function DemoPageContent() {
                 role: 'Senior Platform Engineer',
                 company: 'Nebula Systems',
                 original: 'Redesigned the EKS platform around reusable Terraform modules.',
-                tailored: 'Redesigned core infrastructure platform around reusable Terraform modules, cutting new-environment bootstrap time from days to under an hour — the same ownership model Stripe\'s backend APIs require at scale.',
+                tailored: 'Redesigned core infrastructure platform around reusable Terraform modules, cutting new-environment bootstrap time from days to under an hour, the same ownership model Stripe\'s backend APIs require at scale.',
                 reason: 'Framed platform ownership in terms that map to the JD\'s "build reliable, secure backend APIs" requirement.',
             },
             {
                 role: 'Senior Platform Engineer',
                 company: 'Nebula Systems',
                 original: 'Introduced OpenTelemetry tracing and Prometheus/Grafana dashboards across 40+ services.',
-                tailored: 'Introduced distributed tracing and real-time observability dashboards across 40+ production services, giving engineers a single place to diagnose latency regressions — directly transferable to optimizing p95 latency on transaction-critical paths.',
+                tailored: 'Introduced distributed tracing and real-time observability dashboards across 40+ production services, giving engineers a single place to diagnose latency regressions, directly transferable to optimizing p95 latency on transaction-critical paths.',
                 reason: 'Connected existing observability experience to the JD\'s "optimize application performance, improving p95 latency" requirement.',
             },
             {

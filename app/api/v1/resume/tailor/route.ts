@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         const { resumeData, jdKeywords: requestJdKeywords, jd, template, theme, tailorMode } = validatedInput.data;
         const isOptimizeOnly = tailorMode === 'optimize';
         // Reassigned below if the model extracts it from raw `jd` text in this same
-        // completion — keeps every downstream reference (ATS summary, alignment map,
+        // completion, keeps every downstream reference (ATS summary, alignment map,
         // confidence score) working the same regardless of which path supplied it.
         let jdKeywords = requestJdKeywords ?? null;
 
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
             console.log(`[Tailor] Starting streaming tailor (Mode: ${tailorMode}, BYOK: ${usingCustomKeys})...`);
             const { textStream, model } = await generateStream(prompt, undefined, 'heavy', {
                 // This response packs the full tailored resume + JD-keyword
-                // extraction + ATS alignment summary into one JSON payload —
+                // extraction + ATS alignment summary into one JSON payload,
                 // shrinking this to fit weaker models' limits (previously tried
                 // 4096) truncated real responses mid-JSON, corrupting output
                 // instead of failing cleanly. Exclude models too small for this
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
                 // A weak fallback model can return syntactically valid JSON that's
                 // still an empty/near-empty resume (e.g. under load or a truncated
                 // response). If the source resume had real content, the tailored
-                // output should too — otherwise fail over to the next model rather
+                // output should too, otherwise fail over to the next model rather
                 // than silently handing back a gutted resume as a "success".
                 validate: (fullText) => {
                     try {
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
                     try {
                         jdKeywords = normalizeAnalyzeJDFromLLM(wrapped.jdKeywords);
                     } catch {
-                        // Extraction came back malformed — proceed without it rather
+                        // Extraction came back malformed, proceed without it rather
                         // than fail the whole tailor response over a secondary field.
                     }
                 }
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
             tailoredResume = normalizeResumeFromLLM(candidateResume);
         } catch (llmError: unknown) {
             // Surface this as a real failure instead of silently returning the
-            // untouched original resume as a fake "200 success" — the caller (Step 3)
+            // untouched original resume as a fake "200 success", the caller (Step 3)
             // needs to know tailoring didn't actually happen so it can show its
             // error state and offer a retry, rather than presenting stale content
             // as if it were freshly tailored.
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
 
         if (!isOptimizeOnly && jdKeywords) {
             // In JD alignment mode, compute realistic alignment score based on verified
-            // overlap — no artificial floor. This used to clamp to a 0.70-0.98 band
+            // overlap, no artificial floor. This used to clamp to a 0.70-0.98 band
             // regardless of matchRatio, which meant a 0%-match resume still reported
             // 70% "confidence." Report the real ratio instead (capped only for sanity).
             const reqSkills = jdKeywords.required_skills || [];
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
                 ? (tailoredResume.confidenceScore || undefined)
                 : Math.max(0, Math.min(0.98, matchRatio));
         }
-        // Optimize mode has no JD to score alignment against — leave confidenceScore
+        // Optimize mode has no JD to score alignment against, leave confidenceScore
         // as whatever (if anything) the model itself reported, rather than fabricating
         // a fixed 0.92. The UI already shows an honest "no JD" state when it's absent.
 
@@ -349,7 +349,7 @@ export async function POST(req: NextRequest) {
         const calculatedScore = Math.round(
             ((matchedRequirements.length * 1.0 + partiallyMatchedRequirements.length * 0.5) / totalReqs) * 100
         );
-        // No artificial floor here — this used to clamp to a minimum of 70-85 regardless
+        // No artificial floor here, this used to clamp to a minimum of 70-85 regardless
         // of actual computed match, which meant the "ATS Alignment Summary" could never
         // honestly report low coverage even when it existed.
         const overallScore = Math.min(99, Math.max(0, rawAtsSummary?.overallScore || calculatedScore));
@@ -373,7 +373,7 @@ export async function POST(req: NextRequest) {
             typstCode,
             confidenceScore: tailoredResume.confidenceScore || 0,
             // Only present when extracted in this same completion (caller sent raw
-            // `jd` instead of pre-extracted jdKeywords) — lets the client score
+            // `jd` instead of pre-extracted jdKeywords), lets the client score
             // against it without a separate analyze-jd round trip.
             jdKeywords: !requestJdKeywords && jdKeywords ? jdKeywords : undefined,
             atsAlignmentSummary,

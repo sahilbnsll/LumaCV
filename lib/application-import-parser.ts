@@ -1,7 +1,6 @@
 import * as XLSX from "xlsx";
 import {
   ApplicationStatus,
-  APPLICATION_STATUS_KEYS,
   JobApplication,
 } from "./application-schema";
 

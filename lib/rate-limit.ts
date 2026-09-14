@@ -41,7 +41,7 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
  * In-memory sliding-window limiter for the Typst compile endpoint.
  *
  * The compile route is a synchronous, self-hosted, sub-50ms operation (spawn
- * a local Typst process, no external API call) — it fires on every debounced
+ * a local Typst process, no external API call), it fires on every debounced
  * edit (color swatch, template swap, a single keystroke), so it needs basic
  * abuse protection, not the network-backed Upstash limiter built for slow,
  * costly, externally-metered calls (LLM providers etc). Routing it through

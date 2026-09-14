@@ -6,16 +6,16 @@ import {
     GraduationCap, Award, Trophy, GitFork, BookOpen,
     Users, HeartHandshake, Mic2, Languages, Compass,
     Package, Terminal, Shield, PlusCircle, Check,
-    ChevronLeft, ChevronRight, Edit3, Trash2, ArrowUp, ArrowDown,
-    Plus, CheckCircle2, ChevronDown, ChevronUp, Save,
-    GripVertical, SlidersHorizontal, RotateCcw, Copy,
+    ChevronLeft, ChevronRight, Trash2, ArrowUp, ArrowDown,
+    Plus, CheckCircle2, ChevronDown, ChevronUp,
+    GripVertical, SlidersHorizontal, Copy,
     Search, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -30,6 +30,20 @@ import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 
 export type EditorSectionKey = 'personalInfo' | ResumeSectionKey;
+
+// Section array items have different shapes (experience has company/role,
+// education has institution/degree, skills just has a name, etc.). This
+// tries the fields most likely to identify the specific entry so reorder/
+// duplicate toasts can say "Senior Engineer moved down" instead of a bare
+// "Item repositioned" that leaves you guessing which one changed.
+function getEntryLabel(item: unknown): string | undefined {
+    if (!item || typeof item !== 'object') return undefined;
+    const obj = item as Record<string, unknown>;
+    const candidate =
+        obj.role || obj.title || obj.company || obj.institution ||
+        obj.degree || obj.name || obj.organization || obj.projectName;
+    return typeof candidate === 'string' && candidate.trim() ? candidate.trim() : undefined;
+}
 
 interface SectionMeta {
     key: EditorSectionKey;
@@ -191,7 +205,8 @@ export function CompactResumeEditor({ className }: { className?: string }) {
             currentList.splice(toIndex, 0, movedItem);
             updateData((prev) => ({ ...prev, [sectionKey]: currentList }));
             setExpandedCardIndex(toIndex);
-            notify.info('Item repositioned');
+            const label = getEntryLabel(movedItem);
+            notify.info('Item repositioned', label ? `${label} moved to position ${toIndex + 1}` : undefined);
         },
         [resumeData, updateData]
     );
@@ -215,7 +230,8 @@ export function CompactResumeEditor({ className }: { className?: string }) {
             currentList.splice(index + 1, 0, itemToClone);
             updateData((prev) => ({ ...prev, [sectionKey]: currentList }));
             setExpandedCardIndex(index + 1);
-            notify.info('Entry duplicated');
+            const label = getEntryLabel(itemToClone);
+            notify.info('Entry duplicated', label ? `Copy of "${label}" added below` : undefined);
         },
         [resumeData, updateData]
     );
@@ -819,7 +835,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                         </div>
                     )}
 
-                    {/* 5. WORK EXPERIENCE — Compact Summary Cards with Single Card Expansion */}
+                    {/* 5. WORK EXPERIENCE, Compact Summary Cards with Single Card Expansion */}
                     {activeSection === 'experience' && (
                         <div className="space-y-3">
                             {(resumeData.experience || []).map((exp, idx) => {
@@ -1187,7 +1203,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                         </div>
                     )}
 
-                    {/* 6. PROJECTS — Compact Summary Cards with Single Card Expansion */}
+                    {/* 6. PROJECTS, Compact Summary Cards with Single Card Expansion */}
                     {activeSection === 'projects' && (
                         <div className="space-y-3">
                             {(resumeData.projects || []).map((project, idx) => {

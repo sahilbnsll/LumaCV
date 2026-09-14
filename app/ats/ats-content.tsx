@@ -42,10 +42,10 @@ type AtsState = 'idle' | 'reading' | 'analyzing' | 'complete' | 'error';
 
 interface NormalizedAtsResult {
     score: number;
-    /** False when there weren't enough real JD keywords to score against — the UI
+    /** False when there weren't enough real JD keywords to score against, the UI
      *  must show an honest "no JD" state instead of a fabricated 0%/85% score. */
     isCalculated: boolean;
-    /** True when a JD *was* pasted but analyzing it requires sign-in — distinct
+    /** True when a JD *was* pasted but analyzing it requires sign-in, distinct
      *  from simply not having pasted one, so the "no JD" panel can tell the
      *  user the real reason instead of asking them to paste a JD they already did. */
     jdAuthRequired: boolean;
@@ -87,7 +87,7 @@ const SAMPLE_JOB_DESCRIPTIONS: Array<{
     text: string;
     /** Pre-computed keyword extraction for this fixed, known JD text. Lets
      *  "Test with sample roles" work instantly for guests with zero network
-     *  call and zero auth requirement — /api/v1/resume/analyze-jd is a real
+     *  call and zero auth requirement, /api/v1/resume/analyze-jd is a real
      *  AI call and correctly requires sign-in, but there's no reason to pay
      *  that cost (or hit that wall) analyzing text that never changes. */
     keywords: SampleJdKeywords;
@@ -261,7 +261,7 @@ function AtsCheckerContent() {
             const matchedSample = SAMPLE_JOB_DESCRIPTIONS.find((s) => s.text.trim() === jobDescription.trim());
 
             if (matchedSample) {
-                // Known, fixed text — use the pre-computed keywords instead of
+                // Known, fixed text, use the pre-computed keywords instead of
                 // paying for (and auth-gating) a real AI call to re-derive
                 // something that never changes.
                 jdKeywords = matchedSample.keywords;
@@ -279,9 +279,9 @@ function AtsCheckerContent() {
                     }
                 } else {
                     // Don't silently score against an empty keyword set as if the JD
-                    // had been read — tell the user their JD wasn't actually analyzed.
+                    // had been read, tell the user their JD wasn't actually analyzed.
                     // This endpoint requires sign-in (it's a real AI call, unlike the
-                    // rest of this tool) — that's the actual cause most of the time,
+                    // rest of this tool), that's the actual cause most of the time,
                     // so say so instead of a generic "couldn't extract keywords" that
                     // leaves a perfectly good pasted JD looking like it failed for no
                     // reason.
@@ -310,14 +310,14 @@ function AtsCheckerContent() {
 
             if (jdAnalysisFailed) {
                 if (jdAnalysisAuthRequired) {
-                    notify.error('Sign in to analyze against a job description', 'JD-based keyword matching requires an account — scoring your resume without a target JD for now.');
+                    notify.error('Sign in to analyze against a job description', 'JD-based keyword matching requires an account, scoring your resume without a target JD for now.');
                 } else {
-                    notify.error('Job description not analyzed', 'Could not extract keywords — scoring your resume without a target JD.');
+                    notify.error('Job description not analyzed', 'Could not extract keywords, scoring your resume without a target JD.');
                 }
             }
 
             // Normalize response safely regardless of shape.
-            // `rawData.score` is a 0–1 fraction from the API, not a percentage — scale
+            // `rawData.score` is a 0–1 fraction from the API, not a percentage, scale
             // it here. `isCalculated` (false when there were no real JD keywords to
             // score against) is what drives the honest "no JD" UI state below, instead
             // of ever showing a fabricated 0% or 85% as if it were a real assessment.
@@ -345,7 +345,7 @@ function AtsCheckerContent() {
             setAnalysisState('complete');
             setActiveTab('diagnostics');
             // A 0% (or any) score is only meaningful once it's actually been
-            // measured against real JD keywords — without that, `score` is
+            // measured against real JD keywords, without that, `score` is
             // just the empty-keyword default, and announcing it as an
             // "analysis complete ... score" reads as a real result when
             // nothing was actually scored. The "no target JD" panel already
@@ -785,7 +785,7 @@ function AtsCheckerContent() {
                                                 <h3 className="text-sm font-semibold text-foreground">
                                                     {analysisResult.score >= 85
                                                         ? 'Strong Parseability & Target Alignment'
-                                                        : 'Moderate Alignment — Gaps Identified'}
+                                                        : 'Moderate Alignment, Gaps Identified'}
                                                 </h3>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                                     {analysisResult.scoreReason}
@@ -884,7 +884,7 @@ function AtsCheckerContent() {
                                                             <p className="text-xs text-muted-foreground italic">
                                                                 {analysisResult.jdAuthRequired
                                                                     ? 'Sign in to compare against your pasted JD.'
-                                                                    : 'No target JD provided — nothing to compare against yet.'}
+                                                                    : 'No target JD provided, nothing to compare against yet.'}
                                                             </p>
                                                         )
                                                     )}

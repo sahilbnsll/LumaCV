@@ -1,7 +1,7 @@
 // pdfjs-dist's bundle calls the very new Promise.withResolvers() API
 // (Safari 17.4+ / iOS 17.4+, Chrome 119+, Firefox 121+). On an older mobile
 // browser it's simply undefined, and calling it throws a cryptic minified
-// "undefined is not a function" with no indication of what actually failed —
+// "undefined is not a function" with no indication of what actually failed,
 // exactly the symptom reported on mobile while desktop worked fine. This
 // polyfill is a no-op wherever the native API already exists.
 function ensurePromiseWithResolversPolyfill(): void {
@@ -30,7 +30,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdfjsLib = await import('pdfjs-dist/build/pdf.min.mjs') as any;
 
-    // Same-origin worker (see public/pdf.worker.min.mjs) — avoids protocol/CSP issues with //cdn URLs
+    // Same-origin worker (see public/pdf.worker.min.mjs), avoids protocol/CSP issues with //cdn URLs
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
     const arrayBuffer = await file.arrayBuffer();
@@ -52,7 +52,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     for (let i = 1; i <= pdf.numPages; i++) {
         // Extraction is isolated per page: a single malformed page (bad font
         // encoding, corrupt content stream, etc.) should not abort the whole
-        // document — skip it and keep the text we could recover.
+        // document, skip it and keep the text we could recover.
         try {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
@@ -104,7 +104,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 
     if (!result) {
         throw new Error(
-            'No extractable text found in this PDF — it may be a scanned image rather than real text. Try a text-based export or a .docx instead.',
+            'No extractable text found in this PDF, it may be a scanned image rather than real text. Try a text-based export or a .docx instead.',
         );
     }
 

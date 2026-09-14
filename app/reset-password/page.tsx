@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
                 password,
             });
             if (error) throw error;
-            notify.success('Password updated');
+            notify.success('Password updated', 'Use your new password next time you sign in');
             router.push('/dashboard');
         } catch (err) {
             notify.error("Couldn't update password", err instanceof Error ? err.message : undefined);

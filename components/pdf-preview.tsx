@@ -11,7 +11,6 @@ import {
     ZoomIn,
     ZoomOut,
     FileText,
-    CheckCircle2,
     Zap,
     AlertCircle,
     Sparkles,
@@ -25,7 +24,7 @@ import { notify } from '@/lib/notify';
 import { Badge } from '@/components/ui/badge';
 import { hashTextBrowser } from '@/lib/content-hash';
 import { generateTypst } from '@/lib/typst-generator';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { TypstCompileVisualizer } from '@/components/ui/typst-compile-visualizer';
 import { cn } from '@/lib/utils';
 import { exportResume, ExportFormatType } from '@/lib/resume-export';
@@ -63,7 +62,7 @@ export function PdfPreview() {
 
     const debounceRef = useRef<number | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
-    // Monotonic counter — ensures stale responses are discarded
+    // Monotonic counter, ensures stale responses are discarded
     const requestIdRef = useRef<number>(0);
 
     const candidateName = useMemo(
@@ -81,7 +80,7 @@ export function PdfPreview() {
      */
     const compilePdf = useCallback(
         async (force = false) => {
-            // 1. Resolve active Typst source — prefer fresh Typst generated from current resumeData
+            // 1. Resolve active Typst source, prefer fresh Typst generated from current resumeData
             let effectiveTypstCode = '';
             if (resumeData) {
                 try {
@@ -172,7 +171,7 @@ export function PdfPreview() {
 
                     if (!response.ok) {
                         let detail = `HTTP ${response.status}`;
-                        // Read the body once as text, then try to parse it as JSON —
+                        // Read the body once as text, then try to parse it as JSON,
                         // calling response.json() and, on failure, response.text() on
                         // the same Response throws "body stream already read" because
                         // .json() already consumed the stream even when parsing fails.
@@ -187,7 +186,7 @@ export function PdfPreview() {
                                 }
                             }
                         } catch {
-                            // Body unreadable — keep the HTTP status fallback.
+                            // Body unreadable, keep the HTTP status fallback.
                         }
                         // 4xx errors are not retryable
                         if (response.status < 500) {
@@ -233,7 +232,7 @@ export function PdfPreview() {
                     setStatus('ready');
                     setCompileError(null);
                     setRetryCount(0);
-                    return; // success — stop retry loop
+                    return; // success, stop retry loop
 
                 } catch (error) {
                     if ((error as Error).name === 'AbortError') return; // intentionally cancelled
@@ -249,7 +248,7 @@ export function PdfPreview() {
                         setCompileError(message);
                         setIsAuthError(authFailure);
                         setStatus('failed');
-                        // DO NOT clear pdfUrl — preserve last successful PDF
+                        // DO NOT clear pdfUrl, preserve last successful PDF
                         if (!authFailure) {
                             notify.error('Compilation failed', message.slice(0, 80), {
                                 retry: () => compilePdf(true),
@@ -571,7 +570,7 @@ export function PdfPreview() {
                 {/* Desk Ambient Sheen in Dark Mode */}
                 <div className="absolute inset-0 bg-[radial-gradient(#0071e3_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03] dark:opacity-[0.05] pointer-events-none" />
 
-                {/* PDF Document Sheet Frame — bg-white is intentional and stays literal in
+                {/* PDF Document Sheet Frame, bg-white is intentional and stays literal in
                     both themes: this represents actual paper, which real printed resumes
                     and PDFs are always white regardless of the app's own light/dark theme. */}
                 <div
@@ -692,7 +691,7 @@ export function PdfPreview() {
                             <div className="flex items-center gap-2 min-w-0">
                                 <AlertCircle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
                                 <p className="text-[11px] text-rose-300 font-mono truncate">
-                                    {compileError?.slice(0, 120) || 'Compile error — last PDF preserved'}
+                                    {compileError?.slice(0, 120) || 'Compile error, last PDF preserved'}
                                 </p>
                             </div>
                             <Button

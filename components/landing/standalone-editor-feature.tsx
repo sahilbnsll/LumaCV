@@ -62,7 +62,7 @@ const INITIAL_RESUME_DATA: ResumeData = {
     github: "github.com/alexmorgan",
   },
   experience: {
-    companyRole: "Acme Distributed Cloud — Principal Engineer",
+    companyRole: "Acme Distributed Cloud, Principal Engineer",
     bullet:
       "Designed resilient multi-region control planes utilizing Typst-compiled runbooks and automated failover topologies.",
   },
@@ -171,7 +171,7 @@ function SectionForm({
               value={data.experience.companyRole}
               onChange={(e) => onChange("experience", { companyRole: e.target.value })}
               className="w-full px-2.5 py-1.5 text-xs rounded-md bg-background border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="Company — Role"
+              placeholder="Company, Role"
             />
           </div>
           <div>
@@ -366,7 +366,7 @@ export function StandaloneEditorFeature() {
               <span className="w-3 h-3 rounded-full bg-amber-500/80" />
               <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
               <span className="ml-2 text-xs font-mono text-muted-foreground truncate max-w-[260px] sm:max-w-none">
-                LumaCV Workstation — {doc.personal.name.replace(/\s+/g, "-")}-Resume.typ
+                LumaCV Workstation, {doc.personal.name.replace(/\s+/g, "-")}-Resume.typ
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
@@ -490,7 +490,7 @@ export function StandaloneEditorFeature() {
               </div>
             </div>
 
-            {/* Right: Live Vector Output — mirrors every edit in real time */}
+            {/* Right: Live Vector Output, mirrors every edit in real time */}
             <div className="lg:col-span-6 p-6 sm:p-8 bg-muted/10 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -503,7 +503,7 @@ export function StandaloneEditorFeature() {
                   </div>
                 </div>
 
-                {/* Live Preview Document — mirrors left panel edits and order */}
+                {/* Live Preview Document, mirrors left panel edits and order */}
                 <div className="rounded-xl border border-border/80 bg-background p-6 shadow-sm space-y-4 text-left font-sans min-h-[280px]">
                   {sections.map((sec) => {
                     if (sec.id === "personal") {

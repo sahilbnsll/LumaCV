@@ -21,7 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -30,10 +29,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface ApplicationTableProps {
   applications: JobApplication[];
@@ -227,7 +224,7 @@ export function ApplicationTable({
                           <span className="truncate max-w-[140px]">{app.location}</span>
                         </>
                       ) : (
-                        <span className="text-muted-foreground/40">—</span>
+                        <span className="text-muted-foreground/40">-</span>
                       )}
                       {app.remoteType && app.remoteType !== "unspecified" && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-medium bg-secondary text-secondary-foreground">
@@ -251,7 +248,7 @@ export function ApplicationTable({
                         </span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground/40">—</span>
+                      <span className="text-muted-foreground/40">-</span>
                     )}
                   </td>
 
@@ -266,7 +263,7 @@ export function ApplicationTable({
                         <span>Open Resume</span>
                       </Link>
                     ) : (
-                      <span className="text-muted-foreground/40 text-xs">—</span>
+                      <span className="text-muted-foreground/40 text-xs">-</span>
                     )}
                   </td>
 

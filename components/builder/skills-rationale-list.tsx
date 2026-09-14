@@ -99,7 +99,7 @@ export const SkillsRationaleList = React.memo(function SkillsRationaleList({
                     </div>
                 ) : (
                     <p className="text-[11px] text-muted-foreground">
-                        No required-skill keywords matched yet — add a job description to see this breakdown.
+                        No required-skill keywords matched yet, add a job description to see this breakdown.
                     </p>
                 )}
             </div>

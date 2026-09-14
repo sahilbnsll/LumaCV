@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
 import { EditorialFooter } from '@/components/landing/editorial-footer';
-import { LumaLogo } from '@/components/luma-logo';
 import {
     Terminal,
     Shield,
@@ -16,7 +15,6 @@ import {
     Lock,
     GitBranch,
     Server,
-    ExternalLink,
     Copy,
     Check,
     HelpCircle,
@@ -26,7 +24,6 @@ import {
     Settings,
     FileCheck2,
     ArrowUpRight,
-    Zap,
     Globe,
     SlidersHorizontal,
     ArrowLeft,
@@ -36,13 +33,11 @@ import {
     Database,
     ShieldCheck,
     CheckCheck,
-    Laptop,
     History,
     Calendar,
     Milestone,
     Tag
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -228,25 +223,25 @@ const OVERVIEW_FEATURE_CARDS = [
         title: 'Zero Hallucinations',
         keywords: ['Immutable guardrails', 'Ground-truth diffing', 'No invented dates'],
         cardSummary: 'Immutable factual guardrails guarantee candidate employers, job titles, dates, and universities are never fabricated by AI models.',
-        detail: 'Every AI rewrite is diffed against your original resume before it ever reaches you. Employers, job titles, dates, and universities are treated as immutable ground truth — the model can rephrase and reorganize, but it cannot invent.'
+        detail: 'Every AI rewrite is diffed against your original resume before it ever reaches you. Employers, job titles, dates, and universities are treated as immutable ground truth, the model can rephrase and reorganize, but it cannot invent.'
     },
     {
         title: 'Sub-50ms Typst Engine',
         keywords: ['Rust WASM', 'Native vector PDF', 'No Chromium'],
         cardSummary: 'Replaces bloated, pixelated Puppeteer/Chromium engines with native Rust Typst compilation for crisp, single-page vector PDFs.',
-        detail: 'Most resume builders render through a headless Chromium instance — slow, memory-heavy, and prone to layout drift. LumaCV compiles directly through Typst’s Rust engine instead, producing crisp single-page vector PDFs in 15–45ms.'
+        detail: 'Most resume builders render through a headless Chromium instance, slow, memory-heavy, and prone to layout drift. LumaCV compiles directly through Typst’s Rust engine instead, producing crisp single-page vector PDFs in 15–45ms.'
     },
     {
         title: 'Client-Side BYOK',
         keywords: ['Bring your own key', 'TLS-only transit', 'Zero server storage'],
         cardSummary: 'Bring your own Google Gemini, OpenAI, Claude, or Groq API keys. Headers transmit encrypted over TLS with zero server database storage.',
-        detail: 'Your API key never touches a database. It travels once, encrypted over TLS as a request header, is used for that single call, and is discarded — Gemini, OpenAI, Claude, and Groq are all supported.'
+        detail: 'Your API key never touches a database. It travels once, encrypted over TLS as a request header, is used for that single call, and is discarded, Gemini, OpenAI, Claude, and Groq are all supported.'
     },
     {
         title: '4-Vector ATS Scoring',
         keywords: ['Required Skills 40%', 'Responsibilities 25%', 'Deterministic, not vibes'],
         cardSummary: 'Deterministic alignment across Required Skills (40%), Responsibilities (25%), Preferred Skills (20%), and Terminology (15%).',
-        detail: 'No black-box "AI vibe score." The match against a job description is computed from four weighted, inspectable vectors — Required Skills, Responsibilities, Preferred Skills, and Terminology — so you can see exactly why a number moved.'
+        detail: 'No black-box "AI vibe score." The match against a job description is computed from four weighted, inspectable vectors, Required Skills, Responsibilities, Preferred Skills, and Terminology, so you can see exactly why a number moved.'
     },
 ];
 
@@ -331,7 +326,7 @@ const API_ENDPOINTS = [
     {
       "company": "Tech Corp",
       "title": "Staff Engineer",
-      "dates": "2021 — Present",
+      "dates": "2021, Present",
       "bullets": [
         "Architected real-time streaming pipeline reducing event latency by 72%."
       ]
@@ -552,7 +547,7 @@ const CHANGELOG_RELEASES: ReleaseLog[] = [
 ];
 
 // ==========================================
-// OVERVIEW SECTION — plain chapter content. The page-level chapter stack
+// OVERVIEW SECTION, plain chapter content. The page-level chapter stack
 // (rendered once, on the right, spanning every chapter) is what stacks and
 // syncs now; each chapter's own left-hand content is just its full writeup.
 // ==========================================
@@ -591,7 +586,7 @@ function OverviewStackSection() {
 }
 
 // ==========================================
-// CHAPTER CARD STACK — driven entirely by `activeIndex` (which is itself
+// CHAPTER CARD STACK, driven entirely by `activeIndex` (which is itself
 // derived from real section.offsetTop measurements, not scroll-distance
 // estimates), so a card only becomes "current" exactly when its chapter's
 // content is actually on screen. Every card is always mounted; only its
@@ -603,33 +598,72 @@ function ChapterCardStack({
     sections,
     activeIndex,
     onSelect,
+    variant = 'rail',
 }: {
     sections: typeof DOC_SECTIONS;
     activeIndex: number;
     onSelect: (id: string) => void;
+    /** 'rail' is the sticky right-column deck on md+. 'inline' is a condensed,
+     *  full-width version pinned above the chapter content on mobile, where
+     *  there's no side column to put a rail in, sharing the same synced-to-
+     *  scroll fan animation instead of losing it below md entirely. */
+    variant?: 'rail' | 'inline';
 }) {
+    const isInline = variant === 'inline';
+
     return (
-        <div className="hidden md:block sticky top-28">
-            <div className="relative h-[520px]">
+        <div
+            className={cn(
+                'sticky z-10',
+                isInline ? 'md:hidden top-24 mb-10' : 'hidden md:block top-28'
+            )}
+        >
+            <div className={cn('relative', isInline ? 'h-[300px] sm:h-[340px]' : 'h-[600px]')}>
+                {/* Opaque backdrop plate, inline only: this deck sits directly in
+                    the single-column content flow (not a side rail), so once you
+                    scroll past it the page's own text ends up spatially right
+                    behind it. The peeking cards fade toward transparent as they
+                    recede, and without this solid plate underneath, that faded
+                    edge let the scrolled-up heading/paragraph bleed through and
+                    visually collide with the stack instead of reading as a card. */}
+                {isInline && (
+                    <div className="absolute inset-0 rounded-2xl bg-background" />
+                )}
                 {sections.map((s, i) => {
                     const delta = i - activeIndex;
                     const Icon = s.icon;
 
-                    // Only the current card, 1 passed, and up to 4 upcoming ever need
-                    // to be in the DOM/visible — everything else is inert.
-                    if (delta < -1 || delta > 4) return null;
+                    // Only the current card, 1 passed, and a few upcoming ever need
+                    // to be in the DOM/visible, everything else is inert. The inline
+                    // deck is narrower, so it fans a shorter, tighter run of cards
+                    // to keep the peeking edges from crowding off the small screen.
+                    const maxDelta = isInline ? 2 : 4;
+                    if (delta < -1 || delta > maxDelta) return null;
 
                     const isActive = delta === 0;
                     const behind = delta < 0;
                     // Behind (already-read) cards peel up and away like a torn-off
                     // sheet, pivoting from a bottom corner. Upcoming cards fan out
-                    // below-right in a real, visible deck, each one tilted a touch
-                    // more than the last — like a stack of paper, not a flat pile.
-                    const translateY = behind ? -70 : delta * 26;
-                    const translateX = behind ? -36 : delta * 10;
-                    const rotate = behind ? -9 : delta * 1.4;
-                    const scale = behind ? 0.92 : 1 - delta * 0.055;
-                    const opacity = behind ? 0 : Math.max(0, 1 - delta * 0.2);
+                    // below-right in a real, visible deck. Real hand-dealt paper
+                    // stacks don't curve in one mechanical direction, each sheet
+                    // lands with its own slight twist, so the tilt alternates sign
+                    // per card instead of accumulating linearly. The inline deck
+                    // uses smaller absolute offsets, the same pixel spacing on a
+                    // narrower card would read as an exaggerated, sloppy fan.
+                    const dir = delta % 2 === 0 ? 1 : -1;
+                    const translateY = behind ? (isInline ? -56 : -84) : delta * (isInline ? 14 : 32);
+                    const translateX = behind ? (isInline ? -26 : -44) : delta * (isInline ? 7 : 16);
+                    const rotate = behind
+                        ? (isInline ? -8 : -11)
+                        : isActive ? 0 : dir * (isInline ? 1.4 + delta * 0.5 : 2.2 + delta * 0.9);
+                    const scale = behind ? 0.9 : 1 - delta * 0.05;
+                    const opacity = behind ? 0 : Math.max(0, 1 - delta * 0.18);
+                    // Depth cue: the active sheet casts the deepest, softest
+                    // shadow (it's the one physically closest to the viewer);
+                    // sheets further back in the deck flatten out beneath it.
+                    const shadow = isActive
+                        ? '0 28px 60px -16px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.25)'
+                        : `0 ${10 + Math.abs(delta) * 3}px ${24 + Math.abs(delta) * 5}px -12px rgb(0 0 0 / ${0.18 + Math.abs(delta) * 0.02})`;
 
                     return (
                         <div
@@ -644,7 +678,8 @@ function ChapterCardStack({
                                 }
                             }}
                             className={cn(
-                                'absolute inset-x-0 top-0 min-h-[300px] rounded-2xl border p-9 shadow-lg cursor-pointer origin-bottom-left',
+                                'absolute inset-x-0 top-0 rounded-2xl border cursor-pointer origin-bottom-left',
+                                isInline ? 'min-h-[220px] sm:min-h-[260px] p-5 sm:p-7' : 'min-h-[360px] p-8 sm:p-10',
                                 'transition-[transform,opacity,box-shadow] duration-[650ms] ease-[cubic-bezier(0.34,1.1,0.4,1)]',
                                 isActive
                                     ? 'border-primary bg-card ring-1 ring-primary/30'
@@ -653,27 +688,29 @@ function ChapterCardStack({
                             style={{
                                 transform: `translate(${translateX}px, ${translateY}px) rotate(${rotate}deg) scale(${scale})`,
                                 opacity,
+                                boxShadow: shadow,
                                 zIndex: 100 - Math.abs(delta),
                                 pointerEvents: opacity < 0.05 ? 'none' : 'auto',
                             }}
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <div className={cn(
-                                    'h-12 w-12 rounded-xl flex items-center justify-center border shrink-0',
+                                    'rounded-xl flex items-center justify-center border shrink-0',
+                                    isInline ? 'h-10 w-10 sm:h-11 sm:w-11' : 'h-14 w-14',
                                     isActive
                                         ? 'bg-primary/10 border-primary/30 text-primary'
                                         : 'bg-muted/40 border-border/60 text-muted-foreground'
                                 )}>
-                                    <Icon className="h-6 w-6" />
+                                    <Icon className={isInline ? 'h-5 w-5' : 'h-7 w-7'} />
                                 </div>
-                                <span className="text-3xl font-bold text-primary shrink-0">
+                                <span className={cn('font-bold text-primary shrink-0', isInline ? 'text-2xl sm:text-3xl' : 'text-4xl')}>
                                     {String(i + 1).padStart(2, '0')}
                                 </span>
                             </div>
-                            <h3 className="mt-5 text-2xl font-bold tracking-tight text-foreground">
+                            <h3 className={cn('font-bold tracking-tight text-foreground', isInline ? 'mt-3 sm:mt-4 text-lg sm:text-xl line-clamp-2' : 'mt-6 text-3xl')}>
                                 {s.title}
                             </h3>
-                            <p className="mt-2.5 text-base text-muted-foreground leading-relaxed line-clamp-4">
+                            <p className={cn('text-muted-foreground leading-relaxed', isInline ? 'mt-1.5 sm:mt-2 text-xs sm:text-sm line-clamp-2' : 'mt-3 text-base line-clamp-5')}>
                                 {s.description}
                             </p>
                         </div>
@@ -787,9 +824,9 @@ export default function DocsPageContent() {
 
 
 
-            {/* Jump to section — the one nav aid kept after removing the sidebar/tabs/TOC. */}
+            {/* Jump to section, the one nav aid kept after removing the sidebar/tabs/TOC. */}
             <div className="sticky top-14 z-20 bg-background/90 backdrop-blur-md border-b border-border/60">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
                     <Select value={activeSection} onValueChange={scrollToSection}>
                         <SelectTrigger size="sm" className="w-full sm:w-72 text-xs">
                             <SelectValue placeholder="Jump to section..." />
@@ -797,7 +834,7 @@ export default function DocsPageContent() {
                         <SelectContent>
                             {DOC_SECTIONS.map((s, i) => (
                                 <SelectItem key={s.id} value={s.id} className="text-xs">
-                                    {String(i + 1).padStart(2, '0')} — {s.title}
+                                    {String(i + 1).padStart(2, '0')}, {s.title}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -805,14 +842,26 @@ export default function DocsPageContent() {
                 </div>
             </div>
 
-            {/* Documentation content — no sidebar/tabs/TOC. Full chapter content on the
+            {/* Documentation content, no sidebar/tabs/TOC. Full chapter content on the
                 left; a continuously-growing stack of chapter cards on the right, each
                 one sticking in place as the next lands on top of it, the current
                 chapter's card picked out with a primary border. */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid md:grid-cols-[1fr_360px] lg:grid-cols-[1fr_400px] gap-10 items-start">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid md:grid-cols-[1fr_380px] lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_480px] gap-10 xl:gap-14 items-start">
                 <main className="min-w-0 space-y-16 pb-28 text-sm text-muted-foreground leading-relaxed">
 
-                    {/* SECTION 1: Product Overview — left column swaps headline/keywords/detail
+                    {/* Mobile-only chapter card stack: the same "real stack of paper"
+                        deck as the desktop right rail, condensed and pinned above the
+                        chapter content since there's no side column to put it in below
+                        md. Kept in sync with the same activeIndex/onSelect as the rail
+                        so both read as one component, not two different UIs. */}
+                    <ChapterCardStack
+                        variant="inline"
+                        sections={DOC_SECTIONS}
+                        activeIndex={currentSectionIndex}
+                        onSelect={scrollToSection}
+                    />
+
+                    {/* SECTION 1: Product Overview, left column swaps headline/keywords/detail
                         in sync with whichever card is pinned at the top of the right-hand
                         stack as you scroll. */}
                     <OverviewStackSection />
@@ -1942,7 +1991,7 @@ services:
 
                 </main>
 
-                {/* Right rail — driven by activeSection, so it switches to a chapter's
+                {/* Right rail, driven by activeSection, so it switches to a chapter's
                     card exactly when that chapter's content is on screen, with a
                     smooth animated glide between cards rather than a scroll-timed one. */}
                 <ChapterCardStack

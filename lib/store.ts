@@ -26,7 +26,7 @@ type ArraySectionName =
 interface AppState {
     step: number;
 
-    /** Bumps when resumeData is set — remount ResumeForm so fields populate. */
+    /** Bumps when resumeData is set, remount ResumeForm so fields populate. */
     resumeDataRevision: number;
 
     // Step 1: Inputs
@@ -39,7 +39,7 @@ interface AppState {
 
     /**
      * Immutable snapshot of resumeData captured right before AI tailoring runs.
-     * Used only to diff "before vs after" in Step 4 — never mutated, never exported.
+     * Used only to diff "before vs after" in Step 4, never mutated, never exported.
      */
     preTailorSnapshot: ResumeData | null;
 
@@ -77,7 +77,7 @@ interface AppState {
     setFile: (file: File | null) => void;
     setExtractedText: (text: string) => void;
     setResumeData: (data: ResumeData) => void;
-    /** After /api/parse-resume — bumps form key so Step 2 fields populate. */
+    /** After /api/parse-resume, bumps form key so Step 2 fields populate. */
     setResumeDataFromParse: (data: ResumeData) => void;
     setPreTailorSnapshot: (data: ResumeData | null) => void;
     /** Replaces one bullet's text in-place (used by the Step 4 diff viewer's accept/revert toggle). */

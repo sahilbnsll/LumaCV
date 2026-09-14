@@ -8,7 +8,6 @@ import {
   ApplicationStatus,
 } from "@/lib/application-schema";
 import {
-  Building2,
   MapPin,
   Calendar,
   ExternalLink,

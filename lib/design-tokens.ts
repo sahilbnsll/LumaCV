@@ -128,7 +128,7 @@ export const PALETTES: Record<string, ColorPalette> = {
         contrastOnAccent: '#ffffff',
     },
     // These three were previously only decorative swatches on the homepage
-    // hero (resume-stack-hero.tsx) with no real palette backing them — the
+    // hero (resume-stack-hero.tsx) with no real palette backing them, the
     // hero has been switched to source its swatches from this file instead,
     // so the two color pickers can never drift out of sync again.
     plum: {

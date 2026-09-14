@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FeedbackCard } from '@/components/ui/feedback-card';
-import { Smile, MessageSquarePlus, X } from 'lucide-react';
+import { Smile } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 

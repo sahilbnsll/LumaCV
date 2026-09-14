@@ -7,7 +7,6 @@ import {
   Copy,
   Check,
   QrCode,
-  Sparkles,
   ShieldCheck,
   CheckCircle2,
 } from "lucide-react";
