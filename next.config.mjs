@@ -17,13 +17,6 @@ const nextConfig = {
     outputFileTracingIncludes: {
       '/api/**/*': ['./bin/**/*', './typst/**/*'],
     },
-    // Inlines the CSS actually used above the fold into the HTML response
-    // and loads the rest async, instead of two full render-blocking <link>
-    // stylesheets (measured ~2.3s combined under PageSpeed's throttling
-    // profile). Still marked experimental by Next.js itself, verified with
-    // a full production build and a visual pass across light/dark and
-    // several routes before shipping.
-    optimizeCss: true,
     optimizePackageImports: [
       'lucide-react',
       'framer-motion',
