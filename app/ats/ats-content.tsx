@@ -7,7 +7,7 @@ import { useDropzone } from 'react-dropzone';
 import { AppHeader } from '@/components/app-header';
 import { EditorialFooter } from '@/components/landing/editorial-footer';
 import { useAuth } from '@/components/auth-provider';
-import { getLocalResumes, SavedResume } from '@/lib/user-resumes-store';
+import { fetchSavedResumes, SavedResume } from '@/lib/user-resumes-store';
 import { extractTextFromFile } from '@/lib/document-parser';
 import { resumeDataToPlainText } from '@/lib/resume-plaintext';
 import { DEMO_RESUME_DATA } from '@/lib/demo-data';
@@ -165,10 +165,18 @@ function AtsCheckerContent() {
     const [analysisResult, setAnalysisResult] = useState<NormalizedAtsResult | null>(null);
     const [errorMessage, setErrorMessage] = useState<string>('');
 
-    // Load user's saved resumes
+    // Load user's saved resumes. Previously read localStorage only, so a
+    // resume saved from another device/session (or after clearing local
+    // storage) silently didn't show up here even though the dashboard
+    // could see it, fetches the server copy first now, same as dashboard.
     useEffect(() => {
-        if (user) {
-            const list = getLocalResumes(user.id);
+        if (!user) {
+            setSavedResumes([]);
+            return;
+        }
+        let cancelled = false;
+        fetchSavedResumes(user.id).then((list) => {
+            if (cancelled) return;
             setSavedResumes(list);
 
             const queryId = searchParams.get('id');
@@ -183,7 +191,10 @@ function AtsCheckerContent() {
                     if (found.jd) setJobDescription(found.jd);
                 }
             }
-        }
+        });
+        return () => {
+            cancelled = true;
+        };
     }, [user, searchParams]);
 
     // Handle Dropzone Upload

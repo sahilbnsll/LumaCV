@@ -85,6 +85,69 @@ export function getLocalResumes(userId?: string): SavedResume[] {
     }
 }
 
+/** Row shape returned by GET /api/v1/resumes (snake_case Supabase columns). */
+interface SavedResumeRow {
+    id?: string;
+    user_id?: string;
+    title?: string;
+    target_job_title?: string;
+    target_job_company?: string;
+    template_id?: string;
+    resume_data?: (ResumeData & { _snapshot?: Partial<SavedResume> }) | null;
+    jd?: string;
+    typst_code?: string;
+    ats_score?: number;
+    created_at?: string;
+    updated_at?: string;
+}
+
+function mapResumeRow(row: SavedResumeRow): SavedResume {
+    const snapshot = row.resume_data?._snapshot;
+    return {
+        id: String(row.id || ''),
+        userId: row.user_id ? String(row.user_id) : undefined,
+        title: String(row.title || 'Professional Resume'),
+        targetJobTitle: row.target_job_title || undefined,
+        targetJobCompany: row.target_job_company || undefined,
+        templateId: String(row.template_id || 'modern'),
+        resumeData: row.resume_data as ResumeData,
+        jd: snapshot?.jd || row.jd,
+        jdAnalysis: snapshot?.jdAnalysis,
+        generatedResume: snapshot?.generatedResume,
+        originalScore: snapshot?.originalScore,
+        tailoredScore: snapshot?.tailoredScore,
+        typstCode: row.typst_code,
+        atsScore: typeof row.ats_score === 'number' && row.ats_score > 0 ? row.ats_score : undefined,
+        lastStep: snapshot?.lastStep || 4,
+        createdAt: String(row.created_at || row.updated_at || new Date().toISOString()),
+        updatedAt: String(row.updated_at || row.created_at || new Date().toISOString()),
+    };
+}
+
+/**
+ * The signed-in user's saved resumes, from the server first (the real
+ * source of truth, synced across devices) with a same-device localStorage
+ * fallback on network failure or an empty/unconfigured Supabase table.
+ * Several pages (dashboard, ATS checker) need this same "list what this
+ * user has saved" data; pulling it from localStorage alone, as the ATS
+ * checker used to, misses anything saved from a different device/session.
+ */
+export async function fetchSavedResumes(userId?: string): Promise<SavedResume[]> {
+    if (!userId) return [];
+    try {
+        const res = await fetch('/api/v1/resumes');
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.resumes) && data.resumes.length > 0) {
+                return data.resumes.map((row: unknown) => mapResumeRow(row as SavedResumeRow));
+            }
+        }
+    } catch {
+        // Network/server failure, fall through to the local fallback below.
+    }
+    return getLocalResumes(userId);
+}
+
 export function saveLocalResume(resume: SavedResume, userId?: string): void {
     if (typeof window === 'undefined') return;
     const effectiveUserId = userId || resume.userId;
