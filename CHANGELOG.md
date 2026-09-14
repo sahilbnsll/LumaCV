@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.12.0] - 2026-09-14
+
+### Fixed
+- **The job application tracker was completely non-functional**: `user_applications`, the table both `/api/v1/applications` routes read and write, did not exist anywhere in the live database (it was never captured in `supabase/schema.sql`, only assumed present). Every save silently fell into an error fallback that returned an empty list, so nothing anyone entered was ever actually persisted. Added the table, its RLS policies, and an index on `(user_id, updated_at)` matching the route's actual query. Migration required, see Database below.
+- **`/applications` shipped 486 kB of First Load JS**, well above the ~200 kB target: the CSV/XLSX import dialog was a static import, so the `xlsx` library loaded for every visitor even if they never opened it. Lazy-loaded via `next/dynamic`, cutting the route to 373 kB.
+- **No loading state on 7 routes** (dashboard, applications, editor, ats, templates, profile, billing): route transitions showed a blank screen until data finished fetching. Added `loading.tsx` skeletons built on a new shared `components/ui/skeleton.tsx`.
+- **The "Skip to main content" link was broken on nearly every page**: its target, `id="main-content"`, existed on only 6 of the app's ~20 routes. Every keyboard and screen-reader user's skip link silently went nowhere on the homepage, dashboard, applications, ats, editor, builder, profile, docs, not-found, and the password-reset flow. Added the id everywhere the link needs it to land.
+- **Heading order skipped a level** (h2 to h4) in the homepage's live-preview mockup; **a mobile-menu button's animated "Menu"/"Close" text didn't match its `aria-label`**, both flagged by an automated accessibility audit and fixed.
+- **Several color-contrast failures below WCAG AA**, found via the same audit: white button text on the dark-mode primary blue measured 3.52:1 against a 4.5:1 requirement; the homepage hero's selectable accent-color headline text measured as low as 2.26:1 on its near-black background; two export-format badges used partially-transparent white text that could never reach 4.5:1 against their red background at any usable opacity. Fixed by splitting the dark-mode primary color into two tokens (`--primary` for backgrounds, `--primary-text` for text on dark surfaces, since no single lightness satisfies both roles), lightening the hero's accent color only for its own dark-background display (the actual resume-editor palette colors are untouched), and removing the opacity reductions on the export badges.
+- Unbounded `/api/v1/resumes` and `/api/v1/applications` list queries had no upper bound at all. Added safety-cap limits (300/500 rows); the board/kanban and dashboard views still need the full set client-side for search and grouping, so this isn't full pagination.
+
+### Changed
+- Added AVIF to `next.config.mjs`'s image format priority (Next's built-in optimizer already converts template previews to WebP/AVIF on demand, this is a small additional win, not a rework of the image pipeline, which was already correctly using `next/image`).
+
+### Database
+- `supabase/schema.sql` gained the `user_applications` table (see Fixed above). **Run the updated script (or just this new section) in the Supabase SQL Editor** for the application tracker to start actually saving data.
+
+### Docs
+- `AGENTS.md`: documented the loading-state pattern, the `--primary`/`--primary-text` token split (with the reasoning, so it doesn't get collapsed back into one token later), and the sitewide `id="main-content"` requirement under "Do Not Break."
+
+---
+
 ## [2.11.1] - 2026-09-14
 
 ### Security

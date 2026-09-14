@@ -44,6 +44,7 @@ Most resume builders either (a) fake "ATS optimization" with vague, unverifiable
 | Toast/notification helper | `lib/notify.ts` |
 | Predefined profile avatar options | `lib/avatar-options.ts` (56 static SVGs in `public/avatars/`, DiceBear "Notionists" style) |
 | Design tokens (palettes, motion easings) | `lib/design-tokens.ts`, `lib/motion.ts` |
+| Route-transition loading states | `app/*/loading.tsx` (skeletons built from `components/ui/skeleton.tsx`); most top-level routes have one, add one for any new route with a non-trivial data fetch |
 | Main resume editor UI | `components/compact-resume-editor.tsx` |
 | Builder 4-step wizard | `app/builder/step1-jd.tsx` .. `step4-preview.tsx` |
 | Shared design system primitives | `components/ui/` (Radix + shadcn) |
@@ -54,6 +55,7 @@ Most resume builders either (a) fake "ATS optimization" with vague, unverifiable
 - **Rendering**: almost everything under `app/*/page.tsx` is a thin server component carrying `metadata`, rendering a co-located `"use client"` `*-content.tsx` component that does the actual interactive work. This split exists specifically so pages can have real per-page SEO metadata (`export const metadata`) while the interactive UI stays client-rendered — a client component cannot export `metadata`, and most of this app's real functionality (forms, live preview, Zustand state) needs to be client-side. Follow this pattern for any new page.
 - **State management**: Zustand (`lib/store.ts`) for the resume being edited (client-only, not synced automatically — see Data Flow). React Hook Form + Zod for form validation. No Redux, no React Query — data fetching is plain `fetch()` in `useEffect`/handlers.
 - **Styling**: Tailwind utility classes against CSS custom-property design tokens (`app/globals.css`) so components adapt to light/dark automatically. Framer Motion is the primary animation library (28+ files); GSAP is used in exactly one place (`components/full-screen-nav.tsx`, an imperative open/close timeline) — these are not redundant, don't consolidate them.
+- **`--primary` vs `--primary-text`**: `--primary` is tuned for `bg-primary` (buttons/fills, needs to stay dark enough for white text at 4.5:1). `--primary-text` is a separate token for the primary blue used directly as text color on a dark surface (small labels/badges), where a darker `--primary` would fail contrast instead. No single lightness satisfies both roles at once (verified), so don't collapse these back into one token — use `text-primary-text`, not `text-primary`, for primary-colored text sitting on a dark/near-black background.
 - **No ORM**: Supabase JS client (`@supabase/supabase-js` / `@supabase/ssr`) executes queries directly against Postgres via PostgREST. Schema lives in `supabase/schema.sql`, protected by Row Level Security policies (every `user_*` table is scoped to `auth.uid()`).
 
 ## DATA FLOW
@@ -134,6 +136,7 @@ There is **no `ANTHROPIC_API_KEY`** (Claude is BYOK-only, don't add a server-sid
 - `requireUser()` on every route that reads/writes user-owned data. If a route looks like it should be public, double-check that's actually intended (see the compile-route demo bypass for the one deliberate, narrowly-scoped exception) rather than assuming missing auth is fine.
 - `app/opengraph-image.tsx`'s declared `size` (1200×630) must match what it actually renders — this is what fixed a previously-broken, wrong-aspect-ratio social preview image. If you replace it with a static asset again, the asset must genuinely be 1200×630.
 - The `outputFileTracingIncludes` config in `next.config.js` for `bin/` and `typst/` — removing it silently breaks PDF compilation in production only (works fine in `next dev`).
+- `id="main-content"` on every top-level route's primary `<main>` — the root layout's "Skip to main content" link (`app/layout.tsx`) targets this id sitewide. It was missing on most routes for a long time with no visible symptom (only a broken keyboard/screen-reader skip link), so a new page's `<main>` needs this id added explicitly, nothing enforces it automatically.
 
 ## CHANGE PROCESS
 
