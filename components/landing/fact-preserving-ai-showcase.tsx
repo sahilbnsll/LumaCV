@@ -400,7 +400,7 @@ export function FactPreservingAiShowcase() {
                           {!isApplied ? (
                             <Button
                               onClick={() => setIsApplied(true)}
-                              className="h-9 px-4 text-xs font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background gap-2 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background gap-2 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-[color,background-color,border-color,box-shadow,transform]"
                             >
                               <span>Apply wording to studio</span>
                               <ArrowRight className="w-3.5 h-3.5" />

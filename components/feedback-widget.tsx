@@ -108,7 +108,7 @@ export function FeedbackWidget() {
                                 onMouseEnter={() => {
                                     if (!isMobile) setIsExpanded(true);
                                 }}
-                                className="group flex items-center justify-center sm:gap-2 rounded-full glass-sm p-2.5 sm:px-3.5 sm:py-2 shadow-lg transition-all hover:border-primary/50 hover:shadow-xl cursor-pointer border border-border/70 hover:scale-105 active:scale-95 bg-card/90 dark:bg-card/80 backdrop-blur-md"
+                                className="group flex items-center justify-center sm:gap-2 rounded-full glass-sm p-2.5 sm:px-3.5 sm:py-2 shadow-lg transition-[border-color,box-shadow,transform] hover:border-primary/50 hover:shadow-xl cursor-pointer border border-border/70 hover:scale-105 active:scale-95 bg-card/90 dark:bg-card/80 backdrop-blur-md"
                                 aria-label="Give Feedback"
                             >
                                 <Smile className="h-4 w-4 text-primary group-hover:scale-115 group-hover:rotate-12 transition-transform duration-200" />

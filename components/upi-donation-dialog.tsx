@@ -142,7 +142,7 @@ export function UpiDonationDialog({
                   type="button"
                   onClick={() => handlePresetSelect(preset)}
                   className={cn(
-                    "min-h-touch px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex items-center justify-center select-none active:scale-95",
+                    "min-h-touch px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-[color,background-color,border-color,transform] cursor-pointer flex items-center justify-center select-none active:scale-95",
                     isSelected
                       ? "bg-foreground text-background border-foreground shadow-sm ring-1 ring-foreground/20 dark:ring-white/30"
                       : "bg-muted/40 text-muted-foreground border-border/70 hover:border-foreground/30 hover:text-foreground hover:bg-muted/70"
@@ -158,7 +158,7 @@ export function UpiDonationDialog({
               type="button"
               onClick={handleClearAmount}
               className={cn(
-                "min-h-touch px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer flex items-center justify-center select-none active:scale-95",
+                "min-h-touch px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-[color,background-color,border-color,transform] cursor-pointer flex items-center justify-center select-none active:scale-95",
                 amountInput === ""
                   ? "bg-foreground text-background border-foreground shadow-sm ring-1 ring-foreground/20 dark:ring-white/30"
                   : "bg-muted/40 text-muted-foreground border-border/70 hover:border-foreground/30 hover:text-foreground hover:bg-muted/70"
@@ -274,7 +274,7 @@ export function UpiDonationDialog({
             variant="outline"
             size="sm"
             onClick={handleCopyUpi}
-            className="min-h-touch px-3.5 rounded-xl border-border/80 dark:border-white/10 hover:bg-muted text-xs font-semibold gap-1.5 shrink-0 active:scale-95 transition-all shadow-xs"
+            className="min-h-touch px-3.5 rounded-xl border-border/80 dark:border-white/10 hover:bg-muted text-xs font-semibold gap-1.5 shrink-0 active:scale-95 transition-[color,background-color,border-color,box-shadow,transform] shadow-xs"
             aria-label="Copy UPI ID to clipboard"
           >
             {copied ? (

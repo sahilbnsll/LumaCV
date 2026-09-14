@@ -67,7 +67,7 @@ export function ApplicationCard({
       onDragStart={handleDragStart}
       onClick={() => onSelect(application)}
       className={cn(
-        "group relative rounded-xl border bg-card p-3.5 shadow-sm transition-all duration-150 cursor-pointer hover:shadow-md hover:border-foreground/25 active:scale-[0.99]",
+        "group relative rounded-xl border bg-card p-3.5 shadow-sm transition-[border-color,box-shadow,transform,opacity] duration-150 cursor-pointer hover:shadow-md hover:border-foreground/25 active:scale-[0.99]",
         isDragging && "opacity-40 border-dashed border-primary",
         "border-border/70"
       )}

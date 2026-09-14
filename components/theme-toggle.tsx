@@ -45,7 +45,7 @@ export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'cards' }
                             type="button"
                             onClick={() => { setTheme(t.id); notify.themeChanged(t.id); }}
                             className={cn(
-                                "flex min-h-touch flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all cursor-pointer gap-2",
+                                "flex min-h-touch flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-[color,background-color,border-color,box-shadow] cursor-pointer gap-2",
                                 isSelected
                                     ? "border-primary bg-primary/10 text-primary font-semibold shadow-xs ring-2 ring-primary/20"
                                     : "border-border/70 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/40"

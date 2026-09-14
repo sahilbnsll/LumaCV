@@ -2342,7 +2342,7 @@ export function CompactResumeEditor({ className }: { className?: string }) {
                                 setActiveSection(nextSection.key);
                                 setExpandedCardIndex(0);
                             }}
-                            className="h-9 px-4 text-xs font-semibold rounded-xl gap-1.5 cursor-pointer shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl gap-1.5 cursor-pointer shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-[color,background-color,border-color,box-shadow,transform]"
                         >
                             <span>Next: {nextSection.label}</span>
                             <ChevronRight className="h-3.5 w-3.5" />

@@ -193,7 +193,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-9 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer mt-2"
+                    className="w-full h-9 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-[color,background-color,border-color,box-shadow] cursor-pointer mt-2"
                 >
                     {loading ? (
                         <>
@@ -211,7 +211,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                 type="button"
                 onClick={handleInstantDemo}
                 disabled={loading}
-                className="w-full py-2 px-3 rounded-md border border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 text-[11.5px] font-mono text-muted-foreground hover:text-foreground flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                className="w-full py-2 px-3 rounded-md border border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 text-[11.5px] font-mono text-muted-foreground hover:text-foreground flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
                 <Zap className="size-3 text-amber-400" />
                 <span>One-click Demo Account (Full Control)</span>

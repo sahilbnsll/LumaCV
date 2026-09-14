@@ -76,7 +76,7 @@ export function AppHeader() {
                                 href="https://github.com/sahilbnsll/LumaCV"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hidden sm:inline-flex h-9 items-center gap-2 rounded-md border border-border/80 bg-card/60 hover:bg-muted/80 text-foreground px-3 text-xs font-semibold shadow-2xs transition-all cursor-pointer group"
+                                className="hidden sm:inline-flex h-9 items-center gap-2 rounded-md border border-border/80 bg-card/60 hover:bg-muted/80 text-foreground px-3 text-xs font-semibold shadow-2xs transition-colors cursor-pointer group"
                                 title="View source code and star on GitHub"
                                 aria-label={starCount ? `GitHub Star (${starCount} stars)` : 'View source code on GitHub'}
                             >

@@ -71,7 +71,7 @@ export function BuilderWorkflowBar() {
                         <Button
                             size="sm"
                             onClick={handleStep1Next}
-                            className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-xl shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                            className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-xl shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-[color,background-color,border-color,box-shadow,transform] cursor-pointer"
                         >
                             <span>Continue to Details</span>
                             <ArrowRight className="h-3.5 w-3.5" />
@@ -92,7 +92,7 @@ export function BuilderWorkflowBar() {
                             <Button
                                 size="sm"
                                 onClick={handleStep2Next}
-                                className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-xl shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                                className="h-8 px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-xl shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-[color,background-color,border-color,box-shadow,transform] cursor-pointer"
                             >
                                 <span>Continue to AI Tailor</span>
                                 <ArrowRight className="h-3.5 w-3.5" />

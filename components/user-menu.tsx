@@ -37,7 +37,7 @@ export function UserMenu() {
         return (
             <Link
                 href="/login"
-                className="group relative flex items-center gap-1.5 rounded-full border border-border/80 hover:border-primary/50 bg-background hover:bg-muted/50 py-1.5 px-3 transition-all duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                className="group relative flex items-center gap-1.5 rounded-full border border-border/80 hover:border-primary/50 bg-background hover:bg-muted/50 py-1.5 px-3 transition-[background-color,border-color,box-shadow] duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
                 title="Sign in to your account"
                 aria-label="Sign in"
             >
@@ -79,7 +79,7 @@ export function UserMenu() {
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className="group relative flex items-center gap-2 rounded-full border border-border/80 hover:border-primary/50 bg-background hover:bg-muted/50 p-1 pr-2.5 transition-all duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer select-none"
+                    className="group relative flex items-center gap-2 rounded-full border border-border/80 hover:border-primary/50 bg-background hover:bg-muted/50 p-1 pr-2.5 transition-[background-color,border-color,box-shadow] duration-200 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer select-none"
                     aria-label="User Account Menu"
                 >
                     {avatarUrl ? (

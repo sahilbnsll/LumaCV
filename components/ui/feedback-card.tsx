@@ -97,7 +97,7 @@ export const FeedbackCard = ({
                 aria-label={e.label}
                 title={e.label}
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-115 active:scale-95 cursor-pointer',
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-[color,background-color,transform] duration-200 hover:scale-115 active:scale-95 cursor-pointer',
                   isSelected
                     ? cn(e.color, 'bg-muted/80 dark:bg-white/[0.08] shadow-2xs scale-110 font-bold')
                     : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/40'
@@ -154,7 +154,7 @@ export const FeedbackCard = ({
                     : (placeholder || "Tell us what went wrong so we can fix it ASAP...")
                 }
                 rows={4}
-                className="w-full resize-none rounded-xl border border-border/80 bg-muted/25 dark:bg-white/[0.03] p-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary/25 transition-all leading-relaxed"
+                className="w-full resize-none rounded-xl border border-border/80 bg-muted/25 dark:bg-white/[0.03] p-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary/25 transition-[border-color,box-shadow] leading-relaxed"
               />
 
               <div className="flex items-center justify-between pt-1">
@@ -167,7 +167,7 @@ export const FeedbackCard = ({
                   disabled={isLoading}
                   onClick={() => submitFeedback(happiness!, textRef.current?.value || '')}
                   className={cn(
-                    'inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] cursor-pointer gap-1.5',
+                    'inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-[background-color,opacity,transform] hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] cursor-pointer gap-1.5',
                     {
                       'opacity-70 cursor-not-allowed': isLoading,
                     }
