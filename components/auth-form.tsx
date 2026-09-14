@@ -9,13 +9,18 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from './auth-provider';
 import { notify } from '@/lib/notify';
 import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
-import { getAppUrl } from '@/lib/app-url';
+import { getAppUrl, sanitizeRedirectPath } from '@/lib/app-url';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     const { supabase } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams?.get('redirect') || '/dashboard';
+    // Sanitized to a same-origin relative path: this value flows into both
+    // router.push() and the emailRedirectTo sent to Supabase below, an
+    // unvalidated absolute URL here would let an attacker-crafted signup
+    // link's *legitimate* confirmation email redirect the victim to a
+    // phishing page after a real, trusted click.
+    const redirectUrl = sanitizeRedirectPath(searchParams?.get('redirect'));
 
     const [identifier, setIdentifier] = useState('');
     const [fullName, setFullName] = useState('');

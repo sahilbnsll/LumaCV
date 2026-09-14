@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getAppUrl } from '@/lib/app-url';
+import { getAppUrl, sanitizeRedirectPath } from '@/lib/app-url';
 
 export async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
@@ -8,8 +8,7 @@ export async function GET(request: NextRequest) {
     const code = requestUrl.searchParams.get('code');
     const token_hash = requestUrl.searchParams.get('token_hash');
     const type = requestUrl.searchParams.get('type');
-    const nextParam = requestUrl.searchParams.get('next') ?? '/dashboard';
-    const safeNext = nextParam.startsWith('/') ? nextParam : '/dashboard';
+    const safeNext = sanitizeRedirectPath(requestUrl.searchParams.get('next'));
     const emailTypes = new Set(['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email']);
 
     const supabase = createSupabaseServerClient();
