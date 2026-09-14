@@ -12,7 +12,7 @@ LumaCV is built as a high-throughput, deterministic resume engineering studio ce
 2. **Dual-Mode AI Engine**: Multi-provider BYOK architecture supporting both standalone resume optimization (Mode 1) and targeted, adjacent-technology job description tailoring (Mode 2).
 3. **Radical Explainability & Auditability**: Decomposed, modular audit UI (`components/builder/`) showing before $\rightarrow$ after diffs for every altered bullet, skill provenance tracking (`direct`, `transferable`, `inferred`), line-by-line JD evidence mapping, and score gap analysis.
 4. **Normalized Dynamic ATS Scoring**: Edge-rendered deterministic scoring engine evaluating hard skills, responsibility alignment, keyword density, and formatting compliance without penalizing missing optional criteria.
-5. **Native Typst Typesetting**: 100% native vector document generation using the compiled Typst CLI (< 50ms compilation time), replacing fragile HTML-to-PDF canvas rasterizers and heavyweight LaTeX toolchains.
+5. **Native Typst Typesetting**: 100% native vector document generation using the compiled Typst CLI (typesetting itself completes in 20-45ms; end-to-end request latency is a few hundred ms, dominated by spawning the compiler process, not typesetting), replacing fragile HTML-to-PDF canvas rasterizers and heavyweight LaTeX toolchains.
 6. **Hardened Production Security**: Strict Content Security Policy (CSP), anti-clickjacking frame restrictions, sanitized input validation via Zod, ephemeral client-held API keys, and verified transactional email delivery via Resend.
 
 ---
@@ -56,7 +56,7 @@ LumaCV is built as a high-throughput, deterministic resume engineering studio ce
         ▼ POST /api/v1/resume/compile
 [Typst Native Engine (bin/typst)]
         │
-        ▼ (< 50ms)
+        ▼ (20-45ms typeset, a few hundred ms end-to-end)
 [High-Resolution Vector PDF Preview & Download]
 ```
 
@@ -72,7 +72,7 @@ LumaCV is built as a high-throughput, deterministic resume engineering studio ce
 
 ### 3.2 AI Client & BYOK Pipeline (`lib/llm-client.ts`)
 Every AI call in the app goes through `generateStream()`, which fails over
-across whichever of the following are configured, in this order — user BYOK
+across whichever of the following are configured, in this order, user BYOK
 keys first (if supplied via request headers), then system keys:
 
 | Provider | Models (heavy tasks) | Notes |
@@ -86,7 +86,7 @@ keys first (if supplied via request headers), then system keys:
 | **Anthropic Claude** (BYOK only) | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022` | |
 
 By default there is no cap on how many models/providers are tried (`maxAttempts`
-defaults to `Infinity`) — on a genuine failure it fails over through everything
+defaults to `Infinity`), on a genuine failure it fails over through everything
 configured rather than giving up early, since resilience is the whole reason to
 configure several providers. The SDK's own built-in per-call retry is disabled
 (`maxRetries: 0`) so a rate-limited or quota-exhausted model fails over
@@ -100,7 +100,7 @@ not accepted as a success.
 
 ### 3.3 Job Description Analysis (`lib/jd-analysis.ts`)
 - Ingests raw job posting text and extracts required/preferred skills, core responsibilities, industry buzzwords, and seniority level as structured JSON.
-- Used standalone by `POST /api/v1/resume/analyze-jd` (the ATS Checker), and inlined into the same completion as `POST /api/v1/resume/tailor` when the caller sends raw `jd` text instead of pre-extracted keywords — so Step 3 tailoring needs only one AI call total, not a separate analyze-then-tailor round trip.
+- Used standalone by `POST /api/v1/resume/analyze-jd` (the ATS Checker), and inlined into the same completion as `POST /api/v1/resume/tailor` when the caller sends raw `jd` text instead of pre-extracted keywords, so Step 3 tailoring needs only one AI call total, not a separate analyze-then-tailor round trip.
 
 ### 3.4 Modular Review Architecture (`components/builder/`)
 To ensure optimal frontend performance, eliminate re-render bottlenecks, and maintain code readability, the Step 4 preview interface is decomposed into isolated subcomponents:
@@ -111,8 +111,8 @@ To ensure optimal frontend performance, eliminate re-render bottlenecks, and mai
 
 ### 3.5 Typst Typesetting Engine (`lib/typst-generator.ts` & `typst/`)
 LumaCV uses **Typst**, a fast, memory-safe typesetting system written in Rust:
-- **Sub-50ms Compilation**: Compiles complex, multi-page resumes in 20–45ms.
-- **48 Curated Layout Combinations**: 6 base archetypes (`modern`, `classic`, `engineering`, `compact`, `two_column`, `ats_safe`) mapped across 8 color themes (`none`, `navy`, `cobalt`, `emerald`, `burgundy`, `teal`, `slate`, `black`).
+- **Fast Compilation**: Typst itself typesets complex, multi-page resumes in 20-45ms; total request latency (a few hundred ms) is dominated by spawning the compiler process, not the typesetting step.
+- **52 Templates**: defined in `TemplateTypeSchema` (`lib/resume-schema.ts`), grouped into families (ATS-Optimized, Modern & Tech, Executive & Advisory, Editorial & Creative, Modern Technical & Minimalist, Academic & Research), plus 4 legacy aliases (`ats`, `minimal`, `creative`, `tech`) kept for backward compatibility that resolve to real templates rather than adding new designs.
 - **Deterministic ATS Formatting**: Generates 100% vector text without font rasterization or embedded image artifacts, ensuring perfect optical character and text extraction for ATS parsers.
 
 ### 3.6 Transactional Feedback Service (`lib/email-service.ts`)
@@ -134,11 +134,18 @@ LumaCV enforces modern defense-in-depth HTTP security headers:
 
 | Method | Endpoint | Runtime | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/resume/parse` | Node/Edge | Parses raw PDF text into structured `ResumeData` |
-| `POST` | `/api/v1/resume/analyze-jd` | Node/Edge | Primary JD analysis endpoint delegating to `lib/jd-analysis.ts` |
-| `POST` | `/api/v1/jd/analyze` | Node/Edge | Backward-compatible JD analysis endpoint |
-| `POST` | `/api/v1/resume/tailor` | Node/Edge | Dual-mode bullet tailoring & transparent audit trail generator |
-| `POST` | `/api/v1/resume/compile` | Node | Compiles `ResumeData` or raw Typst into PDF binary (< 50ms) |
-| `POST` | `/api/v1/resume/score` | Edge | Deterministic 4-pillar normalized ATS scoring engine |
-| `POST` | `/api/v1/feedback` | Node/Edge | User bug reports & feedback dispatched via Resend |
-| `GET` | `/api/v1/stats` | Edge | Aggregated compilation metrics and engine health |
+| `POST` | `/api/v1/resume/parse` | Node | Parses raw PDF/DOCX-extracted text into structured `ResumeData` (guest-allowed, identity-scoped rate limit) |
+| `POST` | `/api/v1/resume/analyze-jd` | Node | JD analysis, extracts required/preferred skills, responsibilities, buzzwords |
+| `POST` | `/api/v1/resume/tailor` | Node | Dual-mode bullet tailoring & transparent audit trail generator (auth required) |
+| `POST` | `/api/v1/resume/compile` | Node | Compiles `ResumeData` or raw Typst into a PDF binary (demo resume bypasses auth; everything else requires it) |
+| `POST` | `/api/v1/resume/export-typ` | Node | Exports the compiled resume as raw Typst source (auth required) |
+| `POST` | `/api/v1/resume/score` | Edge | Deterministic 4-pillar normalized ATS scoring engine (public, no signup required) |
+| `GET/POST` | `/api/v1/resumes` | Node | List/save the signed-in user's saved resumes (Supabase-backed) |
+| `GET/PATCH/DELETE` | `/api/v1/resumes/[id]` | Node | Read, update, or delete a single owned resume |
+| `GET/POST` | `/api/v1/applications` | Node | List/save job application tracker entries (auth required) |
+| `PATCH/DELETE` | `/api/v1/applications/[id]` | Node | Update or delete a single owned application |
+| `POST` | `/api/v1/applications/import-ai-map` | Node | AI-assisted spreadsheet column mapping for bulk application import (falls back to heuristic matching) |
+| `POST` | `/api/v1/auth/resolve-username` | Node | Resolves a username to its account email for username-based sign-in (rate-limited) |
+| `POST` | `/api/v1/feedback` | Node | User bug reports & feedback dispatched via Resend (IP rate-limited) |
+| `GET` | `/api/v1/stats` | Edge | Aggregated, public compilation metrics and engine health |
+| `POST` | `/api/v1/internal/infra-check` | Node | Internal Supabase Storage connectivity probe, gated behind a shared-secret header (`COMPILE_WORKER_SECRET`), not for client use |

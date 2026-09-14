@@ -22,14 +22,21 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
 
 # AI Provider Fallbacks (Optional for public instances; users can provide BYOK in UI)
+# Anthropic Claude has no server-side fallback: it's BYOK-only, so there is no
+# ANTHROPIC_API_KEY here.
 GEMINI_API_KEY=AIzaSy...
 OPENAI_API_KEY=sk-proj-...
-ANTHROPIC_API_KEY=sk-ant-...
 GROQ_API_KEY=gsk_...
 
-# Typst Engine Path (Optional: defaults to bundled bin/ or system PATH)
-TYPST_BIN_PATH=/usr/local/bin/typst
+# Rate limiting (Optional: falls back to allowing every request if unset,
+# see lib/rate-limit.ts, strongly recommended for any public deployment)
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=...
 ```
+
+The Typst compiler binary is resolved automatically from the bundled `bin/`
+directory (installed by the `postinstall` script, `scripts/install-typst.mjs`)
+or the system `PATH`; there is no environment variable to override its path.
 
 ---
 
@@ -51,7 +58,7 @@ LumaCV is optimized for Vercel deployment with Next.js 14 App Router:
 Add all variables from Section 1 in the Vercel Project Settings $\rightarrow$ Environment Variables.
 
 ### Step 4: Edge & Serverless Considerations
-- API routes executing Typst compilations (`/api/v1/resume/compile`) run in Node.js Serverless Functions with bundled WASM or Linux binaries.
+- API routes executing Typst compilations (`/api/v1/resume/compile`) run in Node.js Serverless Functions, spawning the bundled native Typst CLI binary as a child process (not WASM).
 - The `middleware.ts` runs on the Edge Runtime with strict security headers.
 
 ---

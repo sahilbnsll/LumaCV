@@ -6,7 +6,7 @@ This document details the mathematical formula, normalization rules, diagnostic 
 
 ## 1. The 4 Evaluation Pillars
 
-LumaCV evaluates resumes against job descriptions across four distinct technical pillars:
+LumaCV evaluates resumes against job descriptions across four categories extracted from the JD by `lib/jd-analysis.ts`, scored in `app/api/v1/resume/score/route.ts`:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -14,34 +14,28 @@ LumaCV evaluates resumes against job descriptions across four distinct technical
 ├────────────────────────────────┬────────────────────────────────────────────┤
 │ Pillar                         │ Baseline Weight                            │
 ├────────────────────────────────┼────────────────────────────────────────────┤
-│ 1. Hard Skills Alignment       │ 40% (0.40)                                 │
-│ 2. Core Responsibility Match   │ 30% (0.30)                                 │
-│ 3. Keyword Density & Context   │ 15% (0.15)                                 │
-│ 4. Formatting & ATS Compliance │ 15% (0.15)                                 │
+│ 1. Required Skills             │ 40% (0.40)                                 │
+│ 2. Core Responsibilities       │ 25% (0.25)                                 │
+│ 3. Preferred Skills            │ 20% (0.20)                                 │
+│ 4. Buzzwords / Keywords        │ 15% (0.15)                                 │
 └────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
-### Pillar 1: Hard Skills Alignment (40%)
-Evaluates the presence and context of technical competencies required by the job posting.
-- **Required Skills**: Given double weight ($w_r = 2.0$) compared to preferred/bonus skills ($w_p = 1.0$).
-- **Contextual Verification**: A skill is only counted as fully matched if it appears in context within an experience bullet, project, or dedicated technical skills category.
+There is no separate "formatting compliance" pillar; formatting concerns (single-page balance, section structure) are handled by the Typst templates themselves, not scored as part of the ATS percentage.
 
-### Pillar 2: Core Responsibility Alignment (30%)
-Evaluates whether the candidate's historical work responsibilities mirror the day-to-day duties expected in the target role.
-- Matches key action stems (e.g. *"architecting"*, *"scaling"*, *"mentoring"*, *"deploying"*) across role descriptions.
-- Rewards domain context matching (e.g. distributed systems, financial technology, compliance pipelines).
+### Pillar 1: Required Skills (40%)
+Evaluates presence of the JD's `required_skills` list across the resume's summary, skills, experience, and project text.
 
-### Pillar 3: Keyword Frequency & Density (15%)
-Measures the natural distribution of industry terminology throughout the resume:
-- **Optimal Target Density**: 7.0% to 11.5% technical keyword ratio.
-- **Under-Indexing Penalty**: Below 4.0% density triggers an under-indexing deduction.
-- **Keyword Stuffing Penalty**: Exceeding 14.0% keyword density triggers an anti-spam penalty, mirroring enterprise ATS filtering heuristics.
+### Pillar 2: Core Responsibilities (25%)
+Evaluates presence of the JD's `responsibilities` list, the day-to-day duties expected in the target role, across the same resume text.
 
-### Pillar 4: Formatting & Structural Compliance (15%)
-Guarantees parser indexability:
-- Section header standardizations (`Experience`, `Education`, `Skills`, `Projects`).
-- Contact information completeness (Name, Email, Phone, Location, Portfolio / GitHub / LinkedIn).
-- Typographic parsing safety: single-page balance, clean margins, and standard UTF-8 character encoding.
+### Pillar 3: Preferred Skills (20%)
+Evaluates presence of the JD's `preferred_skills` (bonus/nice-to-have) list. Weighted lower than required skills so missing "nice-to-have" tools don't disproportionately cap an otherwise well-matched resume.
+
+### Pillar 4: Buzzwords / Keywords (15%)
+Evaluates presence of the JD's `buzzwords` list, general industry/company terminology extracted from the posting.
+
+Each pillar's raw score is a simple presence-match ratio against its keyword list (see `computeCategoryDetails` in the route above), not a density or frequency curve.
 
 ---
 

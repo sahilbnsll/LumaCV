@@ -91,7 +91,7 @@ The migration script automatically configures strict RLS policies:
 
 ---
 
-## 4. Setup Storage Bucket (Optional)
+## 5. Setup Storage Bucket (Optional)
 
 If you plan to store generated PDFs in Supabase Storage:
 1. In the Supabase Dashboard, go to **Storage** $\rightarrow$ **Buckets**.
@@ -102,7 +102,7 @@ If you plan to store generated PDFs in Supabase Storage:
 
 ---
 
-## 5. Configure Local Environment Variables
+## 6. Configure Local Environment Variables
 
 In your Supabase project dashboard, navigate to **Project Settings** $\rightarrow$ **API**:
 - Copy **Project URL**

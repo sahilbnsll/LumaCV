@@ -6,21 +6,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [Unreleased]
+
+### Security
+- **Cross-user data overwrite (IDOR)**: `POST /api/v1/resumes` and `POST /api/v1/applications` upserted a client-supplied `id` with no ownership check, so a signed-in user could pass another user's row id and overwrite their resume/application, contingent entirely on Supabase RLS being configured to catch it. Both routes now verify the existing row's `user_id` before upserting and return `404` on mismatch.
+- **Unlimited account enumeration**: `POST /api/v1/auth/resolve-username` returns a real account email for any valid username and had no rate limiting. Added the same per-IP limiter the AI routes use.
+- **AI cost-abuse gap**: `POST /api/v1/applications/import-ai-map` was the only AI-calling route with no rate limiting. Added it, matching the tailor/parse/analyze-jd routes' BYOK-aware policy.
+
+### Fixed
+- **Social share preview was broken**: the Open Graph/Twitter image was a 1191x1684 portrait template render mislabeled as 1200x630 in metadata, rendering cropped/broken previews on Slack, X, LinkedIn, and iMessage. Replaced with `app/opengraph-image.tsx`, a generated 1200x630 branded card that always matches its declared dimensions.
+- **Homepage had no page-specific SEO metadata**: `app/page.tsx` was a `"use client"` component, which structurally cannot export `metadata`, so Google indexed the highest-value URL on the site under the generic root title. Split into a server `app/page.tsx` (metadata) + client `app/home-content.tsx` (the actual landing page), the same pattern every other page already used.
+- **Two `<h1>` elements on the homepage**: both `LumaStreamHero` and `ResumeStackHero` rendered their own `<h1>`. Demoted the second to `<h2>`.
+- **No root-layout error boundary**: `app/error.tsx` only catches errors thrown beneath the root layout; if `app/layout.tsx` itself threw, users got Next's unstyled default error screen. Added `app/global-error.tsx`.
+- Removed the unused `swiper` dependency (zero imports anywhere in the codebase).
+- Removed unused imports across ~30 files (icons, unused Radix subcomponents, etc.), confirmed via a full `tsc --noEmit --noUnusedLocals` pass.
+- Removed 8 confirmed zero-import dead files: `components/buy-me-coffee.tsx`, `components/ui/buy-me-coffee.tsx` (these two additionally disagreed on the donation URL, a real trap if either got imported later), `components/resume-form.tsx`, `components/stats-social-proof.tsx`, `components/why-lumacv.tsx`, `components/kokonutui/profile-dropdown.tsx`, `components/ui/cards-stack.tsx`, `components/ui/marquee.tsx`, `components/ui/morphing-card-stack-demo.tsx`.
+
+### Docs
+- Corrected a cluster of stale claims that had drifted from the actual implementation: `docs/ats-scoring.md`'s scoring-pillar table described a "formatting compliance" pillar that was never implemented (the real weighting is `required_skills` 40% / `responsibilities` 25% / `preferred_skills` 20% / `buzzwords` 15%, per `app/api/v1/resume/score/route.ts`); `CONTRIBUTING.md`/`docs/deployment.md` described the Typst compiler as WASM (it shells out to a native CLI binary via `child_process`); several docs said "48 templates" against the real count of 52; `docs/architecture.md` still listed the removed `/api/v1/jd/analyze` route and repeated the corrected "sub-50ms" claim in three more places.
+- Added the 8 real API routes missing from `docs/api-reference.md` (`resumes`, `resumes/[id]`, `applications`, `applications/[id]`, `applications/import-ai-map`, `auth/resolve-username`, `resume/export-typ`, `internal/infra-check`) — a third of the actual API surface had no documentation.
+- Removed `ANTHROPIC_API_KEY` and `TYPST_BIN_PATH` from documented environment variables (README, CONTRIBUTING, deployment.md) — neither is read anywhere in the code; Claude is BYOK-only by design and the Typst binary path isn't configurable.
+- Fixed a fabricated-looking changelog reference to a nonexistent `QSTASH_URL` variable (corrected to the real `UPSTASH_REDIS_REST_URL`, which genuinely is per-instance).
+- Removed `walkthrough.md`, a stale single-session dev scratch note fully superseded by this changelog and `docs/ats-scoring.md`.
+- Added `AGENTS.md`, a canonical technical-context document for AI coding agents (architecture, data flow, auth/security model, environment variables, and explicit "do not break" invariants).
+
+### Added
+- `app/manifest.ts` — a web app manifest was missing despite `viewport.themeColor` already being set.
+
+---
+
 ## [2.9.0] - 2026-09-13
 
 ### Fixed
-- **Production Typst font resolution**: `theme.typ`'s font-sans/font-serif stacks list "Inter" and "JetBrains Mono" as the primary choice, but neither ships in Typst's own embedded fonts (only DejaVu Sans Mono, Libertinus Serif, New Computer Modern), and production (Vercel/Linux) passed no `--font-path` at all. Every sans-serif template — the majority of the 52 — was silently falling through the entire font chain in production and rendering in the wrong fallback font. Bundled Inter + JetBrains Mono as single variable-font files (`typst/fonts/`, SIL OFL licensed) and wired `--font-path` on both platforms; verified a real compile now resolves both fonts with zero warnings.
+- **Production Typst font resolution**: `theme.typ`'s font-sans/font-serif stacks list "Inter" and "JetBrains Mono" as the primary choice, but neither ships in Typst's own embedded fonts (only DejaVu Sans Mono, Libertinus Serif, New Computer Modern), and production (Vercel/Linux) passed no `--font-path` at all. Every sans-serif template (the majority of the 52) was silently falling through the entire font chain in production and rendering in the wrong fallback font. Bundled Inter + JetBrains Mono as single variable-font files (`typst/fonts/`, SIL OFL licensed) and wired `--font-path` on both platforms; verified a real compile now resolves both fonts with zero warnings.
 - **Liquid-glass dialogs nearly opaque in light mode**: the modal overlay was a flat `bg-black/50`, which crushed the page behind a liquid-glass panel into a uniform dim with nothing left for the glass blur to actually reveal. Lightened and blurred the overlay (`bg-black/15 backdrop-blur-[2px]` in light mode) so the real page shows through, softened, behind the panel.
-- **Header effectively invisible once scrolled**: the shared `AppHeader` (every page except the editor) used a flat `bg-background/95` with a very faint border, which blended almost seamlessly into a dark page once scrolled past the fold. Switched to the project's own `.glass-nav` utility — the same treatment the editor's headers already used — so every page now shares one consistent, clearly-visible header.
+- **Header effectively invisible once scrolled**: the shared `AppHeader` (every page except the editor) used a flat `bg-background/95` with a very faint border, which blended almost seamlessly into a dark page once scrolled past the fold. Switched to the project's own `.glass-nav` utility (the same treatment the editor's headers already used) so every page now shares one consistent, clearly-visible header.
 - **Editor header inconsistency**: the editor's two custom headers used a smaller, lighter-weight logo + wordmark (`size=22`, `font-semibold`) than every other page's shared header (`size=26`, `font-bold`, tighter tracking); unified.
-- **Animation jank from layout-triggering CSS**: three progress bars animated `width` (forces reflow every frame) instead of `transform: scaleX` (GPU-composited) — the AI-tailoring pipeline progress bar, the wizard stepper's connector fill, and the ATS score breakdown bars.
-- **Metaballs loader console error**: `<circle> attribute cx: Expected length, "undefined"` — a redundant static `cx` prop raced with the same circle's own Framer Motion animation on mount.
-- **Feedback endpoint had no rate limiting** despite emailing the admin and writing to Supabase/disk on every call — an open spam/cost vector. Added the same IP-based limiter used elsewhere.
+- **Animation jank from layout-triggering CSS**: three progress bars animated `width` (forces reflow every frame) instead of `transform: scaleX` (GPU-composited): the AI-tailoring pipeline progress bar, the wizard stepper's connector fill, and the ATS score breakdown bars.
+- **Metaballs loader console error**: `<circle> attribute cx: Expected length, "undefined"`. A redundant static `cx` prop raced with the same circle's own Framer Motion animation on mount.
+- **Feedback endpoint had no rate limiting** despite emailing the admin and writing to Supabase/disk on every call: an open spam/cost vector. Added the same IP-based limiter used elsewhere.
 
 ### Changed
-- **Merged `/billing` and `/support`** into one canonical `/billing` page — both pages duplicated the same three support-method cards and UPI dialog almost verbatim. `/support` now redirects. Rebuilt with liquid-glass throughout, verified in both themes and at mobile/tablet/desktop widths.
+- **Merged `/billing` and `/support`** into one canonical `/billing` page. Both pages duplicated the same three support-method cards and UPI dialog almost verbatim. `/support` now redirects. Rebuilt with liquid-glass throughout, verified in both themes and at mobile/tablet/desktop widths.
 - **Loading animations**: replaced generic `Loader2` spinners on every primary/full-page loading state with the new `Loader` component's distinctive variants, and removed the literal "document scanner" laser-sweep-and-crosshair visual from the Typst compile HUD in favor of the same component.
-- **Footer wordmark**: added a cursor-following gradient reveal masked to the letter glyphs (ported from the previously-unused `InteractiveWatermark` component's technique — `mask-image` circle reveal, not a rectangle behind the text), and switched the hardcoded version string to a live GitHub releases API fetch.
+- **Footer wordmark**: added a cursor-following gradient reveal masked to the letter glyphs (ported from the previously-unused `InteractiveWatermark` component's technique: `mask-image` circle reveal, not a rectangle behind the text), and switched the hardcoded version string to a live GitHub releases API fetch.
 - **Removed several overstated trust badges** ("100% Client-Side Privacy," "No ads, paywalls, or tracking," "Drafts persist... without an account") that didn't hold up against the app's actual auth-gated behavior for compiling/exporting/AI features; swapped for accurate copy where a claim needed replacing rather than just deleting it.
 - Added a portfolio link to the footer's social row, and an explicit Dashboard link to the mobile nav's quick-link row (previously reachable only via "My Resumes" or the desktop header).
 - AI Generation Mode selector (Step 2) redesigned with real icon badges and a proper radio-style selection indicator instead of a checkmark that only appeared once selected.
@@ -29,7 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Rate-limited the public `/api/v1/feedback` endpoint (IP-based, same limiter used for AI provider calls).
 
 ### Docs
-- Corrected the "sub-50ms Typst compilation" claim in the README and API reference — that figure is Typst's internal typesetting time; real end-to-end request latency is dominated by process-spawn overhead (measured ~280-300ms), not typesetting. `/api/v1/resume/score` genuinely is sub-50ms Edge Runtime (pure deterministic string matching, no process spawn) — that claim was accurate and left as-is.
+- Corrected the "sub-50ms Typst compilation" claim in the README and API reference. That figure is Typst's internal typesetting time; real end-to-end request latency is dominated by process-spawn overhead (measured ~280-300ms), not typesetting. `/api/v1/resume/score` genuinely is sub-50ms Edge Runtime (pure deterministic string matching, no process spawn); that claim was accurate and left as-is.
 - Fixed a stale `localhost:3000` template-gallery link and an incorrect rate-limit figure (doc said 30 req/min, code is 90) in the API reference.
 - Moved `future_plans.md` into `docs/roadmap.md` for a cleaner repo root.
 
@@ -38,7 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [2.8.0] - 2026-09-13
 
 ### Fixed
-- **Homepage scroll smoothness**: the hero's scroll-linked zoom used spring physics (`useSpring`) to smooth the scrubbing, which by construction settles toward a moving target — it could not be simultaneously lag-free and jitter-free no matter how it was tuned. Replaced with a damped `requestAnimationFrame` lerp (the Lenis/Apple "smooth the read, never hijack scroll" technique): a shadow progress value is nudged 12% of the way toward the real scroll position every frame, continuously trailing it rather than settling. Native scroll, momentum, and `prefers-reduced-motion` behavior are untouched.
+- **Homepage scroll smoothness**: the hero's scroll-linked zoom used spring physics (`useSpring`) to smooth the scrubbing, which by construction settles toward a moving target; it could not be simultaneously lag-free and jitter-free no matter how it was tuned. Replaced with a damped `requestAnimationFrame` lerp (the Lenis/Apple "smooth the read, never hijack scroll" technique): a shadow progress value is nudged 12% of the way toward the real scroll position every frame, continuously trailing it rather than settling. Native scroll, momentum, and `prefers-reduced-motion` behavior are untouched.
 - **Sticky header jank**: the header's `backdrop-filter` blur sat directly above the hero's continuously animating (not scroll-linked) resume-card corridor, forcing a full re-blur of that actively-changing content every frame regardless of whether the page was actually scrolling. Removed the blur entirely in favor of a near-opaque background.
 - **Navigation drawer scroll lag**: the full-screen nav's glass panel and scrim were re-blurring the still-animating hero corridor behind them the entire time the drawer was open, competing with the drawer's own list scroll for frame budget. The corridor's CSS animation now pauses (`animation-play-state: paused`) the instant the drawer opens via a `nav-open` body class, and resumes on close. Also dropped the panel's blur from a heavy `2xl` radius to `md`, and removed a permanently-held `will-change: transform, opacity` on every list item that kept 8–10 GPU layers alive indefinitely after their entrance animation finished.
 - **MIT License link**: footer linked to `blob/main/LICENSE` on a repo whose default branch is `master`, producing a 404. Corrected to `blob/master/LICENSE`.
@@ -48,25 +77,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added the site footer to the resume editor workspace page (`/editor`), which previously had none.
 
 ### Docs
-- `.env.example`: clarified that `QSTASH_URL` is provisioned per-region by Upstash (not a fixed global endpoint) and must be copied from each account's own QStash console; documented the previously-undocumented `FEEDBACK_NOTIFICATION_EMAIL` / `FEEDBACK_RECIPIENT_EMAIL` aliases the feedback-email code already read.
+- `.env.example`: clarified that `UPSTASH_REDIS_REST_URL` is unique per Upstash database instance/region (not a fixed global endpoint) and must be copied from each account's own Upstash console; documented the previously-undocumented `FEEDBACK_NOTIFICATION_EMAIL` / `FEEDBACK_RECIPIENT_EMAIL` aliases the feedback-email code already read.
 
 ---
 
 ## [2.7.0] - 2026-09-13
 
 ### Fixed
-- **Username Sign-In**: Fixed a data-sync bug where changing your username from Settings updated Supabase auth metadata but never reached the `public.profiles` table username login actually queries against — so a saved username could never resolve at sign-in. Settings now writes both; the DB trigger that seeds `public.profiles` on sign-up now also fires on profile updates.
+- **Username Sign-In**: Fixed a data-sync bug where changing your username from Settings updated Supabase auth metadata but never reached the `public.profiles` table username login actually queries against, so a saved username could never resolve at sign-in. Settings now writes both; the DB trigger that seeds `public.profiles` on sign-up now also fires on profile updates.
 - **REST API Reference accuracy**: Corrected documented endpoints, request bodies, and response shapes in `/docs` to match the real route handlers (`/api/v1/resume/compile`, not a `/typst/compile` that never existed; real field names for parse/tailor/score).
 - **Per-page metadata**: `/dashboard`, `/applications`, `/billing`, and `/profile` previously fell back to the generic root `<title>LumaCV</title>` and had no page-specific Open Graph data. Each now has its own browser-tab title, description, and OG/Twitter metadata, and is marked `noindex` as private workspace pages.
-- **Apple touch icon**: was pointed at an SVG, which iOS home-screen bookmarking doesn't render — now points at the PNG mark.
+- **Apple touch icon**: was pointed at an SVG, which iOS home-screen bookmarking doesn't render; now points at the PNG mark.
 
 ### Changed
-- **Docs page rebuilt**: replaced the 3-column sidebar/tabs/TOC layout with a single continuous reading column and a right-hand rail of chapter cards that stack and animate in sync with real scroll position (not estimated scroll distance) — the active card always matches the chapter actually on screen. Removed every decorative eyebrow-pill/badge across the site (homepage, docs, billing, support, applications, templates, contact, terms, privacy) per an ongoing "no cheap AI-looking chrome" pass.
+- **Docs page rebuilt**: replaced the 3-column sidebar/tabs/TOC layout with a single continuous reading column and a right-hand rail of chapter cards that stack and animate in sync with real scroll position (not estimated scroll distance); the active card always matches the chapter actually on screen. Removed every decorative eyebrow-pill/badge across the site (homepage, docs, billing, support, applications, templates, contact, terms, privacy) per an ongoing "no cheap AI-looking chrome" pass.
 - **Kinetic navigation drawer**: rebuilt as a plain-CSS sticky/GPU-accelerated slide instead of a framer-motion `layout` animation, which doesn't support `position: sticky` reliably; fixed a header/backdrop desync bug in the process.
 - **Magnetic dock**: replaced per-icon rainbow gradients with flat, single-tone tiles that hold up in both light and dark mode.
 
 ### Removed
-- All residual internal references to the "reactive-resume" reference clone used during earlier development (`tsconfig.json`, `.eslintrc.json`, `.gitignore`, code comments) — nothing shipped ever depended on it, this was just dev-tooling residue.
+- All residual internal references to the "reactive-resume" reference clone used during earlier development (`tsconfig.json`, `.eslintrc.json`, `.gitignore`, code comments). Nothing shipped ever depended on it; this was just dev-tooling residue.
 
 ---
 

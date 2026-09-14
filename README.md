@@ -2,38 +2,40 @@
 
 Open-source resume engineering platform built on Typst, Next.js 14, and transparent, privacy-first AI tailoring.
 
-[Quickstart](#quickstart) · [Features](#features) · [Tailoring Modes](#tailoring-modes) · [Audit Trail](#audit-trail) · [Architecture](#architecture) · [Templates](#templates) · [BYOK & Privacy](#byok-and-privacy) · [Docs](docs/architecture.md) · [License](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blueviolet.svg)](CONTRIBUTING.md) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[Quickstart](#quickstart) · [Features](#features) · [Tailoring Modes](#tailoring-modes) · [Audit Trail](#audit-trail) · [Architecture](#architecture) · [Templates](#templates) · [BYOK & Privacy](#byok-and-privacy) · [Docs](docs/architecture.md) · [Contributing](CONTRIBUTING.md) · [License](LICENSE)
 
 ---
 
 ## Overview
 
-LumaCV is an open-source, deterministic resume creation and optimization platform for engineers, researchers, and technical leaders. It replaces HTML-to-PDF canvas wrappers and LaTeX toolchains with the Typst typesetting engine — the layout itself typesets in milliseconds; end-to-end request latency (a few hundred ms) is dominated by spawning the compiler process, not typesetting.
+LumaCV is an open-source, deterministic resume creation and optimization platform for engineers, researchers, and technical leaders. It replaces HTML-to-PDF canvas wrappers and LaTeX toolchains with the Typst typesetting engine. The layout itself typesets in milliseconds; end-to-end request latency (a few hundred ms) is dominated by spawning the compiler process, not typesetting.
 
-The AI pipeline operates in two modes — general resume optimization and job-description-targeted alignment — and is transparent by design: every change comes with a diff, a rationale, and a competency gap analysis, not a black-box rewrite.
+The AI pipeline operates in two modes (general resume optimization and job-description-targeted alignment) and is transparent by design: every change comes with a diff, a rationale, and a competency gap analysis, not a black-box rewrite.
 
 ---
 
 ## Features
 
 - **Native Typst compilation**: millisecond-scale vector typesetting with precise spacing and hierarchy.
-- **Dual AI tailoring modes**: general optimization (Mode 1) and targeted JD alignment with adjacent-technology bridging (Mode 2) — see [Tailoring Modes](#tailoring-modes).
-- **Transparent audit trail**: before/after bullet diffs, a skills rationale matrix, JD-to-resume evidence mapping, and score gap diagnostics — see [Audit Trail](#audit-trail).
+- **Dual AI tailoring modes**: general optimization (Mode 1) and targeted JD alignment with adjacent-technology bridging (Mode 2). See [Tailoring Modes](#tailoring-modes).
+- **Transparent audit trail**: before/after bullet diffs, a skills rationale matrix, JD-to-resume evidence mapping, and score gap diagnostics. See [Audit Trail](#audit-trail).
 - **Deterministic ATS scoring**: a normalized 4-pillar formula covering hard skills, responsibilities, keyword density, and formatting compliance.
-- **52 Typst templates**: Classic/ATS-Optimized, Modern & Tech, and Executive & Advisory families — see [`lib/resume-schema.ts`](lib/resume-schema.ts).
+- **52 Typst templates**: Classic/ATS-Optimized, Modern & Tech, and Executive & Advisory families. See [`lib/resume-schema.ts`](lib/resume-schema.ts).
 - **Bring Your Own Key (BYOK)**: Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud, plus five system-configured fallback providers so the app works without a BYOK key.
 - **Dual export**: vector PDF or raw Typst source (`.typ`) for offline CLI builds.
-- **Privacy-conscious**: client-side PDF/DOCX text extraction — the file itself never leaves the browser, only extracted text is sent server-side for AI features. Browsing and template exploration don't require an account; compiling, exporting, and AI tailoring do. See the [Privacy Policy](https://lumacv.sahilbansal.net/privacy).
+- **Privacy-conscious**: client-side PDF/DOCX text extraction. The file itself never leaves the browser; only extracted text is sent server-side for AI features. Browsing and template exploration don't require an account; compiling, exporting, and AI tailoring do. See the [Privacy Policy](https://lumacv.sahilbansal.net/privacy).
 - Responsive across mobile, tablet, and desktop; self-hostable.
 
 ---
 
 ## Tailoring Modes
 
-**Mode 1 — Resume Optimization (no JD required)**
+**Mode 1: Resume Optimization (no JD required)**
 Polishes passive phrasing into active, quantified language and removes filler, without altering any underlying facts.
 
-**Mode 2 — Targeted JD Alignment (with a job posting)**
+**Mode 2: Targeted JD Alignment (with a job posting)**
 Parses the target job description and ATS keywords, bridges adjacent technical experience (for example container orchestration to Kubernetes, cloud IaC to Terraform), and mirrors recruiter keyword frequency without keyword stuffing. Never fabricates employers, titles, or dates. Produces a full audit trail, JD evidence map, and gap analysis.
 
 Full prompting and safety rules: [AI Pipeline Guide](docs/ai-pipeline.md).
@@ -54,7 +56,7 @@ LumaCV exposes every editorial decision instead of hiding them behind a black-bo
 
 ## Templates
 
-52 templates across three families — the authoritative list is `TemplateTypeSchema` in [`lib/resume-schema.ts`](lib/resume-schema.ts).
+52 templates across three families. The authoritative list is `TemplateTypeSchema` in [`lib/resume-schema.ts`](lib/resume-schema.ts).
 
 | Family | Examples | Best suited for |
 | :--- | :--- | :--- |
@@ -97,10 +99,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Optional platform fallback AI keys (users can also provide BYOK in the UI)
+# Optional platform fallback AI keys (users can also provide BYOK in the UI,
+# including Anthropic Claude, which is BYOK-only with no server-side fallback)
 GEMINI_API_KEY=your-gemini-key
 OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-claude-key
 GROQ_API_KEY=your-groq-key
 
 # User feedback service (Resend)
@@ -124,11 +126,11 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 [User's PDF/DOCX Resume]
         |
-        v (client-side pdfjs-dist / mammoth — file never leaves the browser)
+        v (client-side pdfjs-dist / mammoth, file never leaves the browser)
 [Raw Text + Extracted URLs]
         |
         v POST /api/v1/resume/parse
-[LLM Parser — fails over across Gemini -> Groq -> Mistral -> OpenRouter -> OpenAI -> GitHub Models]
+[LLM Parser, fails over across Gemini -> Groq -> Mistral -> OpenRouter -> OpenAI -> GitHub Models]
         |
         v (jsonrepair + normalizeResumeFromLLM)
 [Structured ResumeData (JSON)]
@@ -137,7 +139,7 @@ Open [http://localhost:3000](http://localhost:3000).
 [User edits / verification]
         |
         v POST /api/v1/resume/tailor (raw `jd` text, or pre-extracted jdKeywords)
-[Tailored ResumeData + audit trail — one AI call; the same completion also
+[Tailored ResumeData + audit trail, one AI call; the same completion also
  extracts JD keywords if the caller didn't already have them]
         |
         v POST /api/v1/resume/compile
@@ -191,26 +193,26 @@ node scripts/test-visual-regression.mjs
 
 ## Documentation
 
-- [System Architecture](docs/architecture.md) — subsystem interactions, data flows, security model
-- [AI Tailoring Pipeline](docs/ai-pipeline.md) — dual-mode prompting, adjacent bridging, anti-hallucination rules
-- [ATS Scoring Engine](docs/ats-scoring.md) — normalized 4-pillar formula, dynamic weighting, gap analysis
-- [API Reference (v1)](docs/api-reference.md) — endpoints, schemas, error codes
-- [Production Deployment Guide](docs/deployment.md) — Vercel, Docker, self-hosted VPS
-- [Supabase Setup & Schema](docs/supabase-setup.md) — authentication, database tables, RLS policies
-- [Troubleshooting Guide](docs/troubleshooting.md) — common deployment and runtime issues
-- [Roadmap](docs/roadmap.md) — unscheduled ideas and future directions
-- [Contributing Guidelines](CONTRIBUTING.md) — branching strategy and PR guidelines
+- [System Architecture](docs/architecture.md): subsystem interactions, data flows, security model
+- [AI Tailoring Pipeline](docs/ai-pipeline.md): dual-mode prompting, adjacent bridging, anti-hallucination rules
+- [ATS Scoring Engine](docs/ats-scoring.md): normalized 4-pillar formula, dynamic weighting, gap analysis
+- [API Reference (v1)](docs/api-reference.md): endpoints, schemas, error codes
+- [Production Deployment Guide](docs/deployment.md): Vercel, Docker, self-hosted VPS
+- [Supabase Setup & Schema](docs/supabase-setup.md): authentication, database tables, RLS policies
+- [Troubleshooting Guide](docs/troubleshooting.md): common deployment and runtime issues
+- [Roadmap](docs/roadmap.md): unscheduled ideas and future directions
+- [Contributing Guidelines](CONTRIBUTING.md): branching strategy and PR guidelines
 
 ---
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for code conventions, bug reports, and feature proposals.
+LumaCV is currently maintained solo and is actively looking for contributors, no change is too small. Bug fixes, new Typst templates, documentation improvements, and feature proposals are all welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, code conventions, and the PR checklist, or open an issue to discuss an idea first.
 
 ---
 
 ## License and Author
 
-Created by [Sahil Bansal](https://sahilbansal.net/). Contact: [connect@sahilbansal.net](mailto:connect@sahilbansal.net)
+Created by [Sahil Bansal](https://sahilbansal.net/), open to community contributions. Contact: [connect@sahilbansal.net](mailto:connect@sahilbansal.net)
 
 Distributed under the [MIT License](LICENSE).

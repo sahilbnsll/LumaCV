@@ -4,6 +4,8 @@ Thank you for your interest in contributing to LumaCV! We welcome contributions 
 
 LumaCV is an open-source resume engineering studio powered by Typst typesetting, Next.js 14, and privacy-preserving AI tailoring. Our mission is to produce factually accurate, beautifully typeset resumes that excel in applicant tracking systems without hallucinated claims or vendor lock-in.
 
+LumaCV is currently maintained solo by [Sahil Bansal](https://github.com/sahilbnsll), so response times on issues and PRs may vary, but every contribution is genuinely wanted. If you're picking up your first issue, feel free to comment on it or reach out via [Contact & Feedback](https://github.com/sahilbnsll/LumaCV/issues) so effort isn't duplicated.
+
 ---
 
 ## Code of Conduct
@@ -17,7 +19,7 @@ We are committed to providing a welcoming, respectful, and inclusive environment
 You can contribute to LumaCV in several ways:
 1. **Reporting Bugs**: Open an issue describing the unexpected behavior, steps to reproduce, browser/OS version, and screenshots if applicable.
 2. **Suggesting Enhancements**: Submit an idea for a new feature, UX refinement, or template concept.
-3. **Designing Typst Templates**: Create new professional, ATS-compliant Typst templates for our 48+ template gallery.
+3. **Designing Typst Templates**: Create new professional, ATS-compliant Typst templates for our 52-template gallery.
 4. **Improving Documentation**: Fix typos, add examples, or clarify guides in `/docs` or the README.
 5. **Submitting Pull Requests**: Implement bug fixes, performance optimizations, or new capabilities.
 
@@ -26,7 +28,7 @@ You can contribute to LumaCV in several ways:
 ## Getting Started with Local Development
 
 ### Prerequisites
-- **Node.js**: `v18.17.0` or higher (`v20.x` recommended)
+- **Node.js**: `v20.0.0` or higher (matches `engines.node` in `package.json`)
 - **Package Manager**: `npm`, `pnpm`, or `yarn`
 - **Typst**: Typst CLI (`v0.11.0` or newer) installed in your PATH, or rely on local bundled binaries in `bin/`
 - **Supabase Account**: A free Supabase project for database tables and authentication
@@ -53,7 +55,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
-*(Optional: Provide `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` for server-side fallback AI parsing, or use your own key in the UI settings via BYOK).*
+*(Optional: Provide `GEMINI_API_KEY` or `OPENAI_API_KEY` for server-side fallback AI parsing, or use your own key in the UI settings via BYOK, including Anthropic Claude, which is BYOK-only and has no server-side fallback).*
 
 ### 4. Run the Development Server
 ```bash
@@ -73,14 +75,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 │   ├── dashboard/        # Saved resumes management
 │   ├── demo/             # Interactive live sample CV preview
 │   ├── docs/             # Technical documentation center
-│   ├── templates/        # 48-template interactive gallery
+│   ├── templates/        # 52-template interactive gallery
 │   └── profile/          # User preferences and BYOK API keys
 ├── components/           # React UI components
 │   ├── ui/               # Radix UI + shadcn primitive design system
 │   ├── luma-logo.tsx     # Canonical product mark
 │   └── resume-*.tsx      # Builder step forms and previewers
 ├── lib/                  # Shared utilities & business logic
-│   ├── compiler-service.ts   # Typst process executor and WASM integration
+│   ├── compiler-service.ts   # Spawns the native Typst CLI binary and manages temp files
 │   ├── resume-store.ts       # Client-side Zustand persistence store
 │   ├── supabase/             # Client and server Supabase SDK instances
 │   └── types.ts              # Core resume schema definitions
