@@ -22,6 +22,12 @@ create table if not exists public.profiles (
 -- Backfill for pre-existing installs that ran this script before `username` existed
 alter table public.profiles add column if not exists username text;
 
+-- Backfill for pre-existing installs that ran this script before `avatar_id`
+-- existed. Stores one of lib/avatar-options.ts's fixed ids (e.g.
+-- "avatar-07"), never a full URL, so the underlying asset can move without
+-- a data migration. Null means "no avatar chosen, show initials."
+alter table public.profiles add column if not exists avatar_id text;
+
 -- Case-insensitive uniqueness so "Alex" and "alex" can't collide
 create unique index if not exists idx_profiles_username_lower
   on public.profiles (lower(username))

@@ -53,6 +53,8 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
   full_name text,
+  username text,
+  avatar_id text, -- one of lib/avatar-options.ts's fixed ids, e.g. "avatar-07"; null means "show initials"
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

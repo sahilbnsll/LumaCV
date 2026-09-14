@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.11.0] - 2026-09-14
+
+### Added
+- **Profile avatar picker**: choose from 56 predefined avatars (DiceBear "Notionists" style, MIT licensed, bundled as static SVGs — no third-party network calls at runtime) in Profile → Avatar, or keep the auto-generated initials monogram. Shows consistently in the header, account menu, and profile sidebar. Stored as `avatar_id` in both `auth.users.user_metadata` and `public.profiles` (new column, migration required — see `supabase/schema.sql`).
+- **"Optimize Resume" (AI tailoring) link** added to the account dropdown menu — it was already in the mobile full-screen nav and the Cmd+K command palette, but missing from the profile dropdown, a real feature-parity gap.
+
+### Fixed
+- **Color palette dropdown clipped off-screen on mobile** (Resume Editor): it was anchored `right-0` to its trigger button, which doesn't sit near the screen's right edge on mobile, so the panel overflowed past the left edge of the viewport. Now positions relative to the viewport on mobile instead of the button.
+- **Cropped text in two homepage showcase cards**: "RESUME SECTIONS (DRAG TO REORDER)" / "Live Sync" and "LIVE VECTOR OUTPUT" / "Instant Preview" each split their own text mid-word on mobile instead of wrapping as clean units; a "Deliverable" stat and the "Copy phrasing" button in another card overflowed their card for the same underlying reason (flex rows with no wrap handling). All four now wrap correctly.
+- **Card-stack shadow bleeding into the format list** (export format showcase, mobile): the card fan's large soft shadow exceeded the stacked layout's gap, making the ".pdf" row look like it was sitting in the card's shadow.
+- **Account dropdown menu touch targets**: rows were ~28px tall, under the 44px touch-target guideline already used elsewhere in the app; increased to `min-h-touch` with larger icons.
+
+### Docs
+- Documented the `username` and `avatar_id` `profiles` columns in `docs/supabase-setup.md`'s schema summary (both existed in code but were missing from this doc).
+- Updated `AGENTS.md`'s database/file-map sections for the new `avatar_id` column and `lib/avatar-options.ts`.
+
+---
+
 ## [2.10.0] - 2026-09-14
 
 ### Security

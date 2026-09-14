@@ -42,6 +42,7 @@ Most resume builders either (a) fake "ATS optimization" with vague, unverifiable
 | Client-side document parsing | `lib/document-parser.ts`, `lib/pdf-parser.ts` |
 | Global client state | `lib/store.ts` (Zustand: current resumeData/template/theme) |
 | Toast/notification helper | `lib/notify.ts` |
+| Predefined profile avatar options | `lib/avatar-options.ts` (56 static SVGs in `public/avatars/`, DiceBear "Notionists" style) |
 | Design tokens (palettes, motion easings) | `lib/design-tokens.ts`, `lib/motion.ts` |
 | Main resume editor UI | `components/compact-resume-editor.tsx` |
 | Builder 4-step wizard | `app/builder/step1-jd.tsx` .. `step4-preview.tsx` |
@@ -63,7 +64,7 @@ Most resume builders either (a) fake "ATS optimization" with vague, unverifiable
 
 ## DATABASE
 
-Supabase Postgres. Key tables (`supabase/schema.sql`): `profiles` (username↔email mapping for username-login, one row per `auth.users` row), `user_resumes`, `user_applications`, `feedback`, `platform_stats`. Every `user_*` table has an RLS policy scoping reads/writes to `auth.uid() = user_id`.
+Supabase Postgres. Key tables (`supabase/schema.sql`): `profiles` (username↔email mapping for username-login, plus `avatar_id` — one of `lib/avatar-options.ts`'s fixed predefined-avatar ids, null means show initials; one row per `auth.users` row), `user_resumes`, `user_applications`, `feedback`, `platform_stats`. Every `user_*` table has an RLS policy scoping reads/writes to `auth.uid() = user_id`.
 
 **Do not rely on RLS alone from application code.** Two POST routes (`/api/v1/resumes`, `/api/v1/applications`) accept a client-supplied `id` for upserts; both now explicitly verify the existing row's `user_id` before upserting (added in this audit — see DO NOT BREAK). If you add another upsert-by-client-id endpoint, copy that ownership-check pattern, don't assume RLS is configured to catch it.
 

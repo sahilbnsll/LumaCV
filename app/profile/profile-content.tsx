@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 import { ALL_TEMPLATES } from '@/lib/templates-data';
 import { getLocalResumes } from '@/lib/user-resumes-store';
+import { AVATAR_OPTIONS, getAvatarUrl } from '@/lib/avatar-options';
 import {
     UserApiKeys,
     getUserApiKeys,
@@ -147,22 +148,28 @@ function ProfileWorkstationContent() {
         user?.user_metadata?.username ||
         (user?.email ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '') : 'user');
 
+    const initialAvatarId: string | null = user?.user_metadata?.avatar_id || null;
+
     const [name, setName] = useState(initialName);
     const [username, setUsername] = useState(initialUsername);
+    const [avatarId, setAvatarId] = useState<string | null>(initialAvatarId);
+    const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
     const [profileSaveState, setProfileSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
     useEffect(() => {
         if (user) {
             if (user.user_metadata?.full_name) setName(user.user_metadata.full_name);
             if (user.user_metadata?.username) setUsername(user.user_metadata.username);
+            setAvatarId(user.user_metadata?.avatar_id || null);
         }
     }, [user]);
 
-    const isProfileDirty = name !== initialName || username !== initialUsername;
+    const isProfileDirty = name !== initialName || username !== initialUsername || avatarId !== initialAvatarId;
 
     const handleProfileCancel = () => {
         setName(initialName);
         setUsername(initialUsername);
+        setAvatarId(initialAvatarId);
         setProfileSaveState('idle');
     };
 
@@ -181,20 +188,23 @@ function ProfileWorkstationContent() {
                     data: {
                         full_name: name.trim(),
                         username: username.trim().toLowerCase(),
+                        avatar_id: avatarId,
                     },
                 });
                 if (error) throw error;
 
                 // The `handle_new_user` DB trigger that populates public.profiles
                 // only fires on signup (auth.users INSERT), not on later
-                // auth.updateUser() calls, so username changes here also need to
-                // reach public.profiles directly, or username login (which reads
-                // from public.profiles) silently keeps resolving the old value.
+                // auth.updateUser() calls, so username/avatar changes here also
+                // need to reach public.profiles directly, or username login
+                // (which reads from public.profiles) silently keeps resolving
+                // the old value.
                 const { error: profileError } = await supabase
                     .from('profiles')
                     .update({
                         full_name: name.trim(),
                         username: username.trim().toLowerCase(),
+                        avatar_id: avatarId,
                     })
                     .eq('id', user.id);
                 if (profileError) throw profileError;
@@ -202,6 +212,8 @@ function ProfileWorkstationContent() {
                 // Local guest session save
                 localStorage.setItem('lumacv_guest_name', name.trim());
                 localStorage.setItem('lumacv_guest_username', username.trim().toLowerCase());
+                if (avatarId) localStorage.setItem('lumacv_guest_avatar_id', avatarId);
+                else localStorage.removeItem('lumacv_guest_avatar_id');
             }
 
             setProfileSaveState('saved');
@@ -460,9 +472,17 @@ function ProfileWorkstationContent() {
                         <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs space-y-3">
                             <div className="flex items-center gap-3">
                                 <div className="relative shrink-0">
-                                    <div className="size-11 rounded-xl bg-primary/10 border border-primary/30 text-primary flex items-center justify-center font-display font-bold text-sm shadow-2xs">
-                                        {initials}
-                                    </div>
+                                    {avatarId && getAvatarUrl(avatarId) ? (
+                                        <img
+                                            src={getAvatarUrl(avatarId)!}
+                                            alt=""
+                                            className="size-11 rounded-xl border border-primary/30 shadow-2xs bg-muted/30"
+                                        />
+                                    ) : (
+                                        <div className="size-11 rounded-xl bg-primary/10 border border-primary/30 text-primary flex items-center justify-center font-display font-bold text-sm shadow-2xs">
+                                            {initials}
+                                        </div>
+                                    )}
                                     <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-background">
                                         <Check className="size-2 text-white stroke-[3]" />
                                     </span>
@@ -639,19 +659,110 @@ function ProfileWorkstationContent() {
                                 <form onSubmit={handleProfileSave} className="space-y-5">
                                     {/* Avatar Control */}
                                     <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
-                                        <Label className="text-xs font-semibold text-foreground">Avatar & Monogram</Label>
+                                        <Label className="text-xs font-semibold text-foreground">Avatar</Label>
                                         <div className="flex items-center gap-4">
-                                            <div className="size-16 rounded-2xl bg-primary/10 border-2 border-primary/20 text-primary flex items-center justify-center font-display font-bold text-xl shadow-xs">
-                                                {initials}
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-xs font-medium text-foreground">Auto-generated Monogram</p>
-                                                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                                    Derived automatically from your full name initials for clean document stamping and header identity.
+                                            {avatarId && getAvatarUrl(avatarId) ? (
+                                                <img
+                                                    src={getAvatarUrl(avatarId)!}
+                                                    alt=""
+                                                    className="size-16 rounded-2xl border-2 border-primary/20 shadow-xs bg-muted/30"
+                                                />
+                                            ) : (
+                                                <div className="size-16 rounded-2xl bg-primary/10 border-2 border-primary/20 text-primary flex items-center justify-center font-display font-bold text-xl shadow-xs">
+                                                    {initials}
+                                                </div>
+                                            )}
+                                            <div className="space-y-1.5">
+                                                <p className="text-xs font-medium text-foreground">
+                                                    {avatarId ? 'Custom avatar selected' : 'Auto-generated Monogram'}
                                                 </p>
+                                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                                    {avatarId
+                                                        ? 'Shown in the header and account menu instead of your initials.'
+                                                        : 'Derived automatically from your full name initials for clean document stamping and header identity.'}
+                                                </p>
+                                                <div className="flex items-center gap-2 pt-0.5">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setAvatarPickerOpen(true)}
+                                                        className="h-7 text-[11px] px-2.5 rounded-lg cursor-pointer"
+                                                    >
+                                                        {avatarId ? 'Change Avatar' : 'Choose Avatar'}
+                                                    </Button>
+                                                    {avatarId && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setAvatarId(null)}
+                                                            className="h-7 text-[11px] px-2.5 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+                                                        >
+                                                            Use Initials
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Avatar Picker Dialog: a fixed, curated set of 24 predefined
+                                        avatars (DiceBear "Notionists" style, MIT licensed), bundled
+                                        as static SVGs, not generated per-user, so the same 24 options
+                                        are offered to everyone rather than an infinite random space. */}
+                                    <Dialog open={avatarPickerOpen} onOpenChange={setAvatarPickerOpen}>
+                                        <DialogContent className="max-w-md rounded-2xl">
+                                            <DialogHeader>
+                                                <DialogTitle className="text-sm font-bold">Choose an avatar</DialogTitle>
+                                                <DialogDescription className="text-xs">
+                                                    Pick one of {AVATAR_OPTIONS.length} predefined avatars, or keep your initials.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 py-2 max-h-[360px] overflow-y-auto">
+                                                {AVATAR_OPTIONS.map((avatar) => {
+                                                    const isSelected = avatarId === avatar.id;
+                                                    return (
+                                                        <button
+                                                            key={avatar.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setAvatarId(avatar.id);
+                                                                setAvatarPickerOpen(false);
+                                                            }}
+                                                            className={cn(
+                                                                "relative aspect-square rounded-xl border-2 p-1 transition-all cursor-pointer hover:scale-105",
+                                                                isSelected ? "border-primary ring-2 ring-primary/30" : "border-border/60 hover:border-primary/40"
+                                                            )}
+                                                            aria-label={`Avatar option ${avatar.id}`}
+                                                            aria-pressed={isSelected}
+                                                        >
+                                                            <img src={avatar.url} alt="" className="w-full h-full rounded-lg bg-muted/30" />
+                                                            {isSelected && (
+                                                                <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-card">
+                                                                    <Check className="size-2.5 stroke-[3]" />
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <DialogFooter>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setAvatarId(null);
+                                                        setAvatarPickerOpen(false);
+                                                    }}
+                                                    className="text-xs cursor-pointer"
+                                                >
+                                                    Use Initials Instead
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
 
                                     {/* Name & Username */}
                                     <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
