@@ -32,9 +32,26 @@ export function LumaStreamHero() {
   const prefersReducedMotion = useReducedMotion();
   const [pointerActive, setPointerActive] = useState(true);
 
+  // Framer Motion's useScroll(target) measures the target element's full
+  // offsetParent chain synchronously on setup, a real, measured forced
+  // reflow (traced to ~1.2s of the homepage's LCP render delay on a
+  // throttled mobile CPU), made worse by the 8 other below-the-fold
+  // sections all mounting/resizing the document at the same moment. Passing
+  // no target (falls back to cheap window-scroll tracking) until the
+  // critical render window has passed, then upgrading to the real element,
+  // keeps the expensive measurement out of the initial paint's way without
+  // changing the scroll effect's behavior once it engages.
+  const [motionReady, setMotionReady] = useState(false);
+  useEffect(() => {
+    const ric = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => window.setTimeout(cb, 300));
+    const cic = window.cancelIdleCallback ?? window.clearTimeout;
+    const id = ric(() => setMotionReady(true));
+    return () => cic(id as number);
+  }, []);
+
   // Track scroll through the pinned hero zoom track
   const { scrollYProgress } = useScroll({
-    target: containerRef,
+    target: motionReady ? containerRef : undefined,
     offset: ["start start", "end end"],
   });
 
