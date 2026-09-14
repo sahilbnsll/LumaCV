@@ -7,8 +7,9 @@ import { ArrowRight } from 'lucide-react';
 import { AuthTopNav } from '@/components/auth-top-nav';
 
 export const metadata: Metadata = {
-    title: 'Sign in to your account — LumaCV',
+    title: 'Sign in to your account, LumaCV',
     description: 'Sign in to access your resumes, full account settings, and live ATS checker.',
+    alternates: { canonical: '/login' },
 };
 
 export default function LoginPage() {

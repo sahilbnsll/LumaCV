@@ -20,7 +20,7 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://lumacv.sahilbansal.net'),
   title: 'LumaCV',
-  description: 'Free, open-source resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
+  description: 'Free, open-source resume builder with instant Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
   applicationName: 'LumaCV',
   authors: [{ name: 'LumaCV Team' }],
   keywords: [
@@ -45,23 +45,19 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://lumacv.sahilbansal.net',
     siteName: 'LumaCV',
-    title: 'LumaCV — Open-Source AI Resume Builder & Typst Typesetter',
-    description: 'Free, open-source resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
-    images: [
-      {
-        url: '/templates/renders/modern-cobalt.png',
-        width: 1200,
-        height: 630,
-        alt: 'LumaCV Deterministic Typst Resume Preview',
-      },
-    ],
+    title: 'LumaCV, Open-Source AI Resume Builder & Typst Typesetter',
+    description: 'Free, open-source resume builder with instant Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
+    // No `images` override here: app/opengraph-image.tsx generates a correctly-
+    // sized (1200x630) social preview at request time and Next.js wires it into
+    // this metadata automatically. The previous hardcoded image was a portrait
+    // resume render mislabeled as 1200x630, so it rendered cropped on every
+    // social platform, don't reintroduce a static override here.
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LumaCV — Open-Source AI Resume Builder & Typst Typesetter',
-    description: 'Free, open-source resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
-    images: ['/templates/renders/modern-cobalt.png'],
-    creator: '@sahilbnsll',
+    title: 'LumaCV, Open-Source AI Resume Builder & Typst Typesetter',
+    description: 'Free, open-source resume builder with instant Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
+    creator: '@sahilbansalll',
   },
   robots: {
     index: true,
@@ -80,7 +76,7 @@ export const metadata: Metadata = {
       { url: '/logo.png', type: 'image/png' },
     ],
     shortcut: '/icon.svg',
-    // iOS home-screen icons need a raster format — SVG doesn't render there.
+    // iOS home-screen icons need a raster format, SVG doesn't render there.
     apple: [{ url: '/logo.png', type: 'image/png', sizes: '320x320' }],
   },
 };
@@ -107,7 +103,7 @@ export default function RootLayout({
     '@type': 'WebApplication',
     name: 'LumaCV',
     url: 'https://lumacv.sahilbansal.net',
-    description: 'Free, open-source AI resume builder with sub-50ms Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
+    description: 'Free, open-source AI resume builder with instant Typst vector PDF typesetting, 100% factual ATS integrity, and client-side privacy.',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'All',
     offers: {
@@ -116,7 +112,7 @@ export default function RootLayout({
       priceCurrency: 'USD',
     },
     featureList: [
-      'Sub-50ms Typst PDF typesetting',
+      'Instant Typst vector PDF typesetting',
       '100% factual ATS integrity guarantee',
       'Client-side privacy with zero telemetry',
       '52 professional resume design archetypes',

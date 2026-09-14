@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        // /builder and /editor are deliberately excluded here — both have a
+        // /builder and /editor are deliberately excluded here, both have a
         // public, guest-visible entry point (linked from the signed-out nav
         // and listed in sitemap.ts) and only gate specific actions behind
         // sign-in, so they should stay crawlable. Everything below is either

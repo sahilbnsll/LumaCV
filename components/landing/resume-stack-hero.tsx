@@ -34,7 +34,7 @@ const HERO_TEMPLATES = [
   },
 ];
 
-// Sourced from the real editor's palette system (lib/design-tokens.ts) —
+// Sourced from the real editor's palette system (lib/design-tokens.ts),
 // this used to be its own private, decorative 4-color list that didn't
 // match what you can actually pick in the resume builder (its "Cobalt" was
 // even a different hex than the real one). Every color here is a real,
@@ -139,7 +139,9 @@ export function ResumeStackHero() {
 
         {/* ── Left editorial text ── */}
         <div className="relative z-1 pb-[22px] max-[900px]:max-w-[590px]">
-          <h1
+          {/* h2, not h1: the page's one h1 is LumaStreamHero's headline, which
+              renders above this section on the homepage. */}
+          <h2
             id="hero-title"
             className="font-semibold text-display-hero max-[1100px]:text-[64px] max-[900px]:text-[clamp(55px,10vw,77px)] max-[540px]:text-[clamp(48px,11.65vw,63px)] text-foreground"
           >
@@ -160,10 +162,10 @@ export function ResumeStackHero() {
               </motion.span>
               .
             </span>
-          </h1>
+          </h2>
 
           <p className="mt-7 max-w-[356px] text-muted-foreground text-[17px] leading-[1.65] max-[900px]:max-w-[410px] max-[540px]:mt-6 max-[540px]:max-w-[330px] max-[540px]:text-[15px]">
-            Free and open source, compiled with Typst — so formatting never gets in the way.
+            Free and open source, compiled with Typst, so formatting never gets in the way.
           </p>
 
           <div className="mt-[30px] flex flex-wrap items-center gap-9 max-[1100px]:gap-7 max-[900px]:gap-9 max-[540px]:mt-[25px] max-[540px]:gap-7">
@@ -222,16 +224,31 @@ export function ResumeStackHero() {
                       zIndex: p.zIndex,
                     }}
                   >
-                    {/* Paper face — live HTML preview, updates with name/accent/typeface.
+                    {/* Paper face, live HTML preview, updates with name/accent/typeface.
                         bg-white is intentional and stays literal in both themes: this is a
                         physical paper mockup, not an app surface, so it doesn't follow dark mode. */}
-                    <div className="absolute inset-0 border border-[#dedbd3] bg-white shadow-[0_25px_28px_#0004,0_2px_1px_#0006] overflow-hidden rounded-[2px]">
-                      {/* Render at 794px (A4 width) then scale down to fit ~347px container */}
+                    <div
+                      className="absolute inset-0 border border-[#dedbd3] bg-white shadow-[0_25px_28px_#0004,0_2px_1px_#0006] overflow-hidden rounded-[2px]"
+                      style={{ containerType: "inline-size" }}
+                    >
+                      {/* Render at 794px (A4 width), then scale to the container's actual
+                          current width via a cqw-based transform, not a hardcoded desktop
+                          scale factor. That constant was tuned for one fixed ~347px desktop
+                          paper size; on a narrower mobile stage the paper container shrinks
+                          but the content kept rendering at the same fixed scale, so only the
+                          left slice fit before `overflow-hidden` clipped the rest, the
+                          resume looked half cut off. `scale(100cqw / 794px)` always fills
+                          exactly 100% of whatever width the container actually has, same
+                          responsive technique already used in image-stream-hero.tsx. */}
                       <div
                         style={{
                           width: 794,
                           height: 1123,
-                          transform: "scale(0.4369)",
+                          // scale() needs a unitless ratio, dividing by a bare number
+                          // (`/ 794`) mixes a length with a number, which CSS rejects as
+                          // invalid and silently drops the whole declaration. `794px`
+                          // makes it length-over-length, which resolves to a plain ratio.
+                          transform: "scale(calc(100cqw / 794px))",
                           transformOrigin: "top left",
                           pointerEvents: "none",
                         }}
@@ -267,7 +284,7 @@ export function ResumeStackHero() {
             </button>
           </div>
 
-          {/* Template switcher — 3 very different layouts, drives the headline above */}
+          {/* Template switcher, 3 very different layouts, drives the headline above */}
           <fieldset className="mb-3 flex gap-2" aria-label="Choose a resume template">
             {HERO_TEMPLATES.map((tpl, i) => (
               <button
@@ -287,12 +304,12 @@ export function ResumeStackHero() {
             ))}
           </fieldset>
 
-          {/* Accent color — the one live control, tied to the headline's accent word.
+          {/* Accent color, the one live control, tied to the headline's accent word.
               10 real swatches now (was 4), so this wraps instead of forcing a
               single row beside the label the way it could when there were few
               enough to fit. The legend and the selected color's name share a
               row (like the "Stack/Spread pages" row above it) instead of the
-              legend sitting alone above the swatches — and naming the current
+              legend sitting alone above the swatches, and naming the current
               selection means you don't have to hover/guess which dot is which. */}
           <fieldset className="rounded-[4px] border border-border bg-card px-[21px] py-[15px] shadow-sm">
             <div className="mb-[7px] flex items-center justify-between gap-3">

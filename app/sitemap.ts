@@ -8,11 +8,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '', changeFrequency: 'daily' as const, priority: 1.0 },
     { path: '/builder', changeFrequency: 'daily' as const, priority: 0.9 },
     { path: '/templates', changeFrequency: 'weekly' as const, priority: 0.9 },
+    { path: '/editor', changeFrequency: 'weekly' as const, priority: 0.8 },
     { path: '/demo', changeFrequency: 'weekly' as const, priority: 0.8 },
     { path: '/docs', changeFrequency: 'weekly' as const, priority: 0.8 },
     { path: '/ats', changeFrequency: 'weekly' as const, priority: 0.8 },
     { path: '/billing', changeFrequency: 'monthly' as const, priority: 0.6 },
-    { path: '/support', changeFrequency: 'monthly' as const, priority: 0.5 },
+    // /support is a pure redirect to /billing (see app/support/page.tsx),
+    // not a real destination, so it's left out to avoid spending crawl
+    // budget on a page that immediately 307s elsewhere.
     { path: '/contact', changeFrequency: 'yearly' as const, priority: 0.4 },
     { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3 },
     { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3 },

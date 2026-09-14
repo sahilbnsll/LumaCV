@@ -7,8 +7,9 @@ import { ArrowRight } from 'lucide-react';
 import { AuthTopNav } from '@/components/auth-top-nav';
 
 export const metadata: Metadata = {
-    title: 'Create your account — LumaCV',
+    title: 'Create your account, LumaCV',
     description: 'Create your free account to craft tailored, typeset resumes with zero vendor lock-in.',
+    alternates: { canonical: '/signup' },
 };
 
 export default function SignupPage() {
