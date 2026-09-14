@@ -182,7 +182,7 @@ export function FactPreservingAiShowcase() {
               <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
               <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
               <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
-              <span className="ml-2 text-xs font-mono text-muted-foreground truncate max-w-[260px] sm:max-w-none">
+              <span className="ml-2 text-xs font-mono text-muted-foreground truncate max-w-[140px] sm:max-w-none">
                 LumaCV Workstation – Alex-Morgan-Resume.typ
               </span>
             </div>
@@ -342,7 +342,7 @@ export function FactPreservingAiShowcase() {
 
                       {/* Transformed Bullet Display */}
                       <div className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] font-mono text-muted-foreground">
                           <span>Synthesized Bullet Statement</span>
                           {isApplied && (
                             <span className="text-foreground font-medium flex items-center gap-1">
@@ -372,9 +372,16 @@ export function FactPreservingAiShowcase() {
                             <span className="text-muted-foreground block">Active Verb:</span>
                             <span className="text-foreground font-semibold">{scenario.grounded.actionVerb}</span>
                           </div>
-                          <div>
+                          <div className="col-span-2 sm:col-span-1">
+                            {/* Deliverable values ("authored migration runbooks",
+                                etc.) run longer than Active Verb's single word,
+                                and on mobile this cell only got half the row's
+                                width (grid-cols-2), so `truncate` was cutting it
+                                mid-word ("authored migratio…"). Full width + wrap
+                                on mobile instead, matching how Fake Metrics
+                                already spans the row. */}
                             <span className="text-muted-foreground block">Deliverable:</span>
-                            <span className="text-foreground font-medium truncate block">{scenario.grounded.tangibleDeliverable}</span>
+                            <span className="text-foreground font-medium block">{scenario.grounded.tangibleDeliverable}</span>
                           </div>
                           <div className="col-span-2 sm:col-span-1">
                             <span className="text-muted-foreground block">Fake Metrics:</span>
@@ -385,7 +392,11 @@ export function FactPreservingAiShowcase() {
 
                       {/* Interactive Buttons */}
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                        <div className="flex items-center gap-2">
+                        {/* The outer row already wrapped, but this inner pair
+                            (Apply/Reset + Copy phrasing) didn't, so the two
+                            buttons together were wider than the mobile card
+                            and "Copy phrasing" ran past its right edge. */}
+                        <div className="flex flex-wrap items-center gap-2">
                           {!isApplied ? (
                             <Button
                               onClick={() => setIsApplied(true)}

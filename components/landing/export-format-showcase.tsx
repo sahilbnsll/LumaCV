@@ -272,7 +272,14 @@ export function ExportFormatShowcase() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
           {/* ── Left Column: Physical Layered Card Fan ─────────────── */}
-          <div className="lg:col-span-6 flex flex-col items-center justify-center">
+          {/* mb-10 on mobile/tablet only: the stacked cards cast a large,
+              deliberately soft shadow (0 30px 70px), and on the stacked
+              single-column mobile layout that shadow's reach extended past
+              the grid's own gap-12 (48px) into the format list below,
+              making the ".pdf" row read as if it were sitting in the
+              card's shadow. Not needed at lg+, where the columns sit
+              side-by-side instead of stacked. */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center mb-10 lg:mb-0">
             <div className="relative w-[270px] sm:w-[310px] aspect-[1/1.4] select-none">
               {/* Real deck-shuffle: every format is its own permanent card
                   (never remounted, never content-swapped) parked at a "slot"

@@ -420,7 +420,17 @@ function EditorContent() {
                                         initial="initial"
                                         animate="animate"
                                         exit="exit"
-                                        className="absolute right-0 top-10 z-50 p-3 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-xl w-64 space-y-2.5"
+                                        className={cn(
+                                            // On mobile the palette button sits well left of the
+                                            // screen's right edge (Export/Theme/User/Menu follow
+                                            // after it), so anchoring this w-64 (256px) dropdown
+                                            // to the BUTTON's right edge let it overflow off the
+                                            // left of the viewport, unreachable. `fixed` positions
+                                            // it relative to the viewport instead, always fully
+                                            // on-screen regardless of where the button lands.
+                                            "fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-10",
+                                            "z-50 p-3 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-xl sm:w-64 space-y-2.5"
+                                        )}
                                     >
                                         <div className="flex items-center justify-between px-0.5 pb-2 border-b border-border/40">
                                             <span className="text-[11px] font-semibold text-muted-foreground">

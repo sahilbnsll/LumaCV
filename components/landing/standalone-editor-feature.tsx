@@ -360,16 +360,19 @@ export function StandaloneEditorFeature() {
         {/* Workstation Simulation Mockup */}
         <div className="rounded-3xl border border-border/80 bg-card shadow-xl overflow-hidden">
           {/* Window Chrome */}
-          <div className="px-5 py-3 border-b border-border/60 bg-muted/30 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-              <span className="w-3 h-3 rounded-full bg-amber-500/80" />
-              <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-              <span className="ml-2 text-xs font-mono text-muted-foreground truncate max-w-[260px] sm:max-w-none">
+          <div className="px-5 py-3 border-b border-border/60 bg-muted/30 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-3 h-3 rounded-full bg-rose-500/80 shrink-0" />
+              <span className="w-3 h-3 rounded-full bg-amber-500/80 shrink-0" />
+              <span className="w-3 h-3 rounded-full bg-emerald-500/80 shrink-0" />
+              {/* max-w was 260px on mobile, leaving no room for the status
+                  badge on the right before the card's own overflow-hidden
+                  clipped it mid-word ("Ve", "En", "Re..."). */}
+              <span className="ml-2 text-xs font-mono text-muted-foreground truncate max-w-[120px] sm:max-w-none">
                 LumaCV Workstation, {doc.personal.name.replace(/\s+/g, "-")}-Resume.typ
               </span>
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium shrink-0">
               <button
                 type="button"
                 onClick={handleReset}
@@ -379,9 +382,10 @@ export function StandaloneEditorFeature() {
                 <RotateCcw className="size-3" />
                 <span>Reset</span>
               </button>
-              <div className="flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-zinc-400" />
-                <span>Vector Engine Ready</span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="size-1.5 rounded-full bg-zinc-400 shrink-0" />
+                <span className="hidden sm:inline">Vector Engine Ready</span>
+                <span className="sm:hidden">Ready</span>
               </div>
             </div>
           </div>
@@ -391,11 +395,17 @@ export function StandaloneEditorFeature() {
 
             {/* Left: Interactive Section Cards with in-place editor */}
             <div className="lg:col-span-6 p-6 sm:p-8 space-y-4 bg-background/50">
-              <div className="flex items-center justify-between mb-2">
+              {/* Both labels together are wider than a mobile card, and this
+                  row had no wrap handling, so the two spans each wrapped
+                  their own text mid-phrase ("RESUME SEC-/TIONS...", "Live/
+                  Sync") instead of the row wrapping as clean units.
+                  flex-wrap lets the second label drop to its own line
+                  intact rather than breaking inside either phrase. */}
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Resume Sections (Drag to Reorder)
                 </span>
-                <span className="text-xs text-zinc-400 font-medium flex items-center gap-1">
+                <span className="text-xs text-zinc-400 font-medium flex items-center gap-1 shrink-0">
                   <span className="size-1.5 rounded-full bg-zinc-400" />
                   Live Sync
                 </span>
@@ -493,11 +503,11 @@ export function StandaloneEditorFeature() {
             {/* Right: Live Vector Output, mirrors every edit in real time */}
             <div className="lg:col-span-6 p-6 sm:p-8 bg-muted/10 flex flex-col justify-between">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Live Vector Output
                   </span>
-                  <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono shrink-0">
                     <Eye className="w-3.5 h-3.5" />
                     <span>Instant Preview</span>
                   </div>
