@@ -198,7 +198,7 @@ export function FactPreservingAiShowcase() {
                       key={sc.id}
                       type="button"
                       onClick={() => handleScenarioChange(sc.id)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-[background-color,color,border-color,box-shadow] cursor-pointer ${
                         active
                           ? "bg-background text-foreground shadow-xs border border-border/60"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
@@ -236,7 +236,7 @@ export function FactPreservingAiShowcase() {
                 <button
                   type="button"
                   onClick={() => setViewMode("grounded")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-[background-color,color,border-color,box-shadow] cursor-pointer flex items-center gap-1.5 ${
                     viewMode === "grounded"
                       ? "bg-background text-foreground border border-border shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
@@ -248,7 +248,7 @@ export function FactPreservingAiShowcase() {
                 <button
                   type="button"
                   onClick={() => setViewMode("hallucinated")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-[background-color,color,border-color,box-shadow] cursor-pointer flex items-center gap-1.5 ${
                     viewMode === "hallucinated"
                       ? "bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
