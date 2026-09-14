@@ -5,6 +5,11 @@ const nextConfig = {
   // can't accidentally break a production deploy.
   poweredByHeader: false,
   compress: true,
+  images: {
+    // AVIF first: typically 20-30% smaller than WebP at the same quality,
+    // next/image falls back to webp/original per-browser support automatically.
+    formats: ['image/avif', 'image/webp'],
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },

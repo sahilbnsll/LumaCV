@@ -61,7 +61,12 @@ export async function GET() {
       .from("user_applications")
       .select("*")
       .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      // The board/table views group and search this list entirely
+      // client-side (kanban columns need the full set to render correctly),
+      // so this is a safety cap against pathological row counts rather than
+      // real pagination, 500 is comfortably above any realistic job search.
+      .limit(500);
 
     if (error) {
       // Table may not exist yet in fresh Supabase environment

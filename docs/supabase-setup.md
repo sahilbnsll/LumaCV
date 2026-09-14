@@ -73,7 +73,22 @@ create table public.user_resumes (
   updated_at timestamptz default now()
 );
 
--- 3. PDF Compile Cache Table (stores generated PDFs)
+-- 3. Job Application Tracker Table
+create table public.user_applications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  company text not null,
+  position text not null,
+  status text not null default 'applied',
+  resume_id uuid references public.user_resumes(id) on delete set null,
+  tags text[] not null default '{}'::text[],
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+  -- plus location, remote_type, applied_date, deadline, salary, url,
+  -- job_description, notes, contacts jsonb, see supabase/schema.sql for the full definition
+);
+
+-- 4. PDF Compile Cache Table (stores generated PDFs)
 create table public.resumes (
   id uuid primary key default gen_random_uuid(),
   content_hash text unique not null,

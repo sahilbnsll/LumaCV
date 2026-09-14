@@ -160,6 +160,68 @@ create trigger tr_user_resumes_updated_at
   for each row execute procedure public.set_updated_at();
 
 -- ==============================================================================
+-- 3b. User Applications Table (Job Application Tracker)
+-- This table was referenced by app/api/v1/applications/route.ts and
+-- app/api/v1/applications/[id]/route.ts but was never actually defined here,
+-- it did not exist in the live database. Every read/write against it was
+-- silently swallowed by those routes' `catch` blocks (logged via
+-- console.warn, falling back to an empty list), so the Applications tracker
+-- looked like it worked but never persisted anything.
+-- ==============================================================================
+create table if not exists public.user_applications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  company text not null,
+  position text not null,
+  location text default '',
+  remote_type text default 'unspecified',
+  status text not null default 'applied',
+  applied_date timestamptz default now(),
+  deadline timestamptz,
+  salary text default '',
+  url text default '',
+  job_description text default '',
+  notes text default '',
+  contacts jsonb not null default '[]'::jsonb,
+  resume_id uuid references public.user_resumes(id) on delete set null,
+  tags text[] not null default '{}'::text[],
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
+-- Matches the GET route's `.eq('user_id', ...).order('updated_at')` query exactly
+create index if not exists idx_user_applications_user_updated
+  on public.user_applications (user_id, updated_at desc);
+
+alter table public.user_applications enable row level security;
+
+drop policy if exists "Users can view their own applications" on public.user_applications;
+create policy "Users can view their own applications"
+  on public.user_applications for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can create their own applications" on public.user_applications;
+create policy "Users can create their own applications"
+  on public.user_applications for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update their own applications" on public.user_applications;
+create policy "Users can update their own applications"
+  on public.user_applications for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete their own applications" on public.user_applications;
+create policy "Users can delete their own applications"
+  on public.user_applications for delete
+  using (auth.uid() = user_id);
+
+drop trigger if exists tr_user_applications_updated_at on public.user_applications;
+create trigger tr_user_applications_updated_at
+  before update on public.user_applications
+  for each row execute procedure public.set_updated_at();
+
+-- ==============================================================================
 -- 4. PDF Compile Cache Table (Optional async render cache)
 -- ==============================================================================
 create table if not exists public.resumes (
@@ -256,4 +318,14 @@ drop policy if exists "Allow insert on feedback" on public.feedback;
 create policy "Allow insert on feedback"
   on public.feedback for insert
   with check (true);
+
+-- ==============================================================================
+-- 8. Supabase-Managed Event Trigger Lockdown
+-- rls_auto_enable() is not defined by this script, it's an event_trigger
+-- function some Supabase project templates install to auto-enable RLS on
+-- newly created tables. Same default-PUBLIC-execute exposure as the
+-- functions above applies, so close it the same way even though it isn't
+-- ours to create or replace here.
+-- ==============================================================================
+revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
 

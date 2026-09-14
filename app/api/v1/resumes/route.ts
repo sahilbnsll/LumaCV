@@ -30,7 +30,12 @@ export async function GET() {
             .from('user_resumes')
             .select('*')
             .eq('user_id', user.id)
-            .order('updated_at', { ascending: false });
+            .order('updated_at', { ascending: false })
+            // No pagination UI exists for this list yet (the dashboard grid
+            // renders and filters the whole set client-side), so this is a
+            // safety cap against pathological row counts rather than real
+            // pagination, 300 is comfortably above any realistic per-user count.
+            .limit(300);
 
         if (error) throw error;
         return NextResponse.json({ resumes: data || [] });

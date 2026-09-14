@@ -23,7 +23,17 @@ import { ApplicationTable } from "@/components/applications/application-table";
 import { ApplicationStats } from "@/components/applications/application-stats";
 import { ApplicationFormDialog } from "@/components/applications/application-form-dialog";
 import { ApplicationDetailSheet } from "@/components/applications/application-detail-sheet";
-import { ApplicationImportDialog } from "@/components/applications/application-import-dialog";
+import dynamic from "next/dynamic";
+
+// Dynamically imported: this pulls in the `xlsx` library (spreadsheet
+// parsing), which is large and only needed by the small fraction of users
+// who actually click "Import". Statically importing it here shipped xlsx's
+// full bundle to every visitor of /applications, even ones who never open
+// the dialog.
+const ApplicationImportDialog = dynamic(
+  () => import("@/components/applications/application-import-dialog").then((m) => m.ApplicationImportDialog),
+  { ssr: false }
+);
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -330,7 +340,7 @@ export default function ApplicationsPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <AppHeader />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Workspace Top Banner & Primary Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/60">
           <div>
