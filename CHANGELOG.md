@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.13.0] - 2026-09-14
+
+### Added
+- **Vercel Speed Insights**, alongside the existing Analytics integration in the root layout, real Core Web Vitals data collection on every deployed page.
+- Google Search Console site-verification file (`public/google55d5a1739e977f91.html`), required to claim ownership of the production domain. Per Google's own instructions, do not remove this file even after verification succeeds, it stays live as ongoing proof of ownership.
+
+### Fixed
+- **`/demo` was an orphan page**: fully built with its own metadata and listed in `sitemap.ts` at priority 0.8, but linked from nowhere on the site, neither the footer nor the mobile/guest navigation menu. Added it to both, since a page search engines can only reach via the sitemap (never through an actual link) sends a weak discovery signal.
+- **`/forgot-password` and `/reset-password` had no page-specific metadata**: both were `"use client"` at the top of `page.tsx`, which structurally cannot export `metadata`, so they fell back to the generic root "LumaCV" browser tab title. Split into the same thin server `page.tsx` (metadata) + client `*-content.tsx` pattern every other page already uses. (`/settings` was deliberately left as-is, it's a pure client-side redirect, the same intentional pattern already used by `/support`.)
+
+### Docs
+- An SEO/indexing audit of the codebase (sitemap, robots.txt, canonical tags, per-page metadata, heading structure, alt text, JSON-LD, internal/broken links) found the site's actual on-page SEO already correctly implemented; the two real findings above were the only genuine gaps. If Google still isn't indexing the site after this release, the cause is outside this repository, check Vercel's Deployment Protection setting (a "Require Log In" gate blocks Googlebot exactly like it blocks anyone else), Search Console's coverage report, and domain/DNS verification.
+
+---
+
 ## [2.12.0] - 2026-09-14
 
 ### Fixed

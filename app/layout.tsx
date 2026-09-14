@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AuthProvider } from '@/components/auth-provider';
 import dynamic from 'next/dynamic';
 
@@ -143,6 +144,7 @@ export default function RootLayout({
             <Toaster />
           </ThemeProvider>
           <Analytics />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>

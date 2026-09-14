@@ -56,6 +56,7 @@ const COLUMNS: FooterColumn[] = [
   {
     title: "Product",
     links: [
+      { label: "Live Demo", href: "/demo" },
       { label: "Templates", href: "/templates" },
       { label: "Resume Editor", href: "/editor" },
       { label: "ATS Checker", href: "/ats" },

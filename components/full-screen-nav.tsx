@@ -39,6 +39,7 @@ const AUTHED_DESTINATIONS: NavDestination[] = [
 ];
 
 const GUEST_DESTINATIONS: NavDestination[] = [
+    { href: '/demo', label: 'Live Demo', description: 'See LumaCV in action, no signup required', badge: 'Try It' },
     { href: '/builder', label: 'Optimize Resume', description: 'AI-tailor resume bullets to any job description', badge: 'AI' },
     { href: '/templates', label: 'Templates Gallery', description: 'Browse all 52 high-density Typst designs', badge: '52 Free' },
     { href: '/ats', label: 'ATS Checker', description: 'Real-time keyword matching and parse scoring' },
