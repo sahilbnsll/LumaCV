@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+
+// Card width is `p.cardWidth` cqw (19cqw by default) of the hero's own
+// container, not the viewport, so this can't be a precise vw-based `sizes`
+// string. These bounds comfortably cover the container's likely rendered
+// width at both breakpoints (with headroom for the 3D stream's exit-scale
+// growth, up to 1.28x) without falling back to the raw source PNGs
+// (500KB+ each, at up to 15 cards eager-loading before this fix).
+const STREAM_CARD_SIZES = "(max-width: 640px) 140px, 360px";
 
 /* ── Continuous 3D Resume Stream Corridor ───────────────────────────
  *
@@ -219,12 +228,12 @@ export function ImageStreamHero({
                 }}
               >
                 {img?.src ? (
-                  <img
+                  <Image
                     src={img.src}
                     alt={img.alt ?? "Resume Template"}
-                    loading="eager"
-                    decoding="async"
-                    className="h-full w-full object-cover object-top select-none pointer-events-none"
+                    fill
+                    sizes={STREAM_CARD_SIZES}
+                    className="object-cover object-top select-none pointer-events-none"
                     draggable={false}
                   />
                 ) : null}
@@ -262,12 +271,12 @@ export function ImageStreamHero({
                 }}
               >
                 {img?.src ? (
-                  <img
+                  <Image
                     src={img.src}
                     alt={img.alt ?? "Resume Template"}
-                    loading="eager"
-                    decoding="async"
-                    className="h-full w-full object-cover object-top select-none pointer-events-none"
+                    fill
+                    sizes={STREAM_CARD_SIZES}
+                    className="object-cover object-top select-none pointer-events-none"
                     draggable={false}
                   />
                 ) : null}
