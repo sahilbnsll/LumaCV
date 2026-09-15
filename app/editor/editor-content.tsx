@@ -530,7 +530,7 @@ function EditorContent() {
                                     <DropdownMenuItem onClick={() => handleDownloadFormat('docx')} className="cursor-pointer">
                                         <span className="h-2 w-2 rounded-full bg-amber-500 mr-2 shrink-0" />
                                         <span className="flex-1 text-xs">Word Document</span>
-                                        <span className="text-[10px] font-mono text-muted-foreground">.doc</span>
+                                        <span className="text-[10px] font-mono text-muted-foreground">.docx</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleDownloadFormat('md')} className="cursor-pointer">
                                         <span className="h-2 w-2 rounded-full bg-emerald-500 mr-2 shrink-0" />

@@ -1,6 +1,19 @@
 import { DEFAULT_SECTION_ORDER, ResumeData, TemplateType } from './resume-schema';
 import { ALL_TEMPLATES } from './templates-data';
 
+// `a || b || ''` only falls through to '' when a and b are falsy, an empty
+// array or object is truthy, so a malformed field (e.g. AI-tailored output
+// that put an array where a string belongs) reaches `.trim()` on a
+// non-string and throws "x.trim is not a function", crashing the whole
+// export. Coerce to a real string first so a bad field degrades to '',
+// not a hard failure.
+function safeTrim(...values: unknown[]): string {
+  for (const v of values) {
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return '';
+}
+
 export interface TypstPersonalContact {
   phone: string;
   email: string;
@@ -315,18 +328,18 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
   const awards = (data.achievements || []).map((a) => ({
     name: a.name,
     title: a.name,
-    awarder: (a.context || (a as any).awarder || '').trim(),
-    context: (a.context || (a as any).awarder || '').trim(),
+    awarder: safeTrim(a.context, (a as any).awarder),
+    context: safeTrim(a.context, (a as any).awarder),
     date: a.date?.trim() || '',
     description: a.description?.trim() || '',
     rank: a.rank?.trim() || '',
-    url: (a.link || (a as any).url || '').trim(),
-    link: (a.link || (a as any).url || '').trim(),
+    url: safeTrim(a.link, (a as any).url),
+    link: safeTrim(a.link, (a as any).url),
   }));
 
   const publications = (data.publications || []).map((pub) => {
     const title = pub.title;
-    const publisher = (pub.platform || (pub as any).publisher || '').trim();
+    const publisher = safeTrim(pub.platform, (pub as any).publisher);
     const date = pub.date?.trim() || '';
     const authors = pub.authors?.trim() || '';
     const citParts = [
@@ -343,8 +356,8 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
       date,
       authors,
       description: pub.description?.trim() || '',
-      url: (pub.link || (pub as any).url || '').trim(),
-      link: (pub.link || (pub as any).url || '').trim(),
+      url: safeTrim(pub.link, (pub as any).url),
+      link: safeTrim(pub.link, (pub as any).url),
       citation: citParts.join(', '),
     };
   });

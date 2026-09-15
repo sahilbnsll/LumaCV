@@ -56,7 +56,7 @@ export const FORMATS: FormatOption[] = [
   },
   {
     id: "docx",
-    ext: ".doc",
+    ext: ".docx",
     name: "Microsoft Word Document",
     label: "Word",
     desc: "Editable document format compatible with Microsoft Word and Google Docs.",

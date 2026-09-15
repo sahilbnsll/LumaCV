@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.16.0] - 2026-09-15
+
+### Fixed
+- **A resume with certain AI-tailored achievement/publication fields crashed the entire export** ("Export failed: (r || "").trim is not a function"), reported directly by a user. Root cause: `lib/typst-generator.ts` mapped those fields with a `(a || b || '').trim()` pattern, an empty array is truthy in JS, so a malformed field (the tailoring pipeline put an array where a string belongs) reached `.trim()` on a non-string and threw, taking down PDF compile, Word export, and anything else that touched that resume's data. Replaced with a `safeTrim()` helper that only accepts real strings, everything else degrades to an empty value instead of crashing.
+
+### Changed
+- **The Word export is now a genuine OOXML `.docx`**, not an HTML file wearing a Word extension. The previous version (`resumeToWordHtml()`) had a real, separate bug (fixed in 2.15.1 by renaming the download to `.doc`) but was still a hand-maintained, fixed-layout HTML approximation covering only 6 of the resume's 22 possible section types, in a hardcoded order that ignored the user's actual configured section order. A user asked for it to genuinely match the PDF, since a true PDF-to-DOCX conversion isn't feasible in this stack (LibreOffice is a 300MB+ native dependency incompatible with Vercel serverless, hosted conversion APIs mean a new paid external dependency), the fix instead builds a real `.docx` (via the `docx` npm package, in a new `lib/docx-generator.ts`) directly from the same `ResumeData` the PDF compiles from: every section type, in the user's real configured order, using the resume's actual accent color. It won't clone any one of the 52 Typst templates' exact columns and spacing, Word's layout engine and Typst's are fundamentally different systems, but the content, structure, and order now genuinely match. Lazy-loaded on click (not a static import) so the ~100KB `docx` library doesn't load into the editor's initial bundle for the (majority) of sessions that never export to Word.
+- Markdown export now includes the Tech Stack section (`techStackSummary`) alongside the sections it already covered, one of the two concrete content gaps a user flagged between the exported Markdown and the compiled resume.
+
+---
+
 ## [2.15.2] - 2026-09-15
 
 ### Changed
