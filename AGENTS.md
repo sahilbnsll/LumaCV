@@ -111,6 +111,8 @@ Supabase Auth (`@supabase/ssr`), email/password plus optional username-based sig
 
 Vercel (recommended) — see `docs/deployment.md` for Docker/VPS alternatives. The Typst CLI binary ships from `bin/` (installed by the `postinstall` script `scripts/install-typst.mjs`) and is included in serverless function bundles via `experimental.outputFileTracingIncludes` in `next.config.js` — if you move `bin/` or `typst/`, update that config too, or compiles will 500 in production while working locally. Compilation shells out to a native binary via `child_process.spawn`; there is no WASM path (older docs said otherwise — corrected).
 
+`bin/` is gitignored, so it doesn't survive between Vercel builds, only `node_modules` does (via Vercel's lockfile-keyed dependency cache). `install-typst.mjs` also stashes the downloaded binary under `node_modules/.cache/typst-bin/<version>/`, so a build with a warm dependency cache restores it with a local file copy instead of re-downloading from GitHub every time. If you bump `TYPST_VERSION`, the old cached copy is simply orphaned (different version subdirectory), no explicit invalidation needed.
+
 ## ENVIRONMENT
 
 Server-only (never exposed to the client): `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`/`SUPABASE_ANON_KEY` (server-side aliases, distinct from the `NEXT_PUBLIC_` ones), `GEMINI_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `GITHUB_MODELS_TOKEN`/`GITHUB_TOKEN`, `UPSTASH_REDIS_REST_URL`/`TOKEN`, `COMPILE_WORKER_SECRET`, `RESEND_API_KEY`, `FEEDBACK_*_EMAIL` vars, `APP_BASE_URL`, `VERCEL_URL`.

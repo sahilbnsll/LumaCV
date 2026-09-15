@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.15.2] - 2026-09-15
+
+### Changed
+- **Every Vercel deploy re-downloaded and re-extracted the ~50MB Typst binary from GitHub, even for doc-only or one-line changes.** `bin/` is gitignored (it has to be, the Linux and Windows binaries are platform-specific), so it doesn't exist at the start of a fresh build, only `node_modules` survives between builds via Vercel's dependency cache, keyed on the lockfile. `scripts/install-typst.mjs` now also stashes a copy under `node_modules/.cache/typst-bin/<version>/` after downloading; on a build where that cache is still warm (dependencies unchanged), it's a local file copy instead of a network fetch. Verified locally end to end: a fresh install downloads and populates the cache, a second run with `bin/` cleared restores from the cache instead of hitting the network, and the restored binary runs and reports its version correctly. Whether this actually helps on a given Vercel build depends on whether Vercel's cache was warm for that build, watch the deploy log for `[install-typst] Restoring ... from node_modules cache` vs `Downloading Typst ...` to see which happened.
+
+---
+
 ## [2.15.1] - 2026-09-15
 
 ### Fixed
