@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ResumeDataSchema, TemplateTypeSchema } from '@/lib/resume-schema';
+import { sanitizeResumeData } from '@/lib/sanitize-resume-data';
 
 // This route previously did no real validation beyond `!resumeData`, letting
 // a malformed resumeData shape reach Supabase as an opaque JSON blob (only
@@ -55,6 +56,14 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
+        // Same reasoning as the compile route: sanitize resumeData before
+        // validating it so a malformed field (an AI-tailored field that
+        // ended up an array/object instead of a string) gets cleaned up
+        // instead of failing this schema and silently dropping the save
+        // (the autosave caller here only does a no-op .catch()).
+        if (body && typeof body === 'object' && body.resumeData) {
+            body.resumeData = sanitizeResumeData(body.resumeData);
+        }
         const validated = saveResumeSchema.safeParse(body);
         if (!validated.success) {
             return NextResponse.json(

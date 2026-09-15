@@ -5,6 +5,7 @@ import { compileTypst } from '@/lib/compiler-service';
 import { compileRatelimit } from '@/lib/rate-limit';
 import { recordResumeCompiled } from '@/lib/stats-service';
 import { requireUser } from '@/lib/auth';
+import { sanitizeResumeData } from '@/lib/sanitize-resume-data';
 
 export const maxDuration = 60;
 
@@ -22,6 +23,15 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
+        // Sanitize resumeData before validating it, not after: a malformed
+        // field (an AI-tailored field that ended up an array/object
+        // instead of a string) used to fail this schema's z.string()
+        // checks with a 400 whose response body the client couldn't
+        // reliably surface, cleaning it first means it actually compiles
+        // instead of hard-rejecting a resume for one bad field.
+        if (body && typeof body === 'object' && body.resumeData) {
+            body.resumeData = sanitizeResumeData(body.resumeData);
+        }
         const validatedInput = CompileResumeRequestSchema.safeParse(body);
 
         if (!validatedInput.success) {

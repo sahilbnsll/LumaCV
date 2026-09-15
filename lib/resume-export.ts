@@ -1,6 +1,27 @@
 import { ResumeData, TemplateType } from './resume-schema';
 import { notify } from './notify';
 import { generateTypst } from './typst-generator';
+import { sanitizeResumeData } from './sanitize-resume-data';
+
+/**
+ * Extracts a short, readable message from a Zod `.error.format()` object
+ * (`{ fieldName: { _errors: ["message"] }, nested: { field: {...} } }`)
+ * instead of assuming server error details are always a plain string.
+ */
+function summarizeZodFormatError(details: unknown, depth = 0): string {
+  if (!details || typeof details !== 'object' || depth > 3) return '';
+  const obj = details as Record<string, unknown>;
+  const messages: string[] = [];
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === '_errors') {
+      if (Array.isArray(value) && value.length) messages.push(...value.filter((m): m is string => typeof m === 'string'));
+      continue;
+    }
+    const nested = summarizeZodFormatError(value, depth + 1);
+    if (nested) messages.push(`${key}: ${nested}`);
+  }
+  return messages.slice(0, 3).join('; ');
+}
 
 /**
  * Trigger browser file download for a given Blob or string content
@@ -138,7 +159,18 @@ export interface ExportOptions {
  * Universal Resume Exporter: handles PDF, Word (DOCX), Markdown, JSON, and Typst downloads
  */
 export async function exportResume(opts: ExportOptions): Promise<boolean> {
-  const { resumeData, format, template = 'modern', theme = { color: 'cobalt' }, typstCode, customFilename } = opts;
+  const { resumeData: rawResumeData, format, template = 'modern', theme = { color: 'cobalt' }, typstCode, customFilename } = opts;
+  // Sanitize once, here, for every format, instead of guarding individual
+  // .trim() call sites inside the generators. A malformed field (an
+  // AI-tailored field that ended up an array/object instead of a string)
+  // used to either crash the generator directly or get rejected by the
+  // server's Zod schema with a 400 that this function's own error path
+  // then mishandled. Coercing to well-formed data up front means a
+  // malformed resume actually exports successfully instead of failing in
+  // either of those ways. JSON export is the one exception, it uses the
+  // raw data so a user exporting for backup/reimport gets exactly what's
+  // actually in their resume, not a silently "fixed" copy.
+  const resumeData = sanitizeResumeData(rawResumeData);
   const safeName = (resumeData.personalInfo?.name || 'Resume').toLowerCase().replace(/\s+/g, '-');
   const baseName = customFilename || `${safeName}`;
 
@@ -165,10 +197,24 @@ export async function exportResume(opts: ExportOptions): Promise<boolean> {
       // %PDF header slapped on) isn't a valid PDF and no reader can open
       // it, this used to report success anyway, silently handing the user
       // a corrupt file. Surface the real failure instead.
+      //
+      // errBody.details on a 400 is Zod's error.format() output, a nested
+      // OBJECT describing which fields failed, not a string. Passing it
+      // straight through as a notification description used to crash
+      // inside notify.ts's title.trim() with a generic, unhelpful "(r ||
+      // "").trim is not a function", masking the actual validation error
+      // that would have said which field was wrong. Extract a real
+      // message string from it instead of assuming the shape.
       let serverMessage = '';
       try {
         const errBody = await res.json();
-        serverMessage = errBody?.details || errBody?.error || '';
+        if (typeof errBody?.details === 'string') {
+          serverMessage = errBody.details;
+        } else if (errBody?.details && typeof errBody.details === 'object') {
+          serverMessage = summarizeZodFormatError(errBody.details);
+        } else if (typeof errBody?.error === 'string') {
+          serverMessage = errBody.error;
+        }
       } catch {
         // Response wasn't JSON, fall through with no extra detail.
       }
@@ -203,7 +249,10 @@ export async function exportResume(opts: ExportOptions): Promise<boolean> {
     }
 
     if (format === 'json') {
-      const json = JSON.stringify(resumeData, null, 2);
+      // Raw, unsanitized data: a JSON export is for backup/reimport, it
+      // should reflect exactly what's actually stored, not a silently
+      // "fixed" copy.
+      const json = JSON.stringify(rawResumeData, null, 2);
       triggerFileDownload(json, `${baseName}.json`, 'application/json');
       notify.success('JSON exported', `${baseName}.json`);
       return true;

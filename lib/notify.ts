@@ -21,7 +21,15 @@ const DEDUPE_WINDOW_MS = 1400;
 function getDedupedId(type: string, title: string, description?: string, customId?: string | number): string | number {
   if (customId !== undefined) return customId;
 
-  const key = `${type}::${title.trim()}::${(description || '').trim()}`;
+  // Defense in depth: TypeScript's `string` annotations here don't protect
+  // against a caller passing through an untyped JSON.parse() result (an
+  // API error response's `details` field, say) that isn't actually a
+  // string at runtime, .trim() on that throws and takes the whole
+  // notification down with it, hiding whatever the notification was
+  // trying to report in the first place.
+  const safeTitle = typeof title === 'string' ? title : String(title ?? '');
+  const safeDescription = typeof description === 'string' ? description : '';
+  const key = `${type}::${safeTitle.trim()}::${safeDescription.trim()}`;
   const now = Date.now();
   const lastTime = recentNotifications.get(key);
 

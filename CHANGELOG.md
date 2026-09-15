@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.16.2] - 2026-09-15
+
+### Fixed
+- **Found the actual root cause of the export crash** (`"(r || \"\").trim is not a function"`) that 2.16.0 and 2.16.1 each partially, incorrectly diagnosed. It wasn't in the Typst/docx generators at all, those were red herrings, both patched defensively anyway but never the real cause. The compile API route rejects a malformed `resumeData` (a field that ended up an array/object instead of a string, most likely from a code path that edits resume state without going through Zod, not the AI tailoring output, which is already strictly validated) with a 400 whose body includes Zod's `error.format()`, a nested **object**, not a string. `lib/resume-export.ts`'s own error-handling code (added in 2.16.0 to stop faking a fallback PDF) assumed that object was always a string and handed it straight to `notify.error()` as the description; `notify.ts` then called `.trim()` on it and crashed, which is exactly the generic, unhelpful error the user kept seeing, one that actively hid the real, specific validation failure it was trying to report.
+- **Fixed at the actual source this time**: added `lib/sanitize-resume-data.ts`, a single function that coerces a resume's fields to their real expected types (string fields that aren't strings become `''`, bullet arrays keep only actual string items, etc.), called once at every real entry point, before anything else touches the data, `exportResume()` client-side (every format: PDF, Word, Markdown, Typst; JSON export deliberately uses the raw, un-sanitized data instead, so a backup/reimport export reflects exactly what's actually stored) and both `/api/v1/resume/compile` and `POST /api/v1/resumes` server-side. A malformed field anywhere now gets cleaned up before it can crash or fail validation, instead of requiring another individually-patched call site every time a different field turns out to be the one that's broken this time.
+- Also hardened `notify.ts` itself: `getDedupedId()` no longer assumes its `title`/`description` arguments are actually strings at runtime, a defensive fix independent of the resume-export bug, since any future caller passing through an untyped API response would hit the identical crash.
+- Fixed `summarizeZodFormatError()` (new, in `lib/resume-export.ts`) actually extracting a short, readable message from a Zod format object, so if a resume genuinely fails a required-field check (e.g. an experience entry with no dates at all) after sanitization, the export now fails with a clear, specific message instead of either a fabricated file or a crash.
+
+---
+
 ## [2.16.1] - 2026-09-15
 
 ### Fixed
