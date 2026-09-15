@@ -457,7 +457,7 @@ export default function DemoPageContent() {
                                                     className="flex w-full items-center justify-between px-2 py-1 rounded-lg hover:bg-muted font-medium text-left"
                                                 >
                                                     <span>Word Document</span>
-                                                    <span className="text-[10px] text-amber-500 font-mono">.docx</span>
+                                                    <span className="text-[10px] text-amber-500 font-mono">.doc</span>
                                                 </button>
                                                 <button
                                                     type="button"

@@ -698,7 +698,7 @@ export function Step4Preview() {
                                         <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
                                         <span>Word Document</span>
                                     </div>
-                                    <span className="text-[10px] text-amber-500 font-mono font-semibold">.docx</span>
+                                    <span className="text-[10px] text-amber-500 font-mono font-semibold">.doc</span>
                                 </button>
                                 <button
                                     type="button"

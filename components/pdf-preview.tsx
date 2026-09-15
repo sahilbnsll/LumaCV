@@ -518,7 +518,7 @@ export function PdfPreview() {
                                             <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
                                             <span>Word Document</span>
                                         </div>
-                                        <span className="text-[10px] font-mono text-amber-500 font-semibold">.docx</span>
+                                        <span className="text-[10px] font-mono text-amber-500 font-semibold">.doc</span>
                                     </button>
                                     <button
                                         type="button"

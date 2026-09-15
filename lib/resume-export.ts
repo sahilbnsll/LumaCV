@@ -269,22 +269,38 @@ export async function exportResume(opts: ExportOptions): Promise<boolean> {
         triggerFileDownload(blob, `${baseName}-${template}.pdf`, 'application/pdf');
         notify.success('Download complete', `${baseName}-${template}.pdf`);
         return true;
-      } else {
-        // Fallback: client print or vector mock
-        const printBlob = new Blob(['%PDF-1.5 Vector PDF Stream\n' + resumeToMarkdown(resumeData)], { type: 'application/pdf' });
-        triggerFileDownload(printBlob, `${baseName}-${template}.pdf`, 'application/pdf');
-        notify.success('Download ready', `${baseName}-${template}.pdf`);
-        return true;
       }
+
+      // No fabricated fallback: a fake "PDF" (really markdown text with a
+      // %PDF header slapped on) isn't a valid PDF and no reader can open
+      // it, this used to report success anyway, silently handing the user
+      // a corrupt file. Surface the real failure instead.
+      let serverMessage = '';
+      try {
+        const errBody = await res.json();
+        serverMessage = errBody?.details || errBody?.error || '';
+      } catch {
+        // Response wasn't JSON, fall through with no extra detail.
+      }
+      notify.error(
+        'PDF export failed',
+        serverMessage || (res.status === 429 ? 'Too many requests, please wait a moment and try again.' : 'Please try again.')
+      );
+      return false;
     }
 
     if (format === 'docx') {
+      // resumeToWordHtml() produces Word's legacy HTML-flavored document
+      // format (mso conditional comments + an office:word XML namespace),
+      // not a real OOXML package, that's what a .docx file actually is (a
+      // zip archive of XML parts). Modern Word validates the extension
+      // against the real content and refuses to open this as .docx with a
+      // "can't open, contents are damaged" error. .doc + application/msword
+      // is the correct pairing for this format, and Word opens it natively.
       const htmlDoc = resumeToWordHtml(resumeData);
-      const blob = new Blob([htmlDoc], {
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
-      triggerFileDownload(blob, `${baseName}.docx`, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      notify.success('Word document exported', `${baseName}.docx`);
+      const blob = new Blob([htmlDoc], { type: 'application/msword' });
+      triggerFileDownload(blob, `${baseName}.doc`, 'application/msword');
+      notify.success('Word document exported', `${baseName}.doc`);
       return true;
     }
 

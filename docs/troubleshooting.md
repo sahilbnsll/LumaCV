@@ -46,6 +46,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 ```
 
+### Issue (historical, fixed in 2.15.1): Downloaded PDF or Word file won't open
+**Cause**: `lib/resume-export.ts`'s PDF export used to fall back to a fabricated file (markdown text with a `%PDF-1.5` header string prepended) whenever `POST /api/v1/resume/compile` returned a non-OK response, and reported success anyway. The Word export generated Word's legacy HTML-flavored document format but saved it with a `.docx` extension and the real OOXML MIME type, which modern Word validates against the actual content and refuses to open. Both are fixed: a failed PDF compile now surfaces a real, visible error instead of a corrupt download, and Word exports save as `.doc` (matching what the generated content actually is) instead of `.docx`.
+
+If a *new* report of either symptom shows up, check first whether it's actually the PDF compile failing server-side (rate limit, a malformed field in the tailored resume data tripping up `compileTypst()`, an expired session) and surface that root cause, don't reach for another silent fallback.
+
 ---
 
 ## 2. Resend Email Service & User Feedback

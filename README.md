@@ -24,7 +24,7 @@ The AI pipeline operates in two modes (general resume optimization and job-descr
 - **Deterministic ATS scoring**: a normalized 4-pillar formula covering hard skills, responsibilities, keyword density, and formatting compliance.
 - **52 Typst templates**: Classic/ATS-Optimized, Modern & Tech, and Executive & Advisory families. See [`lib/resume-schema.ts`](lib/resume-schema.ts).
 - **Bring Your Own Key (BYOK)**: Google Gemini, OpenAI, Anthropic Claude, and Groq Cloud, plus five system-configured fallback providers so the app works without a BYOK key.
-- **Dual export**: vector PDF or raw Typst source (`.typ`) for offline CLI builds.
+- **Five export formats**: vector PDF (Typst-compiled), Word-compatible `.doc`, Markdown, JSON, and raw Typst source (`.typ`) for offline CLI builds.
 - **Privacy-conscious**: client-side PDF/DOCX text extraction. The file itself never leaves the browser; only extracted text is sent server-side for AI features. Browsing and template exploration don't require an account; compiling, exporting, and AI tailoring do. See the [Privacy Policy](https://lumacv.sahilbansal.net/privacy).
 - Responsive across mobile, tablet, and desktop; self-hostable.
 

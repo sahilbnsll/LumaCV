@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.15.1] - 2026-09-15
+
+### Fixed
+- **Downloaded PDF and Word exports were both silently corrupt.** Reported directly by a user whose downloaded `.pdf` and `.docx` files wouldn't open in anything.
+  - **PDF**: whenever `POST /api/v1/resume/compile` failed, `lib/resume-export.ts` fell back to a fabricated "PDF", really just the resume's markdown text with a `%PDF-1.5 Vector PDF Stream` string prepended, not a valid PDF by any real structure, and reported a success toast anyway. No PDF reader can open it, and the false "Download complete" message hid the real failure completely. The fallback is gone: a failed compile now shows a real error (the server's actual message when available) and the export correctly reports failure instead of handing over a corrupt file.
+  - **Word**: `resumeToWordHtml()` generates Word's legacy HTML-flavored document format (an `mso`-annotated HTML file, not a real OOXML package), but it was being saved with a `.docx` extension and the real OOXML MIME type. Modern Word validates a `.docx` file's actual contents against its extension and refuses to open it, "the file appears to be corrupted." Now saved as `.doc` with `application/msword`, the correct pairing for what's actually being generated, which Word opens natively. Fixed in every download menu that offers the format (editor, dashboard, homepage export demo, `/demo`, the builder), not just the one route.
+
+### Docs
+- `docs/troubleshooting.md`: added a "Downloaded PDF or Word file won't open" entry under Typst Compiler & PDF Generation, documenting the root cause and explicitly warning against reaching for another silent fallback if a similar report comes in again.
+- `AGENTS.md`: added a Do Not Break entry for the export module, no fabricated fallback files on a failed compile, and keep the Word export's extension/MIME type matched to what it actually generates.
+- `README.md`: corrected the Features list's "Dual export" claim (it undersold the app by two formats) to list all five real export formats.
+
+---
+
 ## [2.15.0] - 2026-09-14
 
 ### Security
