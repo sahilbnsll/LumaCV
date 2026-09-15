@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.16.1] - 2026-09-15
+
+### Fixed
+- **2.16.0's export crash fix was incomplete.** It fixed the exact 7 lines matching the `(a || b || '').trim()` pattern in the achievements/publications fields, but the same class of bug existed in roughly 60 other unguarded `field?.trim()` calls across every other section type (experience, education, projects, internships, open source, leadership, volunteering, personal info), plus the same pattern in the brand-new `lib/docx-generator.ts`. A malformed field anywhere in a resume, not just achievements/publications, could still crash both the PDF and Word export. Swept both files: every field that isn't guaranteed to be a string by the time it's used now goes through `safeTrim()` instead of `?.trim() || ''` or `(a || b || '').trim()`, and bullet-array items are now type-checked (`typeof b === 'string'`) before being used, not just filtered for truthiness.
+- Stress-tested this time instead of testing one field: both `generateTypst()` and `generateDocxBlob()` now run clean, across 5 different Typst templates, against a synthetic resume with a malformed (empty-array) value in every single string field and mixed-type bullets (strings, numbers, `null`, `undefined`) in every bullet list. A malformed field now degrades to an empty value in the output instead of crashing or producing visible garbage like `[object Object]`.
+
+---
+
 ## [2.16.0] - 2026-09-15
 
 ### Fixed

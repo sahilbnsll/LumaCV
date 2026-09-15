@@ -18,6 +18,16 @@ const INK = '1A1A1A';
 const MUTED = '555555';
 const RULE = 'CCCCCC';
 
+// Same reasoning as typst-generator.ts's safeTrim: `x || ''` doesn't
+// protect against a truthy non-string (an AI-tailored field that ended up
+// an array/object instead of a string), which crashes at `.trim()`.
+function safeTrim(...values: unknown[]): string {
+  for (const v of values) {
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return '';
+}
+
 /**
  * Builds a genuine OOXML .docx (not an HTML-flavored fake) directly from
  * the same ResumeData the PDF compiles from, section-for-section in the
@@ -41,7 +51,7 @@ export async function generateDocxBlob(data: ResumeData, themeColor: string = 'n
     })
   );
 
-  const headline = p.title?.trim() || p.tagline?.trim();
+  const headline = safeTrim(p.title, p.tagline);
   if (headline) {
     children.push(
       new Paragraph({
@@ -51,14 +61,19 @@ export async function generateDocxBlob(data: ResumeData, themeColor: string = 'n
     );
   }
 
+  const email = safeTrim(p.email);
+  const linkedin = safeTrim(p.linkedin);
+  const github = safeTrim(p.github);
+  const portfolio = safeTrim(p.portfolio);
+
   const contactRuns: (TextRun | ExternalHyperlink)[] = [];
   const contactItems: Array<{ label: string; href?: string }> = [
-    { label: p.email || '', href: p.email ? `mailto:${p.email}` : undefined },
-    { label: p.phone || '' },
-    { label: p.location || '' },
-    { label: p.linkedin || '', href: p.linkedin ? withProtocol(p.linkedin) : undefined },
-    { label: p.github || '', href: p.github ? withProtocol(p.github) : undefined },
-    { label: p.portfolio || '', href: p.portfolio ? withProtocol(p.portfolio) : undefined },
+    { label: email, href: email ? `mailto:${email}` : undefined },
+    { label: safeTrim(p.phone) },
+    { label: safeTrim(p.location) },
+    { label: linkedin, href: linkedin ? withProtocol(linkedin) : undefined },
+    { label: github, href: github ? withProtocol(github) : undefined },
+    { label: portfolio, href: portfolio ? withProtocol(portfolio) : undefined },
   ].filter((c) => c.label.trim());
 
   contactItems.forEach((item, i) => {
@@ -151,11 +166,11 @@ function renderSection(key: string, data: ResumeData, accent: string): Paragraph
 
   switch (parsed.data) {
     case 'summary': {
-      const text = data.summary?.trim();
+      const text = safeTrim(data.summary);
       return text ? [heading('Professional Summary', accent), paragraph(text)] : [];
     }
     case 'techStackSummary': {
-      const text = data.techStackSummary?.trim();
+      const text = safeTrim(data.techStackSummary);
       return text ? [heading('Tech Stack', accent), paragraph(text, { mono: true, size: 18 })] : [];
     }
     case 'skills': {

@@ -199,15 +199,15 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
   const p = data.personalInfo || { name: 'Your Name' };
 
   const contact: TypstPersonalContact = {
-    phone: p.phone?.trim() || '',
-    email: p.email?.trim() || '',
-    linkedin: p.linkedin?.trim() || '',
-    github: p.github?.trim() || '',
-    website: p.portfolio?.trim() || '',
-    location: p.location?.trim() || '',
+    phone: safeTrim(p.phone),
+    email: safeTrim(p.email),
+    linkedin: safeTrim(p.linkedin),
+    github: safeTrim(p.github),
+    website: safeTrim(p.portfolio),
+    location: safeTrim(p.location),
   };
 
-  const headline = p.title?.trim() || p.tagline?.trim() || '';
+  const headline = safeTrim(p.title, p.tagline);
 
   const skills = (data.skills || []).map((s) => {
     const rawItems = s.items || '';
@@ -223,16 +223,17 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
     };
   });
 
-  const cleanBulletText = (s: string) => {
+  const cleanBulletText = (s: unknown) => {
+    if (typeof s !== 'string') return '';
     return s.replace(/^\[(?:Highlight|Impact|Feature|Result)[^\]]*\]\s*/i, '').trim();
   };
 
   const experience = (data.experience || []).map((exp) => {
     const resolvedDates = (() => {
-      const sd = exp.startDate?.trim();
-      const ed = exp.endDate?.trim();
+      const sd = safeTrim(exp.startDate);
+      const ed = safeTrim(exp.endDate);
       if (sd || ed) return [sd, ed].filter(Boolean).join(' – ');
-      return exp.dates?.trim() || '';
+      return safeTrim(exp.dates);
     })();
 
     const cleanBullets = (exp.bullets || []).map(cleanBulletText).filter(Boolean);
@@ -243,11 +244,11 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
       id: exp.id || '',
       role: exp.title || 'Role',
       company: exp.company || 'Company',
-      companyUrl: exp.companyUrl?.trim() || '',
+      companyUrl: safeTrim(exp.companyUrl),
       dates: resolvedDates,
-      location: exp.location?.trim() || '',
-      description: exp.description?.trim() || '',
-      technologies: exp.technologies?.trim() || '',
+      location: safeTrim(exp.location),
+      description: safeTrim(exp.description),
+      technologies: safeTrim(exp.technologies),
       bullets: cleanBullets,
       highlights: cleanHighlights,
       impactBullets: cleanImpactBullets,
@@ -258,8 +259,8 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
     role: intern.title || 'Intern',
     company: intern.company || 'Company',
     dates: intern.dates || '',
-    location: intern.location?.trim() || '',
-    bullets: (intern.bullets || []).filter((b) => Boolean(b && b.trim())),
+    location: safeTrim(intern.location),
+    bullets: (intern.bullets || []).filter((b): b is string => typeof b === 'string' && b.trim().length > 0),
   }));
 
   // If experience is empty but internships are provided, use internships in experience so templates don't show empty work experience
@@ -267,32 +268,32 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
 
   const education = (data.education || []).map((edu) => {
     const resolvedDates = (() => {
-      const sd = edu.startDate?.trim();
-      const ed = edu.endDate?.trim();
+      const sd = safeTrim(edu.startDate);
+      const ed = safeTrim(edu.endDate);
       if (sd || ed) return [sd, ed].filter(Boolean).join(' – ');
-      return edu.dates?.trim() || '';
+      return safeTrim(edu.dates);
     })();
 
     return {
       id: edu.id || '',
       degree: edu.degree || 'Degree',
-      specialization: edu.fieldOfStudy?.trim() || '',
+      specialization: safeTrim(edu.fieldOfStudy),
       institution: edu.institution || 'Institution',
       dates: resolvedDates,
-      location: edu.location?.trim() || '',
-      gpa: edu.gpa?.trim() || '',
-      coursework: edu.coursework?.trim() || '',
-      honors: edu.honors?.trim() || '',
+      location: safeTrim(edu.location),
+      gpa: safeTrim(edu.gpa),
+      coursework: safeTrim(edu.coursework),
+      honors: safeTrim(edu.honors),
     };
   });
 
   const projects = (data.projects || []).map((proj) => {
     // Resolve dates, prefer explicit startDate/endDate, fall back to combined dates string
     const resolvedDates = (() => {
-      const sd = (proj as any).startDate?.trim();
-      const ed = (proj as any).endDate?.trim();
+      const sd = safeTrim((proj as any).startDate);
+      const ed = safeTrim((proj as any).endDate);
       if (sd || ed) return [sd, ed].filter(Boolean).join(' – ');
-      return proj.dates?.trim() || '';
+      return safeTrim(proj.dates);
     })();
 
     const cleanBullets = (proj.bullets || []).map(cleanBulletText).filter(Boolean);
@@ -302,13 +303,13 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
     return {
       id: proj.id || '',
       name: proj.name || 'Project',
-      stack: proj.techStack?.trim() || '',
+      stack: safeTrim(proj.techStack),
       // Keep description as a clean prose string, do NOT append bullets in parentheses
-      description: proj.description?.trim() || '',
-      url: proj.link?.trim() || '',
-      role: proj.role?.trim() || '',
+      description: safeTrim(proj.description),
+      url: safeTrim(proj.link),
+      role: safeTrim(proj.role),
       dates: resolvedDates,
-      impact: proj.impact?.trim() || '',
+      impact: safeTrim(proj.impact),
       // Separate arrays, templates can render them as distinct bullet groups
       impactBullets: cleanImpactBullets,
       highlights: cleanHighlights,
@@ -318,11 +319,11 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
 
   const certifications = (data.certifications || []).map((c) => ({
     name: c.name,
-    issuer: c.issuer?.trim() || '',
-    date: c.date?.trim() || '',
-    url: c.link?.trim() || '',
-    expiryDate: c.expiryDate?.trim() || '',
-    credentialId: c.credentialId?.trim() || '',
+    issuer: safeTrim(c.issuer),
+    date: safeTrim(c.date),
+    url: safeTrim(c.link),
+    expiryDate: safeTrim(c.expiryDate),
+    credentialId: safeTrim(c.credentialId),
   }));
 
   const awards = (data.achievements || []).map((a) => ({
@@ -330,9 +331,9 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
     title: a.name,
     awarder: safeTrim(a.context, (a as any).awarder),
     context: safeTrim(a.context, (a as any).awarder),
-    date: a.date?.trim() || '',
-    description: a.description?.trim() || '',
-    rank: a.rank?.trim() || '',
+    date: safeTrim(a.date),
+    description: safeTrim(a.description),
+    rank: safeTrim(a.rank),
     url: safeTrim(a.link, (a as any).url),
     link: safeTrim(a.link, (a as any).url),
   }));
@@ -340,8 +341,8 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
   const publications = (data.publications || []).map((pub) => {
     const title = pub.title;
     const publisher = safeTrim(pub.platform, (pub as any).publisher);
-    const date = pub.date?.trim() || '';
-    const authors = pub.authors?.trim() || '';
+    const date = safeTrim(pub.date);
+    const authors = safeTrim(pub.authors);
     const citParts = [
       authors,
       title ? `"${title}"` : '',
@@ -355,7 +356,7 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
       publisher,
       date,
       authors,
-      description: pub.description?.trim() || '',
+      description: safeTrim(pub.description),
       url: safeTrim(pub.link, (pub as any).url),
       link: safeTrim(pub.link, (pub as any).url),
       citation: citParts.join(', '),
@@ -365,60 +366,60 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
   const languages = (data.languages || []).map((l) => ({
     name: l.language,
     language: l.language,
-    proficiency: l.proficiency?.trim() || '',
+    proficiency: safeTrim(l.proficiency),
   }));
 
   const keyMetrics = (data.keyMetrics || []).map((m) => ({
     label: m.label,
     value: m.value,
-    context: m.context?.trim() || '',
+    context: safeTrim(m.context),
   }));
 
   const openSource = (data.openSource || []).map((os) => ({
     project: os.project,
-    contribution: os.contribution?.trim() || '',
-    dates: os.dates?.trim() || '',
-    impact: os.impact?.trim() || '',
-    url: os.link?.trim() || '',
-    bullets: (os.bullets || []).filter(Boolean),
+    contribution: safeTrim(os.contribution),
+    dates: safeTrim(os.dates),
+    impact: safeTrim(os.impact),
+    url: safeTrim(os.link),
+    bullets: (os.bullets || []).filter((b): b is string => typeof b === 'string' && b.trim().length > 0),
   }));
 
   const leadership = (data.leadership || []).map((l) => ({
     role: l.role,
     organization: l.organization,
-    location: l.location?.trim() || '',
-    dates: l.dates?.trim() || '',
-    bullets: (l.bullets || []).filter(Boolean),
+    location: safeTrim(l.location),
+    dates: safeTrim(l.dates),
+    bullets: (l.bullets || []).filter((b): b is string => typeof b === 'string' && b.trim().length > 0),
   }));
 
   const volunteering = (data.volunteering || []).map((v) => ({
     role: v.role,
     organization: v.organization,
-    location: v.location?.trim() || '',
-    dates: v.dates?.trim() || '',
-    bullets: (v.bullets || []).filter(Boolean),
+    location: safeTrim(v.location),
+    dates: safeTrim(v.dates),
+    bullets: (v.bullets || []).filter((b): b is string => typeof b === 'string' && b.trim().length > 0),
   }));
 
   const conferences = (data.conferences || []).map((c) => ({
     name: c.name,
-    topic: c.topic?.trim() || '',
-    role: c.role?.trim() || '',
-    date: c.date?.trim() || '',
-    location: c.location?.trim() || '',
-    description: c.description?.trim() || '',
-    url: c.link?.trim() || '',
+    topic: safeTrim(c.topic),
+    role: safeTrim(c.role),
+    date: safeTrim(c.date),
+    location: safeTrim(c.location),
+    description: safeTrim(c.description),
+    url: safeTrim(c.link),
   }));
 
   const interests = (data.interests || []).map((i) => ({
     name: i.name,
-    details: i.details?.trim() || '',
+    details: safeTrim(i.details),
   }));
 
   const products = (data.products || []).map((p) => ({
     name: p.name,
-    responsibility: p.responsibility?.trim() || '',
-    scale: p.scale?.trim() || '',
-    impact: p.impact?.trim() || '',
+    responsibility: safeTrim(p.responsibility),
+    scale: safeTrim(p.scale),
+    impact: safeTrim(p.impact),
   }));
 
   return {
@@ -427,8 +428,8 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
       headline,
       contact,
     },
-    summary: data.summary?.trim() || '',
-    techStackSummary: data.techStackSummary?.trim() || '',
+    summary: safeTrim(data.summary),
+    techStackSummary: safeTrim(data.techStackSummary),
     skills,
     experience: resolvedExperience,
     internships,
@@ -449,11 +450,11 @@ export function resumeDataToTypstData(data: ResumeData): TypstResumeData {
     devopsContributions: (data.devopsContributions || []).filter(Boolean),
     securityContributions: (data.securityContributions || []).filter(Boolean),
     additionalInfo: {
-      availability: data.additionalInfo?.availability?.trim() || '',
-      workAuthorization: data.additionalInfo?.workAuthorization?.trim() || '',
-      relocation: data.additionalInfo?.relocation?.trim() || '',
-      travel: data.additionalInfo?.travel?.trim() || '',
-      notes: data.additionalInfo?.notes?.trim() || '',
+      availability: safeTrim(data.additionalInfo?.availability),
+      workAuthorization: safeTrim(data.additionalInfo?.workAuthorization),
+      relocation: safeTrim(data.additionalInfo?.relocation),
+      travel: safeTrim(data.additionalInfo?.travel),
+      notes: safeTrim(data.additionalInfo?.notes),
     },
     customSections: (data.customSections || []).map((cs) => ({
       title: cs.title,
