@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.16.3] - 2026-09-15
+
+### Fixed
+- **PDF export failed with "theme: Expected string, received object"**, a real, distinct bug the 2.16.2 error-handling fix correctly surfaced instead of crashing on (proof that fix works). `exportResume()` in `lib/resume-export.ts` was forwarding its `theme` option, an object of shape `{ color, font }`, straight into the `/api/v1/resume/compile` request body, but `CompileResumeRequestSchema.theme` (`lib/resume-schema.ts`) expects a plain color string like `"cobalt"`. Every caller (editor, builder step4, dashboard, demo, landing showcase) already passes `theme: { color }` consistently, so the fix is one line in `exportResume()`: send `theme.color` (falling back to `'none'`), not the whole object. The live preview compile in `components/pdf-preview.tsx` was unaffected, it already sends the plain string from app state directly.
+
+---
+
 ## [2.16.2] - 2026-09-15
 
 ### Fixed

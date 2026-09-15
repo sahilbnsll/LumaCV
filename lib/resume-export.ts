@@ -182,7 +182,7 @@ export async function exportResume(opts: ExportOptions): Promise<boolean> {
         body: JSON.stringify({
           resumeData,
           template,
-          theme,
+          theme: theme?.color || 'none',
         }),
       });
 
